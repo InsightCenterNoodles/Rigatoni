@@ -1,4 +1,7 @@
+from dataclasses import fields
+from types import NoneType
 import noodle_objects
+from cbor2 import dumps
 
 class Server(object):
     """NOODLES Server
@@ -60,18 +63,23 @@ class Server(object):
             ("create", noodle_objects.Table): 28,
             ("update", noodle_objects.Table): 29,
             ("delete", noodle_objects.Table): 30,
-            ("update", None): 31,
-            ("reset", None): 32,
+            ("update", NoneType): 31,
+            ("reset", NoneType): 32,
             ("invoke", noodle_objects.Signal): 33,
             ("reply", noodle_objects.Method): 34,
-            ("initialized", None): 35,
+            ("initialized", NoneType): 35
         }
 
         # Set up hardcoded state for initial testing
         for key, value in hardcoded_state.items():
             self.objects[key] = value
 
-    def prepare_message(self, action: str, object):
+    def prepare_message(self, action: str, object=None, delta: list[str] = None):
+        """Given object and action, get id and message contents as dict
+        
+        Not sure how I feel about this rn, analogous to handle in client but kinda messy here
+        definitely revisit
+        """
 
         # Get ID for message
         id = self.message_map[(action, type(object))]
@@ -79,8 +87,7 @@ class Server(object):
         # Get message contents
         contents = {}
         if action == "create":
-            pass
-
+            contents = msg_from_obj(object)
         elif action == "update":
 
             # Document case
@@ -89,16 +96,17 @@ class Server(object):
                 contents["signals_list"] = self.objects["signals"].keys()
             # Normal update
             else:
-                pass
+                msg_from_obj(object, delta)
 
         elif action == "delete":
             contents["id"] = object.id
-
         elif action == "invoke":
-            pass
+            assert(isinstance(object, noodle_objects.SignalInvokeMessage))
+            contents = msg_from_obj
 
         elif action == "reply":
-            pass
+            assert(isinstance(object, noodle_objects.MethodReplyMessage))
+            contents = msg_from_obj(object)
 
         elif action == "initialized" or action == "reset":
             pass
@@ -114,7 +122,42 @@ class Server(object):
         for specifier, object_map, in self.objects.items():
             for id, object in object_map.items():
                 id, content = self.prepare_message("create", object)
-                message.append(id, content)
+                message.extend([id, content])
+        message.extend(self.prepare_message("initialized"))
+        
 
         print(f"Message sent to handle new client: {message}")
-        await websocket.send(message)
+        # Move sending / encoding to server or handle here?
+        await websocket.send(dumps(message))
+
+
+    async def handle_invoke(message: list):
+
+        method = message["method"]
+        context = message.get("context")
+        invoke_id = message["invoke_id"]
+        args: list = message["args"]
+        exception = None
+
+        # What do you do here? how to invoke methods that user defines
+
+        response = []
+        result = []
+        if exception:
+            reply = noodle_objects.MethodReplyMessage(invoke_id, exception)
+        else:
+            reply = noodle_objects.MethodReplyMessage(invoke_id, result)
+        return response, reply
+
+
+def msg_from_obj(obj, delta: list[str]=None):
+    """Return dict of all objects attributes that are not None"""
+
+    if not delta: delta = [f.name for f in fields(obj)]
+
+    contents = {}
+    for field in fields(obj):
+        val = getattr(obj, field.name)
+        if val != None and field.name in delta:
+            contents[field.name] = val
+    return contents

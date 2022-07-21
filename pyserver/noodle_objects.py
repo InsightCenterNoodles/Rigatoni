@@ -280,7 +280,6 @@ class Geometry(object):
     name : str = None
 
 
-# Table Messages ================================================================================ 
 @dataclass
 class Table(object):
     id : IDGroup

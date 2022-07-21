@@ -9,13 +9,13 @@ from noodle_objects import Method, Signal
 
 
 starting_state = {
-    "methods": {}
+    "methods": {
+        (0, 0): Method((0,0), "Test Method 1"),
+        (1, 0): Method((0,0), "Test Method 2"),
+        (2, 0): Method((0,0), "Test Method 3"),
+        (3, 0): Method((0,0), "Test Method 4"),
+    }
 }
-
-
-def handle_invoke(message):
-    response = []
-    return response
 
 
 async def handle_client(websocket, server: Server):
@@ -31,6 +31,7 @@ async def handle_client(websocket, server: Server):
     intro_msg = loads(raw_intro_msg)
     client_name = intro_msg[1]["client_name"]
     print(f"Client '{client_name}' Connecting...")
+    
     await server.handle_intro(websocket)
 
     # Listen for method invocation and keep all clients informed
@@ -42,11 +43,11 @@ async def handle_client(websocket, server: Server):
 
         # Handle the method invocation
         # Also should be able to send response to the client - subscribe or method reply
-        response = handle_invoke(message)
+        response, reply = server.handle_invoke(message)
 
-        # Send response to all clients
+        # Send response to all clients, and method reply to client
         websockets.broadcast(server.clients, response)
-        await websocket.send(response)
+        await websocket.send(reply)
 
 
 async def main():
@@ -55,6 +56,7 @@ async def main():
     """
 
     server = Server(starting_state)
+    print(f"Server initialized with objects: {server.objects}")
 
     # Create partial to pass server to handler
     handler = functools.partial(
