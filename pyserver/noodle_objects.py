@@ -1,7 +1,7 @@
+from collections import namedtuple
 from dataclasses import  dataclass, field
 from math import pi
 from typing import Optional
-
 
 """
 Common Definitions
@@ -9,26 +9,29 @@ Common Definitions
 
 Vec3 = [float] * 3
 Vec4 = [float] * 4
+Mat3 = [float] * 9
 Mat4 = [float] * 16
 
 RGB = [float] * 3
 RGBA = [float] * 4
 
-@dataclass
-class IDGroup(object):
+IDGroup = namedtuple("IDGroup", ["slot", "gen"])
 
-    slot : int
-    gen : int
-    id : list[int] = field(init=False)
+# @dataclass
+# class IDGroup(object):
 
-    def __post_init__(self):
-        self.id = [self.slot, self.gen]
+#     slot : int
+#     gen : int
+#     id : list[int] = field(init=False)
 
-    # redefined hash function, so IDGroup object is hashable as key in state
-    def __hash__(self):
-        places = len(str(abs(self.gen)))
-        hash_val = self.slot + (self.gen >> places)
-        return hash_val
+#     def __post_init__(self):
+#         self.id = [self.slot, self.gen]
+
+#     # redefined hash function, so IDGroup object is hashable as key in state
+#     def __hash__(self):
+#         places = len(str(abs(self.gen)))
+#         hash_val = self.slot + (self.gen >> places)
+#         return hash_val
 
 @dataclass
 class SelectionRange(object):
@@ -51,34 +54,23 @@ class BoundingBox(object):
 Server Messages
 """
 
-# Method Messages ================================================================================
 @dataclass
-class MethodCreateMessage(object):
+class Method(object):
     id : IDGroup
     name : str
     doc : str = None
     return_doc : str = None
     arg_doc : list[MethodArg] = None
 
-@dataclass
-class MethodDeleteMessage(object):
-    id : IDGroup
 
-
-# Signal Messages ================================================================================
 @dataclass
-class SignalCreateMessage(object):
+class Signal(object):
     id : IDGroup
     name : str
     doc : str = None
     arg_doc : list[MethodArg] = None
 
-@dataclass
-class SignalDeleteMessage(object):
-    id : IDGroup
 
-
-# Entity Messages ================================================================================
 @dataclass
 class TextRepresentation(object):
     txt : str
@@ -104,7 +96,7 @@ class RenderRepresentation(object):
     instances : InstanceSource = None
 
 @dataclass
-class EntityCreateMessage(object):
+class Entity(object):
     id : IDGroup
     name : str = None
 
@@ -127,33 +119,7 @@ class EntityCreateMessage(object):
 
 
 @dataclass
-class EntityUpdateMessage(object):
-    id : IDGroup
-    parent : IDGroup = None
-    transform : Mat4 = None
-
-    null_rep : any = None
-    text_rep : TextRepresentation = None
-    web_rep : WebRepresentation = None
-    render_rep : RenderRepresentation = None
-
-    lights : list[IDGroup] = None
-    tables : list[IDGroup] = None
-    plots : list[IDGroup] = None
-    tags : list[str] = None
-    methods_list : list[IDGroup] = None
-    signals_list : list[IDGroup] = None
-
-    influence : BoundingBox = None
-
-@dataclass
-class EntityDeleteMessage(object):
-    id : IDGroup
-
-
-# Plot Messages ================================================================================ 
-@dataclass
-class PlotCreateMessage(object):
+class Plot(object):
     id : IDGroup
     name : str = None
 
@@ -165,25 +131,9 @@ class PlotCreateMessage(object):
     methods_list : list[IDGroup] = None
     signals_list : list[IDGroup] = None
 
-@dataclass
-class PlotUpdateMessage(object):
-    id : IDGroup
-    table : IDGroup = None
-
-    simple_plot : str = None
-    url_plot : str = None
-
-    methods_list : list[IDGroup] = None
-    signals_list : list[IDGroup] = None
 
 @dataclass
-class PlotDeleteMessage(object):
-    id : IDGroup
-
-
-# Buffer Messages ================================================================================
-@dataclass
-class BufferCreateMessage(object):
+class Buffer(object):
     id : IDGroup
     name : str = None
     size : int = None
@@ -192,11 +142,7 @@ class BufferCreateMessage(object):
     uri_bytes : str = None
 
 @dataclass
-class BufferDeleteMessage(object):
-    id : IDGroup
-
-@dataclass
-class BufferViewCreateMessage(object):
+class BufferView(object):
     id : IDGroup
     source_buffer : IDGroup
 
@@ -207,18 +153,11 @@ class BufferViewCreateMessage(object):
     name : str = None
 
 @dataclass
-class BufferViewDeleteMessage(object):
-    id : IDGroup
-
-
-# Material Messages ================================================================================
-@dataclass
 class TextureRef(object):
     texture : IDGroup
-    transform : Mat4 = field(default_factory = [1, 0, 0, 0,
-                        0, 1, 0, 0,
-                        0, 0, 1, 0,
-                        0, 0, 0, 1]) # cddl says mat3, not defined - typo?
+    transform : Mat3 = field(default_factory = [1, 0, 0,
+                                                0, 1, 0,
+                                                0, 0, 1,])
     texture_coord_slot : int = 0
 
 @dataclass
@@ -231,7 +170,7 @@ class PBRInfo(object):
     metal_rough_texture : TextureRef = None # assume linear, ONLY RG used
 
 @dataclass
-class MaterialCreateMessage(object):
+class Material(object):
     id : IDGroup
     pbr_info : PBRInfo
     name : str = None
@@ -250,45 +189,25 @@ class MaterialCreateMessage(object):
     double_sided : bool = False
 
 @dataclass
-class MaterialUpdateMessage(object):
-    id : IDGroup
-    # TBD
-
-@dataclass
-class MaterialDeleteMessage(object):
-    id : IDGroup
-
-
-# Image Messages ================================================================================ 
-@dataclass
-class ImageCreateMessage(object):
+class Image(object):
     id : IDGroup
     name : str = None
 
     buffer_source : IDGroup = None
     uri_source : str = None
 
-@dataclass
-class ImageDeleteMessage(object):
-    id : IDGroup
 
-
-# Texture Messages ================================================================================ 
 @dataclass
-class TextureCreateMessage(object):
+class Texture(object):
     id : IDGroup
     image : IDGroup
     name : str = None
     sampler : IDGroup = None # Revist default sampler
 
-@dataclass
-class TextureDeleteMessage(object):
-    id : IDGroup
 
 
-# Sampler Messages ================================================================================ 
 @dataclass
-class SamplerCreateMessage(object):
+class Sampler(object):
     id : IDGroup
     name : str = None
 
@@ -298,12 +217,7 @@ class SamplerCreateMessage(object):
     wrap_s : str = "REPEAT" # CLAMP_TO_EDGE or MIRRORED_REPEAT or REPEAT
     wrap_t : str = "REPEAT" # CLAMP_TO_EDGE or MIRRORED_REPEAT or REPEAT
 
-@dataclass
-class SamplerDeleteMessage(object):
-    id : IDGroup
 
-
-# Light Messages ================================================================================ 
 @dataclass
 class PointLight(object):
     range : float = -1
@@ -319,7 +233,7 @@ class DirectionalLight(object):
     range :float = -1
 
 @dataclass
-class LightCreateMessage(object):
+class Light(object):
     id : IDGroup
     name : str = None
 
@@ -330,19 +244,7 @@ class LightCreateMessage(object):
     spot : SpotLight = None
     directional : DirectionalLight = None
 
-@dataclass
-class LightUpdateMessage(object):
-    id : IDGroup
 
-    color : RGB
-    intensity : float = 1
-
-@dataclass
-class LightDeleteMessage(object):
-    id : IDGroup
-
-
-# Geometry Messages ================================================================================ 
 @dataclass
 class Attribute(object):
     view : IDGroup
@@ -372,49 +274,22 @@ class GeometryPatch(object):
     indices : Index = None
 
 @dataclass
-class GeometryCreateMessage(object):
+class Geometry(object):
     id : IDGroup
-    patches : list[dict]
+    patches : list[GeometryPatch]
     name : str = None
-
-@dataclass
-class GeometryDeleteMessage(object):
-    id : IDGroup
 
 
 # Table Messages ================================================================================ 
 @dataclass
-class TableCreateMessage(object):
+class Table(object):
     id : IDGroup
     name : str = None
 
     meta : str = None
     methods_list : list[IDGroup] = None
     signals_list : list[IDGroup] = None 
-
-@dataclass
-class TableUpdateMessage(object):
-    id : IDGroup
-
-    meta : str = None
-    methods_list : list[IDGroup] = None
-    signals_list : list[IDGroup] = None 
-
-@dataclass
-class TableDeleteMessage(object):
-    id : IDGroup
-
-
-# Document Messages ================================================================================ 
-@dataclass
-class DocumentUpdateMessage(object):
-    methods_list : list[IDGroup] = None
-    signals_list : list[IDGroup] = None
-
-@dataclass
-class DocumentResetMessage(object):
-    name : str = "placeholder for some content"
-    
+ 
 
 # Communication Messages ================================================================================ 
 @dataclass
@@ -432,7 +307,6 @@ class MethodException(object):
 @dataclass
 class SignalInvokeMessage(object):
     id : IDGroup
-
     signal_data : list[any]
     context : InvokeIDType = None # if empty it is on document
 
