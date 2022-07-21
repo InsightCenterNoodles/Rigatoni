@@ -17,11 +17,15 @@ starting_state = {
     }
 }
 
+async def send(websocket, message: dict):
+    """Send CBOR message using websocket"""
+    
+    print(f"Sending Message: {message}")
+    await websocket.send(dumps(message))
+
 
 async def handle_client(websocket, server: Server):
-    """
-    Coroutine to manage connection
-    """
+    """Coroutine for receiving and transmitting all messages"""
 
     # Update state
     server.clients.add(websocket)
@@ -32,7 +36,8 @@ async def handle_client(websocket, server: Server):
     client_name = intro_msg[1]["client_name"]
     print(f"Client '{client_name}' Connecting...")
     
-    await server.handle_intro(websocket)
+    init_message = server.handle_intro()
+    await send(websocket, init_message)
 
     # Listen for method invocation and keep all clients informed
     async for message in websocket:
@@ -42,12 +47,11 @@ async def handle_client(websocket, server: Server):
         print(f"Message from client: {message}")
 
         # Handle the method invocation
-        # Also should be able to send response to the client - subscribe or method reply
         response, reply = server.handle_invoke(message)
 
         # Send response to all clients, and method reply to client
-        websockets.broadcast(server.clients, response)
-        await websocket.send(reply)
+        websockets.broadcast(server.clients, dumps(response))
+        await send(websocket, reply)
 
 
 async def main():

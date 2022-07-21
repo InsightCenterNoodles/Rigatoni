@@ -74,6 +74,7 @@ class Server(object):
         for key, value in hardcoded_state.items():
             self.objects[key] = value
 
+
     def prepare_message(self, action: str, object=None, delta: list[str] = None):
         """Given object and action, get id and message contents as dict
         
@@ -100,6 +101,7 @@ class Server(object):
 
         elif action == "delete":
             contents["id"] = object.id
+            
         elif action == "invoke":
             assert(isinstance(object, noodle_objects.SignalInvokeMessage))
             contents = msg_from_obj
@@ -115,23 +117,24 @@ class Server(object):
         return id, contents
 
 
-    async def handle_intro(self, websocket):
+    def handle_intro(self):
+        """Formulate response for new client"""
 
-        # Send appropriate messages for new client
+        # Send create message for every object in state
         message = []
         for specifier, object_map, in self.objects.items():
             for id, object in object_map.items():
                 id, content = self.prepare_message("create", object)
                 message.extend([id, content])
+        
+        # Finish with initialization message
         message.extend(self.prepare_message("initialized"))
         
-
-        print(f"Message sent to handle new client: {message}")
-        # Move sending / encoding to server or handle here?
-        await websocket.send(dumps(message))
+        return message
 
 
-    async def handle_invoke(message: list):
+    def handle_invoke(message: list):
+        """Takes message and formulates response for clients"""
 
         method = message["method"]
         context = message.get("context")
