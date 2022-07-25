@@ -303,7 +303,7 @@ class InjectedMethod(object):
         self.method = method
 
     def __call__(self, *args, **kwds):
-        self.method(self.server, *args, **kwds)
+        return self.method(self.server, *args, **kwds)
 
 
 class SlotTracker(object):

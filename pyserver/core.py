@@ -1,4 +1,5 @@
 from collections import namedtuple
+from copy import deepcopy
 from dataclasses import asdict, fields, is_dataclass
 from queue import Queue
 from types import NoneType
@@ -113,7 +114,7 @@ class Server(object):
                 contents["signals_list"] = self.objects[nooobs.Signal].keys()
             # Normal update
             else:
-                msg_from_obj(object, delta)
+                contents = msg_from_obj(object, delta)
 
         elif action == "delete":
             contents["id"] = object.id
@@ -131,6 +132,7 @@ class Server(object):
     def broadcast(self, message: list):
         """Broadcast message to all connected clients"""
         
+        print(f"Broadcasting Message: {message}")
         encoded = dumps(message)
         websockets.broadcast(self.clients, encoded)
 
@@ -193,9 +195,12 @@ class Server(object):
     def create_object(self, obj):
         """update state and clients with new object"""
 
-        self.objects[type(obj)][obj.id] = obj
+        self.objects[type(obj)][obj.id] = deepcopy(obj) # We want to keep track ofcopy right? otherwise user changing their obj changes state here
         message = self.prepare_message("create", obj)
         self.broadcast(message)
+
+        # Update Reference Map (eventually)...
+
 
 
     def delete_object(self, obj):
@@ -205,8 +210,7 @@ class Server(object):
         
 
         # Update ID's available
-        new_id = nooobs.IDGroup(obj.id.slot, obj.id.gen + 1)
-        self.ids[type(obj)].on_deck.put(new_id)
+        self.ids[type(obj)].on_deck.put(obj.id)
         
         # Update State
         del self.objects[type(obj)][obj.id]
@@ -225,8 +229,8 @@ class Server(object):
         for field in fields(obj):
             key = field.name
             val = getattr(obj, key)
-            if val != state_obj[key]:
-                state_obj.key = val
+            if val != getattr(state_obj, key):
+                setattr(state_obj, key, val)
                 delta.append(key)
 
         # Broadcast update with only changed values
@@ -237,8 +241,7 @@ class Server(object):
     def invoke_signal(self, signal, on_component, signal_data):
         """Send signal to target component"""
 
-        id = signal.id
-
+        # Get context from on_component
         context = None
         if isinstance(on_component, nooobs.Entity):
             context = nooobs.InvokeIDType(entity=on_component.id)
@@ -247,13 +250,17 @@ class Server(object):
         elif isinstance(on_component, nooobs.Plot):
             context = nooobs.InvokeIDType(plot=on_component.id)
 
-        invoke = nooobs.Invoke(id, signal_data, context)
+        # Create invoke object and broadcast message
+        invoke = nooobs.Invoke(signal.id, signal_data, context)
         message = self.prepare_message("invoke", invoke)
         self.broadcast(message)
         
 
     def get_id(self, type) -> nooobs.IDGroup:
-        """Get ID with next open slot"""
+        """Get ID with next open slot
+        
+        Check for open slots then take closest available slot
+        """
 
         slot_info = self.ids[type]
         if slot_info.on_deck.empty():
@@ -268,8 +275,13 @@ class Server(object):
 def msg_from_obj(obj, delta: list[str]=None):
     """Return dict of all objects attributes that are not None"""
 
-    if not delta: delta = [f.name for f in fields(obj)]
+    # If no delta, include everything, else always include ID at least
+    if not delta: 
+        delta = [f.name for f in fields(obj)]
+    else:
+        delta.append("id")
 
+    # Add all fields that are not none with respect to delta
     contents = {}
     for field in fields(obj):
         val = getattr(obj, field.name)

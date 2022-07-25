@@ -12,10 +12,12 @@ def new_point_plot(server, col1, col2, col3, colors=None, sizes=None):
     signal_list = []
     tbl = nooobs.Table(id, "Test Table", "Table for testing", method_list, signal_list)
     server.create_object(tbl)
+    tbl.name = "New Name"
+    server.update_object(tbl)
+    server.delete_object(tbl)
 
     return id
 
-    #raise Exception("BLAH")
 
 methods = {
     'new_point_plot': new_point_plot
