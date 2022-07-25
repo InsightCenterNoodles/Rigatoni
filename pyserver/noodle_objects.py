@@ -3,9 +3,7 @@ from dataclasses import  dataclass, field
 from math import pi
 from typing import Optional
 
-"""
-Common Definitions
-"""
+""" ====================== Common Definitions ====================== """
 
 Vec3 = [float] * 3
 Vec4 = [float] * 4
@@ -17,21 +15,6 @@ RGBA = [float] * 4
 
 IDGroup = namedtuple("IDGroup", ["slot", "gen"])
 
-# @dataclass
-# class IDGroup(object):
-
-#     slot : int
-#     gen : int
-#     id : list[int] = field(init=False)
-
-#     def __post_init__(self):
-#         self.id = [self.slot, self.gen]
-
-#     # redefined hash function, so IDGroup object is hashable as key in state
-#     def __hash__(self):
-#         places = len(str(abs(self.gen)))
-#         hash_val = self.slot + (self.gen >> places)
-#         return hash_val
 
 @dataclass
 class SelectionRange(object):
@@ -48,27 +31,6 @@ class MethodArg(object):
 class BoundingBox(object):
     min : Vec3
     max : Vec3
-
-
-"""
-Server Messages
-"""
-
-@dataclass
-class Method(object):
-    id : IDGroup
-    name : str
-    doc : str = None
-    return_doc : str = None
-    arg_doc : list[MethodArg] = None
-
-
-@dataclass
-class Signal(object):
-    id : IDGroup
-    name : str
-    doc : str = None
-    arg_doc : list[MethodArg] = None
 
 
 @dataclass
@@ -96,6 +58,96 @@ class RenderRepresentation(object):
     instances : InstanceSource = None
 
 @dataclass
+class TextureRef(object):
+    texture : IDGroup
+    transform : Mat3 = field(default_factory = [1, 0, 0,
+                                                0, 1, 0,
+                                                0, 0, 1,])
+    texture_coord_slot : int = 0
+
+@dataclass
+class PBRInfo(object):
+    base_color : RGBA = field(default_factory = [255, 255, 255, 1]) # white as default
+    base_color_texture : TextureRef = None # assume SRGB, no premult alpha
+
+    metallic : float = 1
+    roughness : float = 1
+    metal_rough_texture : TextureRef = None # assume linear, ONLY RG used
+
+@dataclass
+class PointLight(object):
+    range : float = -1
+
+@dataclass
+class SpotLight(object):
+    range : float = -1
+    inner_cone_angle_rad : float = 0
+    outer_cone_angle_rad : float = pi/4
+
+@dataclass
+class DirectionalLight(object):
+    range :float = -1
+
+@dataclass
+class Attribute(object):
+    view : IDGroup
+    format : str
+    semantic : str # Attribute semantic - string or vec?
+    channel : int = None
+    offset : int = 0
+    stride : int = 0
+    minimum_value : list[float] = None
+    maximum_value : list[float] = None
+    normalized : bool = False
+
+@dataclass
+class Index(object):
+    view : IDGroup
+    count : int
+    format : str
+    offset : int = 0
+    stride : int = 0
+    
+@dataclass
+class GeometryPatch(object):
+    attributes : list[Attribute]
+    vertex_count : int
+    type : str
+    material : IDGroup
+    indices : Index = None
+
+@dataclass
+class InvokeIDType(object):
+    entity : Optional[IDGroup] = None
+    table : IDGroup = None
+    plot : IDGroup = None
+
+@dataclass
+class MethodException(Exception):
+    code : int
+    message : str = None
+    data : any = None
+
+
+""" ====================== NOOODLE COMPONENTS ====================== """
+
+@dataclass
+class Method(object):
+    id : IDGroup
+    name : str
+    doc : str = None
+    return_doc : str = None
+    arg_doc : list[MethodArg] = None
+
+
+@dataclass
+class Signal(object):
+    id : IDGroup
+    name : str
+    doc : str = None
+    arg_doc : list[MethodArg] = None
+
+@dataclass
 class Entity(object):
     id : IDGroup
     name : str = None
@@ -116,7 +168,6 @@ class Entity(object):
     signals_list : list[IDGroup] = None
 
     influence : BoundingBox = None
-
 
 @dataclass
 class Plot(object):
@@ -153,23 +204,6 @@ class BufferView(object):
     name : str = None
 
 @dataclass
-class TextureRef(object):
-    texture : IDGroup
-    transform : Mat3 = field(default_factory = [1, 0, 0,
-                                                0, 1, 0,
-                                                0, 0, 1,])
-    texture_coord_slot : int = 0
-
-@dataclass
-class PBRInfo(object):
-    base_color : RGBA = field(default_factory = [255, 255, 255, 1]) # white as default
-    base_color_texture : TextureRef = None # assume SRGB, no premult alpha
-
-    metallic : float = 1
-    roughness : float = 1
-    metal_rough_texture : TextureRef = None # assume linear, ONLY RG used
-
-@dataclass
 class Material(object):
     id : IDGroup
     pbr_info : PBRInfo
@@ -196,15 +230,12 @@ class Image(object):
     buffer_source : IDGroup = None
     uri_source : str = None
 
-
 @dataclass
 class Texture(object):
     id : IDGroup
     image : IDGroup
     name : str = None
     sampler : IDGroup = None # Revist default sampler
-
-
 
 @dataclass
 class Sampler(object):
@@ -217,21 +248,6 @@ class Sampler(object):
     wrap_s : str = "REPEAT" # CLAMP_TO_EDGE or MIRRORED_REPEAT or REPEAT
     wrap_t : str = "REPEAT" # CLAMP_TO_EDGE or MIRRORED_REPEAT or REPEAT
 
-
-@dataclass
-class PointLight(object):
-    range : float = -1
-
-@dataclass
-class SpotLight(object):
-    range : float = -1
-    inner_cone_angle_rad : float = 0
-    outer_cone_angle_rad : float = pi/4
-
-@dataclass
-class DirectionalLight(object):
-    range :float = -1
-
 @dataclass
 class Light(object):
     id : IDGroup
@@ -243,35 +259,6 @@ class Light(object):
     point : PointLight = None
     spot : SpotLight = None
     directional : DirectionalLight = None
-
-
-@dataclass
-class Attribute(object):
-    view : IDGroup
-    format : str
-    semantic : str # Attribute semantic - string or vec?
-    channel : int = None
-    offset : int = 0
-    stride : int = 0
-    minimum_value : list[float] = None
-    maximum_value : list[float] = None
-    normalized : bool = False
-
-@dataclass
-class Index(object):
-    view : IDGroup
-    count : int
-    format : str
-    offset : int = 0
-    stride : int = 0
-    
-@dataclass
-class GeometryPatch(object):
-    attributes : list[Attribute]
-    vertex_count : int
-    type : str
-    material : IDGroup
-    indices : Index = None
 
 @dataclass
 class Geometry(object):
@@ -290,43 +277,16 @@ class Table(object):
     signals_list : list[IDGroup] = None 
  
 
-# Communication Messages ================================================================================ 
-@dataclass
-class InvokeIDType(object):
-    entity : Optional[IDGroup] = None
-    table : IDGroup = None
-    plot : IDGroup = None
+""" ====================== Communication Objects ====================== """
 
 @dataclass
-class MethodException(object):
-    code : int
-    message : str = None
-    data : any = None
-
-@dataclass
-class SignalInvokeMessage(object):
+class Invoke(object):
     id : IDGroup
     signal_data : list[any]
     context : InvokeIDType = None # if empty it is on document
 
 @dataclass
-class MethodReplyMessage(object):
+class Reply(object):
     invoke_id : str
     result : any = None
     method_exception : MethodException = None
-
-
-"""
-Client Messages
-"""
-@dataclass
-class IntroMessage(object):
-    client_name: str
-
-
-@dataclass
-class InvokeMethodMessage(object):
-    method : IDGroup
-    args : list[any]
-    context : InvokeIDType = None
-    invoke_id : str = None

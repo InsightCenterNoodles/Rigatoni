@@ -4,20 +4,9 @@ import functools
 import websockets
 from cbor2 import loads, dumps
 
-from core import Server
-from noodle_objects import Method, Signal
+from pyserver.core import Server
 
-
-starting_state = {
-    "methods": {
-        (0, 0): Method((0,0), "Test Method 1"),
-        (1, 0): Method((0,0), "Test Method 2"),
-        (2, 0): Method((0,0), "Test Method 3"),
-        (3, 0): Method((0,0), "Test Method 4"),
-    }
-}
-
-async def send(websocket, message: dict):
+async def send(websocket, message: list):
     """Send CBOR message using websocket"""
     
     print(f"Sending Message: {message}")
@@ -47,19 +36,23 @@ async def handle_client(websocket, server: Server):
         print(f"Message from client: {message}")
 
         # Handle the method invocation
-        response, reply = server.handle_invoke(message)
+        reply = server.handle_invoke(message[1])
+        print(f"Reply: {reply}")
 
-        # Send response to all clients, and method reply to client
-        websockets.broadcast(server.clients, dumps(response))
+        # Send method reply to client
         await send(websocket, reply)
 
+    # Remove client if disconnected
+    print(f"Client 'client_name' disconnected")
+    server.clients.remove(websocket)
 
-async def main():
+
+async def start_server(port: int, methods: dict, starting_state: dict):
     """
     Main method for maintaining websocket connection
     """
 
-    server = Server(starting_state)
+    server = Server(methods, starting_state)
     print(f"Server initialized with objects: {server.objects}")
 
     # Create partial to pass server to handler
@@ -69,9 +62,5 @@ async def main():
     )
 
     print("Starting up Server...")
-    async with websockets.serve(handler, "", 50000):
+    async with websockets.serve(handler, "", port):
         await asyncio.Future()  # run forever
-
-
-if __name__ == "__main__":
-    asyncio.run(main())
