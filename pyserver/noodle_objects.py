@@ -1,6 +1,8 @@
 from collections import namedtuple
 from dataclasses import  dataclass, field
 from math import pi
+from queue import Queue
+import queue
 from typing import Optional
 
 """ ====================== Common Definitions ====================== """
@@ -290,3 +292,22 @@ class Reply(object):
     invoke_id : str
     result : any = None
     method_exception : MethodException = None
+
+
+""" ====================== Miscellaneous Objects ====================== """
+
+class InjectedMethod(object):
+
+    def __init__(self, server, method) -> None:
+        self.server = server
+        self.method = method
+
+    def __call__(self, *args, **kwds):
+        self.method(self.server, *args, **kwds)
+
+
+class SlotTracker(object):
+
+    def __init__(self):
+        self.next_slot = 0
+        self.on_deck = Queue()

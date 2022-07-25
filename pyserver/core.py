@@ -78,13 +78,13 @@ class Server(object):
 
         # Set up user defined methods
         for name, method in methods.items():
-            setattr(self, name, method)
+            injected = nooobs.InjectedMethod(self, method)
+            setattr(self, name, injected)
 
         # Initialize objects / Id's to use component type as key
-        SlotTracker = namedtuple("SlotTracker", "next_slot on_deck")
         for component in self.components:
             self.objects[component] = {}
-            self.ids[component] = SlotTracker(0, Queue())
+            self.ids[component] = nooobs.SlotTracker()
 
         # Set up hardcoded state for initial testing
         for key, value in hardcoded_state.items():
@@ -158,7 +158,8 @@ class Server(object):
             self.invoke_method(message, reply_obj)
         except nooobs.MethodException as e:
             reply_obj.method_exception = e       
-        except:
+        except Exception as e:
+            print(f"\033[91mServerside Error: {e}\033[0m")
             reply_obj.method_exception = nooobs.MethodException(-32603, "Internal Error")
             
         return self.prepare_message("reply", reply_obj)

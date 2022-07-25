@@ -3,16 +3,19 @@ import asyncio
 from pyserver.noodle_objects import Method
 from pyserver.server import start_server
 import pyserver.noodle_objects as nooobs
+from pyserver.core import Server
 
-def new_point_plot(col1, col2, col3, colors=None, sizes=None):
+def new_point_plot(server, col1, col2, col3, colors=None, sizes=None):
     
-    # id = self.get_id(nooobs.Table)
-    # method_list = []
-    # signal_list = []
-    # nooobs.Table(id, "Test Table", "Table for testing", method_list, signal_list)
-    # self.create_object()
+    id = server.get_id(nooobs.Table)
+    method_list = []
+    signal_list = []
+    tbl = nooobs.Table(id, "Test Table", "Table for testing", method_list, signal_list)
+    server.create_object(tbl)
 
-    raise Exception("BLAH")
+    return id
+
+    #raise Exception("BLAH")
 
 methods = {
     'new_point_plot': new_point_plot
