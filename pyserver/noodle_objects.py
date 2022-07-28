@@ -2,8 +2,30 @@ from collections import namedtuple
 from dataclasses import  dataclass, field
 from math import pi
 from queue import Queue
-import queue
 from typing import Optional
+
+import cbor2
+import websockets
+
+
+""" ====================== Generic Parent Class ====================== """
+
+class Component(object):
+
+    host_server = None
+
+    def broadcast(self, message: list):
+        """Broadcast message to all connected clients"""
+        
+        print(f"Broadcasting Message: {message}")
+        encoded = cbor2.dumps(message)
+        websockets.broadcast(Component.host_server.clients, encoded)
+
+
+    def __del__(self):
+        message = Component.host_server.prepare_message("delete", self)
+        self.broadcast(message)
+
 
 """ ====================== Common Definitions ====================== """
 
@@ -24,16 +46,21 @@ class SelectionRange(object):
     key_to_exclusive : int
 
 @dataclass
-class MethodArg(object):
+class Selection(object):
     name : str
     rows : list[int] = None
     row_ranges : list[SelectionRange] = None
 
 @dataclass
+class MethodArg(object): 
+    name: str
+    doc: str = None 
+    editor_hint: str = None
+
+@dataclass
 class BoundingBox(object):
     min : Vec3
     max : Vec3
-
 
 @dataclass
 class TextRepresentation(object):
@@ -130,27 +157,38 @@ class MethodException(Exception):
     message : str = None
     data : any = None
 
+@dataclass
+class TableColumnInfo(object):
+    name : str
+    type : str #"TEXT" / "REAL" / "INTEGER"
+
+@dataclass
+class TableInitData(object):
+    columns : list[TableColumnInfo] # columns or rows?
+    keys : list[int]
+    data : list[list[int]]
+    selections : list[Selection] = None
+
 
 """ ====================== NOOODLE COMPONENTS ====================== """
 
 @dataclass
-class Method(object):
+class Method(Component):
     id : IDGroup
     name : str
     doc : str = None
     return_doc : str = None
     arg_doc : list[MethodArg] = None
 
-
 @dataclass
-class Signal(object):
+class Signal(Component):
     id : IDGroup
     name : str
     doc : str = None
     arg_doc : list[MethodArg] = None
 
 @dataclass
-class Entity(object):
+class Entity(Component):
     id : IDGroup
     name : str = None
 
@@ -172,7 +210,7 @@ class Entity(object):
     influence : BoundingBox = None
 
 @dataclass
-class Plot(object):
+class Plot(Component):
     id : IDGroup
     name : str = None
 
@@ -184,9 +222,8 @@ class Plot(object):
     methods_list : list[IDGroup] = None
     signals_list : list[IDGroup] = None
 
-
 @dataclass
-class Buffer(object):
+class Buffer(Component):
     id : IDGroup
     name : str = None
     size : int = None
@@ -195,7 +232,7 @@ class Buffer(object):
     uri_bytes : str = None
 
 @dataclass
-class BufferView(object):
+class BufferView(Component):
     id : IDGroup
     source_buffer : IDGroup
 
@@ -206,7 +243,7 @@ class BufferView(object):
     name : str = None
 
 @dataclass
-class Material(object):
+class Material(Component):
     id : IDGroup
     pbr_info : PBRInfo
     name : str = None
@@ -225,7 +262,7 @@ class Material(object):
     double_sided : bool = False
 
 @dataclass
-class Image(object):
+class Image(Component):
     id : IDGroup
     name : str = None
 
@@ -233,14 +270,14 @@ class Image(object):
     uri_source : str = None
 
 @dataclass
-class Texture(object):
+class Texture(Component):
     id : IDGroup
     image : IDGroup
     name : str = None
     sampler : IDGroup = None # Revist default sampler
 
 @dataclass
-class Sampler(object):
+class Sampler(Component):
     id : IDGroup
     name : str = None
 
@@ -251,7 +288,7 @@ class Sampler(object):
     wrap_t : str = "REPEAT" # CLAMP_TO_EDGE or MIRRORED_REPEAT or REPEAT
 
 @dataclass
-class Light(object):
+class Light(Component):
     id : IDGroup
     name : str = None
 
@@ -263,14 +300,14 @@ class Light(object):
     directional : DirectionalLight = None
 
 @dataclass
-class Geometry(object):
+class Geometry(Component):
     id : IDGroup
     patches : list[GeometryPatch]
     name : str = None
 
 
 @dataclass
-class Table(object):
+class Table(Component):
     id : IDGroup
     name : str = None
 

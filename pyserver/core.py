@@ -1,12 +1,13 @@
-from collections import namedtuple
-from copy import deepcopy
-from dataclasses import asdict, fields, is_dataclass
+from dataclasses import asdict, dataclass, fields, is_dataclass
 from queue import Queue
 from types import NoneType
+from typing import Type
 
 import websockets
+
 from . import noodle_objects as nooobs
 from cbor2 import dumps
+
 
 class Server(object):
     """NOODLES Server
@@ -18,9 +19,10 @@ class Server(object):
             map object type to slot tracking info (next_slot, on_deck)
     """
 
-    def __init__(self, methods, hardcoded_state):
+    def __init__(self, methods, hardcoded_state, delegates):
         self.clients = set()
-        self.reference_graph = {}
+        self.custom_delegates = delegates
+        self.delegates = {}
         self.ids = {}
         self.objects = {}
         self.components = [
@@ -72,7 +74,7 @@ class Server(object):
             ("delete", nooobs.Table): 30,
             ("update", NoneType): 31,
             ("reset", NoneType): 32,
-            ("invoke", nooobs.Signal): 33,
+            ("invoke", nooobs.Invoke): 33,
             ("reply", nooobs.Reply): 34,
             ("initialized", NoneType): 35
         }
@@ -85,6 +87,7 @@ class Server(object):
         # Initialize objects / Id's to use component type as key
         for component in self.components:
             self.objects[component] = {}
+            self.delegates[component] = {}
             self.ids[component] = nooobs.SlotTracker()
 
         # Set up hardcoded state for initial testing
@@ -104,7 +107,7 @@ class Server(object):
 
         # Get message contents
         contents = {}
-        if action in {"create", "invoke"}:
+        if action in {"create", "invoke", "reply"}:
             contents = msg_from_obj(object)
         elif action == "update":
 
@@ -119,12 +122,8 @@ class Server(object):
         elif action == "delete":
             contents["id"] = object.id
 
-        elif action == "reply":
-            contents = msg_from_obj(object)
-
         elif action == "initialized" or action == "reset":
             pass
-
 
         return id, contents
 
@@ -176,7 +175,6 @@ class Server(object):
             invoke_id = message["invoke_id"]
             args: list = message["args"]
             reply.invoke_id = invoke_id
-            print(f"Handling message w/ method: {method_id}, context: {context}, args: {args}")
         except:
             raise nooobs.MethodException(-32700, "Parse Error")
 
@@ -188,39 +186,45 @@ class Server(object):
             raise nooobs.MethodException(-32601, "Method Not Found")
         
         # Invoke
-        reply.result = method(*args)
+        reply.result = method(context, *args)
 
 
-    # Interface methods to build server methods ===============================
-    def create_object(self, obj):
+    # Interface methods to build server methods ================================
+    def create_component(self, type: Type, *args, **kwargs) -> nooobs.Component:
         """update state and clients with new object"""
 
-        self.objects[type(obj)][obj.id] = deepcopy(obj) # We want to keep track ofcopy right? otherwise user changing their obj changes state here
-        message = self.prepare_message("create", obj)
+        id = self.get_id(type)
+        try:
+            new_component = type(id, *args, **kwargs)
+        except:
+            raise Exception(f"Args, invalid for initializing a {type}")
+
+        # Overhaul to create object in it as well
+        self.objects[type][new_component.id] = new_component
+
+        message = self.prepare_message("create", new_component)
         self.broadcast(message)
 
-        # Update Reference Map (eventually)...
+        # Return delegate instance if applicable
+        if type in self.custom_delegates:
+            delegate = self.custom_delegates[type](self, new_component)
+            self.delegates[type][id] = delegate 
+            return delegate
+        else:
+            return new_component
 
 
-
-    def delete_object(self, obj):
+    def delete_component(self, obj: nooobs.Component):
         """Delete object in state and update clients"""
         
-        # Update Reference Map (eventually)...
-        
-
         # Update ID's available
         self.ids[type(obj)].on_deck.put(obj.id)
         
-        # Update State
+        # Update State - Component class takes care of broadcast
         del self.objects[type(obj)][obj.id]
 
-        # Inform Delegates
-        message = self.prepare_message("delete", obj)
-        self.broadcast(message)
-
     
-    def update_object(self, obj):
+    def update_component(self, obj: nooobs.Component):
         """Update object in stae and update clients"""
 
         # Update state
@@ -268,7 +272,7 @@ class Server(object):
             slot_info.next_slot += 1
             return id
         else:
-            return slot_info.on_deck.get()
+            return slot_info.on_deck.get()             
         
 
 
@@ -276,7 +280,7 @@ def msg_from_obj(obj, delta: list[str]=None):
     """Return dict of all objects attributes that are not None"""
 
     # If no delta, include everything, else always include ID at least
-    if not delta: 
+    if delta == None: 
         delta = [f.name for f in fields(obj)]
     else:
         delta.append("id")
@@ -289,5 +293,7 @@ def msg_from_obj(obj, delta: list[str]=None):
         if val != None and field.name in delta:
             if is_dataclass(val):
                 val = msg_from_obj(val)
+            elif isinstance(val, list) and len(val) > 0 and is_dataclass(val[0]):
+                val = list(map(msg_from_obj, val))
             contents[field.name] = val
     return contents
