@@ -1,3 +1,6 @@
-#Server
+# Python Server
 
-Python Server for NOODLES Protocol
+Python Server Library for NOODLES Protocol
+
+## Description
+Work in progress...
