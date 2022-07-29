@@ -1,18 +1,24 @@
 from collections import namedtuple
-from dataclasses import  dataclass, field
+from enum import Enum
 from math import pi
 from queue import Queue
-from typing import Optional
+from typing import ClassVar, Literal, Optional, Any, Union
 
 import cbor2
 import websockets
-
+from pydantic import BaseModel, root_validator
 
 """ ====================== Generic Parent Class ====================== """
 
-class Component(object):
+class Component(BaseModel):
 
-    host_server = None
+    host_server: ClassVar = None
+
+    class Config:
+        """Validation Configuration"""
+        
+        arbitrary_types_allowed = True
+        #smart_union = True - used to avoid coercion of unions
 
     def broadcast(self, message: list):
         """Broadcast message to all connected clients"""
@@ -27,308 +33,425 @@ class Component(object):
         self.broadcast(message)
 
 
+class Model(BaseModel):
+    """Parent Class for Non-Components"""
+
+    class Config:
+        arbitrary_types_allowed = True
+
+
+
 """ ====================== Common Definitions ====================== """
 
-Vec3 = [float] * 3
-Vec4 = [float] * 4
-Mat3 = [float] * 9
-Mat4 = [float] * 16
+Vec3 = tuple[float, float, float]
+Vec4 = tuple[float, float, float, float]
+Mat3 = tuple[float, float, float, 
+             float, float, float, 
+             float, float, float]
+Mat4 = tuple[float, float, float, float,
+             float, float, float, float,
+             float, float, float, float,
+             float, float, float, float]
 
-RGB = [float] * 3
-RGBA = [float] * 4
+RGB = Vec3
+RGBA = Vec4
 
 IDGroup = namedtuple("IDGroup", ["slot", "gen"])
 
+class AttributeSemantic(Enum):
+    position = "POSITION"
+    normal = "NORMAL"
+    tangent = "TANGENT"
+    texture = "TEXTURE"
+    color = "COLOR"
 
-@dataclass
-class SelectionRange(object):
-    key_from_inclusive : int
-    key_to_exclusive : int
+class Format(Enum):
+    u8 = "U8"
+    u16 = "U16"
+    u32 = "U32"
+    u8vec4 = "U8VEC4"
+    u16vec2 = "U16VEC2"
+    vec2 = "VEC2"
+    vec3 = "VEC3"
+    vec4 = "VEC4"
+    mat3 = "MAT3"
+    mat4 = "MAT4"
 
-@dataclass
-class Selection(object):
-    name : str
-    rows : list[int] = None
-    row_ranges : list[SelectionRange] = None
+class PrimitiveType(Enum):
+    points = "POINTS"
+    lines = "LINES"
+    line_loop = "LINE_LOOP"
+    line_strip = "LINE_STRIP"
+    triangles = "TRIANGLES"
+    triangle_strip = "TRIANGLE_STRIP"
 
-@dataclass
-class MethodArg(object): 
+class SamplerMode(Enum):
+    clamp_to_edge = "CLAMP_TO_EDGE"
+    mirrored_repeat = "MIRRORED_REPEAT"
+    repeat = "REPEAT"
+
+class SelectionRange(BaseModel):
+    key_from_inclusive: int
+    key_to_exclusive: int
+
+
+class Selection(Model):
     name: str
-    doc: str = None 
-    editor_hint: str = None
+    rows: Optional[list[int]] = None
+    row_ranges: Optional[list[SelectionRange]] = None
 
-@dataclass
-class BoundingBox(object):
-    min : Vec3
-    max : Vec3
 
-@dataclass
-class TextRepresentation(object):
-    txt : str
-    font : str = "Arial"
-    height : float = .25
-    width : float = -1
+class MethodArg(Model): 
+    name: str
+    doc: Optional[str] = None 
+    editor_hint: Optional[str] = None
 
-@dataclass
-class WebRepresentation(object):
-    source : str
-    height : float = .5
-    width : float = .5
 
-@dataclass
-class InstanceSource(object):
-    view : IDGroup
-    stride : int
-    bb : BoundingBox = None
+class BoundingBox(Model):
+    min: Vec3
+    max: Vec3
 
-@dataclass
-class RenderRepresentation(object):
-    mesh : IDGroup
-    instances : InstanceSource = None
 
-@dataclass
-class TextureRef(object):
-    texture : IDGroup
-    transform : Mat3 = field(default_factory = [1, 0, 0,
-                                                0, 1, 0,
-                                                0, 0, 1,])
-    texture_coord_slot : int = 0
+class TextRepresentation(Model):
+    txt: str
+    font: Optional[str] = "Arial"
+    height: Optional[float] = .25
+    width: Optional[float] = -1
 
-@dataclass
-class PBRInfo(object):
-    base_color : RGBA = field(default_factory = [255, 255, 255, 1]) # white as default
-    base_color_texture : TextureRef = None # assume SRGB, no premult alpha
 
-    metallic : float = 1
-    roughness : float = 1
-    metal_rough_texture : TextureRef = None # assume linear, ONLY RG used
+class WebRepresentation(Model):
+    source: str
+    height: Optional[float] = .5
+    width: Optional[float] = .5
 
-@dataclass
-class PointLight(object):
-    range : float = -1
 
-@dataclass
-class SpotLight(object):
-    range : float = -1
-    inner_cone_angle_rad : float = 0
-    outer_cone_angle_rad : float = pi/4
+class InstanceSource(Model):
+    view: IDGroup # Buffer View ID, view of mat4
+    stride: int 
+    bb: Optional[BoundingBox] = None
 
-@dataclass
-class DirectionalLight(object):
-    range :float = -1
 
-@dataclass
-class Attribute(object):
-    view : IDGroup
-    format : str
-    semantic : str # Attribute semantic - string or vec?
-    channel : int = None
-    offset : int = 0
-    stride : int = 0
-    minimum_value : list[float] = None
-    maximum_value : list[float] = None
-    normalized : bool = False
+class RenderRepresentation(Model):
+    mesh: IDGroup # Entity ID
+    instances: Optional[InstanceSource] = None
 
-@dataclass
-class Index(object):
-    view : IDGroup
-    count : int
-    format : str
-    offset : int = 0
-    stride : int = 0
+
+class TextureRef(Model):
+    texture: IDGroup
+    transform: Optional[Mat3] = [1, 0, 0,
+                       0, 1, 0,
+                       0, 0, 1,]
+    texture_coord_slot: Optional[int] = 0
+
+
+class PBRInfo(Model):
+    base_color: RGBA = [255, 255, 255, 1]
+    base_color_texture: Optional[TextureRef] = None # assume SRGB, no premult alpha
+
+    metallic: Optional[float] = 1
+    roughness: Optional[float] = 1
+    metal_rough_texture: Optional[TextureRef] = None # assume linear, ONLY RG used
+
+
+class PointLight(Model):
+    range: float = -1
+
+
+class SpotLight(Model):
+    range: float = -1
+    inner_cone_angle_rad: float = 0
+    outer_cone_angle_rad: float = pi/4
+
+
+class DirectionalLight(Model):
+    range: float = -1
+
+class Attribute(Model):
+    view: IDGroup
+    semantic: AttributeSemantic #string or vec - refer to cddl?
+    channel: Optional[int] = None
+    offset: Optional[int] = 0
+    stride: Optional[int] = 0
+    format: Format
+    minimum_value: Optional[list[float]] = None
+    maximum_value: Optional[list[float]] = None
+    normalized: Optional[bool] = False
+
+
+class Index(Model):
+    view: IDGroup # Buffer View ID
+    count: int
+    offset: Optional[int] = 0
+    stride: Optional[int] = 0
+    format: Literal["U8", "U16", "U32"]
+
+class GeometryPatch(Model):
+    attributes: list[Attribute]
+    vertex_count: int
+    indices: Optional[Index] = None
+    type: PrimitiveType
+    material: IDGroup # Material ID
+
+
+class InvokeIDType(Model):
+    entity: Optional[IDGroup] = None
+    table: Optional[IDGroup] = None
+    plot: Optional[IDGroup] = None
+
+    @root_validator
+    def one_of_three(cls, values):
+        already_found  = False
+        for field in values:
+            if values[field] and already_found:
+                raise ValueError("More than one field entered")
+            elif values[field]:
+                already_found = True
+        
+        if not already_found:
+            raise ValueError("No field provided")
+        else:
+            return values
+
+
+class TableColumnInfo(Model):
+    name: str
+    type: Literal["TEXT", "REAL", "INTEGER"]
+
+
+class TableInitData(Model):
+    columns: list[TableColumnInfo] # columns or rows?
+    keys: list[int]
+    data: list[list[Union[float, int, str]]]
+    selections: Optional[list[Selection]] = None
+
+    # add validator here to make sure type in col_info matches data?
+        # Could be a lot of overhead to check every single value in the table 
+    @root_validator
+    def types_match(cls, values):
+        for row in values['data']:
+            for col, i in zip(values['columns'], range(len(row))):
+                text_mismatch = isinstance(row[i], str) and col.type != "TEXT"
+                real_mismatch = isinstance(row[i], float) and col.type != "REAL"
+                int_mismatch = isinstance(row[i], int) and col.type != "INTEGER"
+                if text_mismatch or real_mismatch or int_mismatch:
+                    raise ValueError(f"Column Info doesn't match type in data: {col, row[i]}")
+        return values
+        
     
-@dataclass
-class GeometryPatch(object):
-    attributes : list[Attribute]
-    vertex_count : int
-    type : str
-    material : IDGroup
-    indices : Index = None
-
-@dataclass
-class InvokeIDType(object):
-    entity : Optional[IDGroup] = None
-    table : IDGroup = None
-    plot : IDGroup = None
-
-@dataclass
-class MethodException(Exception):
-    code : int
-    message : str = None
-    data : any = None
-
-@dataclass
-class TableColumnInfo(object):
-    name : str
-    type : str #"TEXT" / "REAL" / "INTEGER"
-
-@dataclass
-class TableInitData(object):
-    columns : list[TableColumnInfo] # columns or rows?
-    keys : list[int]
-    data : list[list[int]]
-    selections : list[Selection] = None
 
 
 """ ====================== NOOODLE COMPONENTS ====================== """
 
-@dataclass
+
 class Method(Component):
-    id : IDGroup
-    name : str
-    doc : str = None
-    return_doc : str = None
-    arg_doc : list[MethodArg] = None
+    id: IDGroup
+    name: str
+    doc: Optional[str] = None
+    return_doc: Optional[str] = None
+    arg_doc: list[MethodArg] = None
 
-@dataclass
+
 class Signal(Component):
-    id : IDGroup
-    name : str
-    doc : str = None
-    arg_doc : list[MethodArg] = None
+    id: IDGroup
+    name: str
+    doc: Optional[str] = None
+    arg_doc: list[MethodArg] = None
 
-@dataclass
+
 class Entity(Component):
-    id : IDGroup
-    name : str = None
+    id: IDGroup
+    name: Optional[str] = None
 
-    parent : IDGroup = None
-    transform : Mat4 = None
+    parent: Optional[IDGroup] = None
+    transform: Optional[Mat4] = None
 
-    null_rep : any = None
-    text_rep : TextRepresentation = None
-    web_rep : WebRepresentation = None
-    render_rep : RenderRepresentation = None
+    null_rep: Optional[Any] = None
+    text_rep: Optional[TextRepresentation] = None
+    web_rep: Optional[WebRepresentation] = None
+    render_rep: Optional[RenderRepresentation] = None
 
-    lights : list[IDGroup] = None
-    tables : list[IDGroup] = None
-    plots : list[IDGroup] = None
-    tags : list[str] = None
-    methods_list : list[IDGroup] = None
-    signals_list : list[IDGroup] = None
+    lights: Optional[list[IDGroup]] = None
+    tables: Optional[list[IDGroup]] = None
+    plots: Optional[list[IDGroup]] = None
+    tags: Optional[list[str]] = None
+    methods_list: Optional[list[IDGroup]] = None
+    signals_list: Optional[list[IDGroup]] = None
 
-    influence : BoundingBox = None
+    influence: Optional[BoundingBox] = None
 
-@dataclass
+    @root_validator
+    def one_of(cls, values):
+        already_found  = False
+        for field in ['null_rep', 'text_rep', 'web_rep', 'render_rep']:
+            if values[field] and already_found:
+                raise ValueError("More than one field entered")
+            elif values[field]:
+                already_found = True
+        
+        if not already_found:
+            raise ValueError("No field provided")
+        else:
+            return values
+
+
 class Plot(Component):
-    id : IDGroup
-    name : str = None
+    id: IDGroup
+    name: Optional[str] = None
 
-    table : IDGroup = None
+    table: Optional[IDGroup] = None
 
-    simple_plot : str = None
-    url_plot : str = None
+    simple_plot: Optional[str] = None
+    url_plot: Optional[str] = None
 
-    methods_list : list[IDGroup] = None
-    signals_list : list[IDGroup] = None
+    methods_list: Optional[list[IDGroup]] = None
+    signals_list: Optional[list[IDGroup]] = None
 
-@dataclass
+    @root_validator
+    def one_of(cls, values):
+        if bool(values['simple_plot']) != bool(values['url_plot']):
+            return values
+        else:
+            raise ValueError("One plot type must be specified")
+
+
 class Buffer(Component):
-    id : IDGroup
-    name : str = None
-    size : int = None
+    id: IDGroup
+    name: Optional[str] = None
+    size: int = None
 
-    inline_bytes : bytes = None
-    uri_bytes : str = None
+    inline_bytes: bytes = None
+    uri_bytes: str = None
 
-@dataclass
+    @root_validator
+    def one_of(cls, values):
+        if bool(values['inline_bytes']) != bool(values['uri_bytes']):
+            return values
+        else:
+            raise ValueError("One plot type must be specified")
+
+
 class BufferView(Component):
-    id : IDGroup
-    source_buffer : IDGroup
+    id: IDGroup
+    name: Optional[str] = None    
+    source_buffer: IDGroup # Buffer ID
 
-    type : str
-    offset : int
-    length : int
+    type: Literal["UNK", "GEOMETRY", "IMAGE"]
+    offset: int
+    length: int
 
-    name : str = None
-
-@dataclass
+    
 class Material(Component):
-    id : IDGroup
-    pbr_info : PBRInfo
-    name : str = None
+    id: IDGroup
+    name: Optional[str] = None
 
-    normal_texture : TextureRef = None
+    pbr_info: Optional[PBRInfo] = PBRInfo()
+    normal_texture: Optional[TextureRef] = None
 
-    occlusion_texture : TextureRef = None # assumed to be linear, ONLY R used
-    occlusion_texture_factor : float = 1
+    occlusion_texture: Optional[TextureRef] = None # assumed to be linear, ONLY R used
+    occlusion_texture_factor: Optional[float] = 1
 
-    emissive_texture : TextureRef = None # assumed to be SRGB, ignore A
-    emissive_factor : Vec3 = field(default_factory =[1, 1, 1])
+    emissive_texture: Optional[TextureRef] = None # assumed to be SRGB, ignore A
+    emissive_factor: Optional[Vec3] = [1, 1, 1]
 
-    use_alpha : bool = False
-    alpha_cutoff : float = .5
+    use_alpha: Optional[bool] = False
+    alpha_cutoff: Optional[float] = .5
 
-    double_sided : bool = False
+    double_sided: Optional[bool] = False
 
-@dataclass
+
 class Image(Component):
-    id : IDGroup
-    name : str = None
+    id: IDGroup
+    name: Optional[str] = None
 
-    buffer_source : IDGroup = None
-    uri_source : str = None
+    buffer_source: IDGroup = None
+    uri_source: str = None
 
-@dataclass
+    @root_validator
+    def one_of(cls, values):
+        if bool(values['buffer_source']) != bool(values['uri_source']):
+            return values
+        else:
+            raise ValueError("One plot type must be specified")
+
+
 class Texture(Component):
-    id : IDGroup
-    image : IDGroup
-    name : str = None
-    sampler : IDGroup = None # Revist default sampler
+    id: IDGroup
+    name: Optional[str] = None
+    image: IDGroup # Image ID
+    sampler: Optional[IDGroup] = None
 
-@dataclass
+
 class Sampler(Component):
-    id : IDGroup
-    name : str = None
+    id: IDGroup
+    name: Optional[str] = None
 
-    mag_filter: str = "LINEAR" # NEAREST or LINEAR
-    min_filter : str = "LINEAR_MIPMAP_LINEAR" # NEAREST or LINEAR or LINEAR_MIPMAP_LINEAR
+    mag_filter: Optional[Literal["NEAREST", "LINEAR"]] = "LINEAR"
+    min_filter: Optional[Literal["NEAREST", "LINEAR", "LINEAR_MIPMAP_LINEAR"]] = "LINEAR_MIPMAP_LINEAR"
 
-    wrap_s : str = "REPEAT" # CLAMP_TO_EDGE or MIRRORED_REPEAT or REPEAT
-    wrap_t : str = "REPEAT" # CLAMP_TO_EDGE or MIRRORED_REPEAT or REPEAT
+    wrap_s: Optional[SamplerMode] = "REPEAT" 
+    wrap_t: Optional[SamplerMode] = "REPEAT" 
 
-@dataclass
+
 class Light(Component):
-    id : IDGroup
-    name : str = None
+    id: IDGroup
+    name: Optional[str] = None
 
-    color : RGB = field(default_factory =[255, 255, 255])
-    intensity : float = 1
+    color: Optional[RGB] = [255, 255, 255]
+    intensity: Optional[float] = 1
 
-    point : PointLight = None
-    spot : SpotLight = None
-    directional : DirectionalLight = None
+    point: PointLight = None
+    spot: SpotLight = None
+    directional: DirectionalLight = None
 
-@dataclass
+    @root_validator
+    def one_of(cls, values):
+        already_found  = False
+        for field in ['point', 'spot', 'directional']:
+            if values[field] and already_found:
+                raise ValueError("More than one field entered")
+            elif values[field]:
+                already_found = True
+        
+        if not already_found:
+            raise ValueError("No field provided")
+        else:
+            return values
+
+
 class Geometry(Component):
-    id : IDGroup
-    patches : list[GeometryPatch]
-    name : str = None
+    id: IDGroup
+    name: Optional[str] = None
+    patches: list[GeometryPatch]
 
 
-@dataclass
 class Table(Component):
-    id : IDGroup
-    name : str = None
+    id: IDGroup
+    name: Optional[str] = None
 
-    meta : str = None
-    methods_list : list[IDGroup] = None
-    signals_list : list[IDGroup] = None 
+    meta: Optional[str] = None
+    methods_list: Optional[list[IDGroup]] = None
+    signals_list: Optional[list[IDGroup]] = None 
  
 
 """ ====================== Communication Objects ====================== """
 
-@dataclass
-class Invoke(object):
-    id : IDGroup
-    signal_data : list[any]
-    context : InvokeIDType = None # if empty it is on document
 
-@dataclass
-class Reply(object):
-    invoke_id : str
-    result : any = None
-    method_exception : MethodException = None
+class Invoke(Model):
+    id: IDGroup # Signal ID
+    context: Optional[InvokeIDType] = None # if empty - document
+    signal_data: list[Any]
+
+
+class MethodException(Exception):
+    code: int
+    message: Optional[str] = None
+    data: Optional[Any] = None
+
+
+class Reply(Model):
+    invoke_id: str
+    result: Optional[Any] = None
+    method_exception: Optional[MethodException] = None
 
 
 """ ====================== Miscellaneous Objects ====================== """

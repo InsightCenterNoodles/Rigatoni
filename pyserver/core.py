@@ -1,7 +1,8 @@
-from dataclasses import asdict, dataclass, fields, is_dataclass
 from queue import Queue
 from types import NoneType
-from typing import Type
+from typing import Type, Union
+from numpy import sign
+from pydantic import BaseModel
 
 import websockets
 
@@ -95,11 +96,14 @@ class Server(object):
             self.objects[key] = value
 
 
-    def prepare_message(self, action: str, object=None, delta: list[str] = None):
+    def prepare_message(self, action: str, object: Union[nooobs.Component, nooobs.Model]=None, delta: list[str] = None):
         """Given object and action, get id and message contents as dict
         
         Not sure how I feel about this rn, analogous to handle in client but kinda messy here
         definitely revisit
+
+        Args:
+            object: Component, Reply, or Invoke
         """
 
         # Get ID for message
@@ -108,7 +112,7 @@ class Server(object):
         # Get message contents
         contents = {}
         if action in {"create", "invoke", "reply"}:
-            contents = msg_from_obj(object)
+            contents = object.dict(exclude_none=True)
         elif action == "update":
 
             # Document case
@@ -117,7 +121,7 @@ class Server(object):
                 contents["signals_list"] = self.objects[nooobs.Signal].keys()
             # Normal update
             else:
-                contents = msg_from_obj(object, delta)
+                contents = object.dict(include=delta)
 
         elif action == "delete":
             contents["id"] = object.id
@@ -154,7 +158,7 @@ class Server(object):
     def handle_invoke(self, message: dict):
         """Takes message and formulates response for clients"""
 
-        reply_obj = nooobs.Reply("")
+        reply_obj = nooobs.Reply(invoke_id="-1")
         try:
             self.invoke_method(message, reply_obj)
         except nooobs.MethodException as e:
@@ -190,14 +194,14 @@ class Server(object):
 
 
     # Interface methods to build server methods ================================
-    def create_component(self, type: Type, *args, **kwargs) -> nooobs.Component:
+    def create_component(self, type: Type, **kwargs) -> nooobs.Component:
         """update state and clients with new object"""
 
         id = self.get_id(type)
         try:
-            new_component = type(id, *args, **kwargs)
+            new_component = type(id=id, **kwargs)
         except:
-            raise Exception(f"Args, invalid for initializing a {type}")
+            raise Exception(f"Args: {kwargs}, invalid for initializing a {type}")
 
         # Overhaul to create object in it as well
         self.objects[type][new_component.id] = new_component
@@ -230,12 +234,10 @@ class Server(object):
         # Update state
         state_obj = self.objects[type(obj)][obj.id]
         delta = []
-        for field in fields(obj):
-            key = field.name
-            val = getattr(obj, key)
-            if val != getattr(state_obj, key):
-                setattr(state_obj, key, val)
-                delta.append(key)
+        for field, val in obj.__fields__.items():
+            if val != getattr(state_obj, field):
+                setattr(state_obj, field, val)
+                delta.append(field)
 
         # Broadcast update with only changed values
         message = self.prepare_message("update", obj, delta)
@@ -255,7 +257,7 @@ class Server(object):
             context = nooobs.InvokeIDType(plot=on_component.id)
 
         # Create invoke object and broadcast message
-        invoke = nooobs.Invoke(signal.id, signal_data, context)
+        invoke = nooobs.Invoke(id=signal.id, context=context, signal_data=signal_data)
         message = self.prepare_message("invoke", invoke)
         self.broadcast(message)
         
@@ -273,27 +275,3 @@ class Server(object):
             return id
         else:
             return slot_info.on_deck.get()             
-        
-
-
-def msg_from_obj(obj, delta: list[str]=None):
-    """Return dict of all objects attributes that are not None"""
-
-    # If no delta, include everything, else always include ID at least
-    if delta == None: 
-        delta = [f.name for f in fields(obj)]
-    else:
-        delta.append("id")
-
-    # Add all fields that are not none with respect to delta
-    contents = {}
-    for field in fields(obj):
-        val = getattr(obj, field.name)
-        
-        if val != None and field.name in delta:
-            if is_dataclass(val):
-                val = msg_from_obj(val)
-            elif isinstance(val, list) and len(val) > 0 and is_dataclass(val[0]):
-                val = list(map(msg_from_obj, val))
-            contents[field.name] = val
-    return contents

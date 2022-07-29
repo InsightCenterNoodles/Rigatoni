@@ -17,15 +17,15 @@ def new_point_plot(server: Server, context: dict, xs, ys, zs, colors=None, sizes
     # Create component and state and get delegate reference
     tbl_delegate: CustomTableDelegate = server.create_component(
         nooobs.Table, 
-        "Custom Table", 
-        "Table for testing", 
-        [subscribe, insert], 
-        []
+        name="Custom Table", 
+        meta="Table for testing", 
+        methods_list=[subscribe, insert], 
+        signals_list=[nooobs.IDGroup(0, 0), nooobs.IDGroup(1, 0), nooobs.IDGroup(2, 0), nooobs.IDGroup(3, 0)]
     )
 
     # Set default colors and sizes 
     if not colors:
-        colors = [0, 0, 0] * len(xs)
+        colors = [0.0, 0.0, 0.0] * len(xs)
     if not sizes:
         sizes = [[.02, .02, .02] for i in xs]
     # Get values for dataframe
@@ -61,15 +61,15 @@ def subscribe(server: Server, context: dict):
     delegate: CustomTableDelegate = server.delegates[nooobs.Table][tbl_id]
     
     tbl: pd.DataFrame = delegate.dataframe
+    types = ["REAL", "REAL", "REAL", "REAL", "REAL", "REAL", "REAL", "REAL", "REAL", "TEXT"]
 
     # Arrange col info
-    cols = []
-    for col, type in zip(tbl.columns, tbl.dtypes):
-        col_info = nooobs.TableColumnInfo(col, str(type))
-        cols.append(col_info)
+    col_info = [nooobs.TableColumnInfo(name=col, type=type) for col, type in zip(tbl.columns, types)]
     
     # Formulate response info for subscription
-    init_info = nooobs.TableInitData(cols, tbl.index.values.tolist(), tbl.values.tolist())
+    #data = list(map(list, df.itertuples(index=False)))
+    #print(f"data: {data}")
+    init_info = nooobs.TableInitData(columns=col_info, keys=tbl.index.values.tolist(), data=tbl.values.tolist())
 
     print(f"Init Info: {init_info}")
     return init_info
@@ -105,16 +105,16 @@ methods = {
 
 starting_state = {
     nooobs.Method: {
-        nooobs.IDGroup(0, 0): Method((0,0), "new_point_plot"),
-        nooobs.IDGroup(1, 0): Method((1,0), "noo::tbl_subscribe"),
-        nooobs.IDGroup(2, 0): Method((2,0), "noo::tbl_insert"),
-        nooobs.IDGroup(3, 0): Method((3,0), "Test Method 4")
+        nooobs.IDGroup(0, 0): Method(id=(0,0), name="new_point_plot"),
+        nooobs.IDGroup(1, 0): Method(id=(1,0), name="noo::tbl_subscribe"), # Resume here... need keyword args
+        nooobs.IDGroup(2, 0): Method(id=(2,0), name="noo::tbl_insert"),
+        nooobs.IDGroup(3, 0): Method(id=(3,0), name="Test Method 4")
     },
     nooobs.Signal: {
-        nooobs.IDGroup(0, 0): nooobs.Signal((0,0), "noo::tbl_reset"),
-        nooobs.IDGroup(1, 0): nooobs.Signal((1,0), "noo::tbl_updated"),
-        nooobs.IDGroup(2, 0): nooobs.Signal((2,0), "noo::tbl_rows_removed"),
-        nooobs.IDGroup(3, 0): nooobs.Signal((3,0), "noo::tbl_selection_updated")
+        nooobs.IDGroup(0, 0): nooobs.Signal(id=(0,0), name="noo::tbl_reset"),
+        nooobs.IDGroup(1, 0): nooobs.Signal(id=(1,0), name="noo::tbl_updated"),
+        nooobs.IDGroup(2, 0): nooobs.Signal(id=(2,0), name="noo::tbl_rows_removed"),
+        nooobs.IDGroup(3, 0): nooobs.Signal(id=(3,0), name="noo::tbl_selection_updated")
     }
 }
 
