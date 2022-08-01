@@ -180,7 +180,7 @@ class CustomTableDelegate(interface.ServerTableDelegate):
         data = [keys, rows]
 
         signal = self.server.objects[nooobs.Signal][nooobs.IDGroup(1, 0)]
-        self.server.invoke_signal(signal, self.component(), data)
+        self.server.invoke_signal(signal, self.component, data)
 
 
     def table_rows_removed(self, keys: list[int]):

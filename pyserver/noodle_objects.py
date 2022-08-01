@@ -433,13 +433,13 @@ class Invoke(Model):
     context: Optional[InvokeIDType] = None # if empty - document
     signal_data: list[Any]
 
+
 # Note: this isn't technically an exception
 # for now this uses a model so that it can be validated / sent as message easier
 class MethodException(Model):
     code: int
     message: Optional[str] = None
     data: Optional[Any] = None
-
 
 class Reply(Model):
     invoke_id: str

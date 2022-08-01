@@ -21,14 +21,14 @@ from . import noodle_objects as nooobs
 
 class Delegate(object):
 
-    def __init__(self, server: Server, component: weakref.ReferenceType):
+    def __init__(self, server: Server, component: nooobs.Component):
         self.server = server
         self.component = component
 
 
 class ServerTableDelegate(Delegate):
 
-    def __init__(self, server: Server, component: weakref.ReferenceType):
+    def __init__(self, server: Server, component: nooobs.Component):
         super().__init__(server, component)
         self.server = server
         self.component = component

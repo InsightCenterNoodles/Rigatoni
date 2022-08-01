@@ -221,9 +221,7 @@ class Server(object):
 
         # Return delegate instance if applicable
         if type in self.custom_delegates:
-            weak_component = weakref.ref(new_component)
-            print(f"WEAK REF IN CREATE: {weakref.getweakrefcount(new_component)}")
-            delegate = self.custom_delegates[type](self, weak_component)
+            delegate = self.custom_delegates[type](self, new_component)
             self.delegates[type][id] = delegate 
             return delegate
         else:
@@ -240,7 +238,7 @@ class Server(object):
 
         # Need to handle delegates as well = not deleted yet
         if type(obj) in self.custom_delegates.values():
-            comp = obj.component()
+            comp = obj.component
             del self.delegates[type(comp)][comp.id]
             del self.objects[type(comp)][comp.id]
         elif type(obj) in self.components:
