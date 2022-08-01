@@ -3,16 +3,20 @@ from enum import Enum
 from math import pi
 from queue import Queue
 from typing import ClassVar, Literal, Optional, Any, Union
+import weakref
 
 import cbor2
 import websockets
 from pydantic import BaseModel, root_validator
 
 """ ====================== Generic Parent Class ====================== """
+IDGroup = namedtuple("IDGroup", ["slot", "gen"])
 
 class Component(BaseModel):
 
     host_server: ClassVar = None
+    __slots__ = ['__weakref__']
+    id: IDGroup = None
 
     class Config:
         """Validation Configuration"""
@@ -29,8 +33,16 @@ class Component(BaseModel):
 
 
     def __del__(self):
+
+        # Update ID's available
+        available_id = IDGroup(self.id.slot, self.id.gen + 1)
+        self.host_server.ids[type(self)].on_deck.put(available_id)
+
+        # Broadcast
         message = Component.host_server.prepare_message("delete", self)
         self.broadcast(message)
+
+        print(f"OFFICIALLY DELETED COMPONENT '{self}'")
 
 
 class Model(BaseModel):
@@ -55,8 +67,6 @@ Mat4 = tuple[float, float, float, float,
 
 RGB = Vec3
 RGBA = Vec4
-
-IDGroup = namedtuple("IDGroup", ["slot", "gen"])
 
 class AttributeSemantic(Enum):
     position = "POSITION"
@@ -94,23 +104,19 @@ class SelectionRange(BaseModel):
     key_from_inclusive: int
     key_to_exclusive: int
 
-
 class Selection(Model):
     name: str
     rows: Optional[list[int]] = None
     row_ranges: Optional[list[SelectionRange]] = None
-
 
 class MethodArg(Model): 
     name: str
     doc: Optional[str] = None 
     editor_hint: Optional[str] = None
 
-
 class BoundingBox(Model):
     min: Vec3
     max: Vec3
-
 
 class TextRepresentation(Model):
     txt: str
@@ -118,23 +124,19 @@ class TextRepresentation(Model):
     height: Optional[float] = .25
     width: Optional[float] = -1
 
-
 class WebRepresentation(Model):
     source: str
     height: Optional[float] = .5
     width: Optional[float] = .5
-
 
 class InstanceSource(Model):
     view: IDGroup # Buffer View ID, view of mat4
     stride: int 
     bb: Optional[BoundingBox] = None
 
-
 class RenderRepresentation(Model):
     mesh: IDGroup # Entity ID
     instances: Optional[InstanceSource] = None
-
 
 class TextureRef(Model):
     texture: IDGroup
@@ -142,7 +144,6 @@ class TextureRef(Model):
                        0, 1, 0,
                        0, 0, 1,]
     texture_coord_slot: Optional[int] = 0
-
 
 class PBRInfo(Model):
     base_color: RGBA = [255, 255, 255, 1]
@@ -152,23 +153,20 @@ class PBRInfo(Model):
     roughness: Optional[float] = 1
     metal_rough_texture: Optional[TextureRef] = None # assume linear, ONLY RG used
 
-
 class PointLight(Model):
     range: float = -1
-
 
 class SpotLight(Model):
     range: float = -1
     inner_cone_angle_rad: float = 0
     outer_cone_angle_rad: float = pi/4
 
-
 class DirectionalLight(Model):
     range: float = -1
 
 class Attribute(Model):
     view: IDGroup
-    semantic: AttributeSemantic #string or vec - refer to cddl?
+    semantic: AttributeSemantic
     channel: Optional[int] = None
     offset: Optional[int] = 0
     stride: Optional[int] = 0
@@ -176,7 +174,6 @@ class Attribute(Model):
     minimum_value: Optional[list[float]] = None
     maximum_value: Optional[list[float]] = None
     normalized: Optional[bool] = False
-
 
 class Index(Model):
     view: IDGroup # Buffer View ID
@@ -191,7 +188,6 @@ class GeometryPatch(Model):
     indices: Optional[Index] = None
     type: PrimitiveType
     material: IDGroup # Material ID
-
 
 class InvokeIDType(Model):
     entity: Optional[IDGroup] = None
@@ -212,20 +208,17 @@ class InvokeIDType(Model):
         else:
             return values
 
-
 class TableColumnInfo(Model):
     name: str
     type: Literal["TEXT", "REAL", "INTEGER"]
 
-
 class TableInitData(Model):
-    columns: list[TableColumnInfo] # columns or rows?
+    columns: list[TableColumnInfo]
     keys: list[int]
     data: list[list[Union[float, int, str]]]
     selections: Optional[list[Selection]] = None
 
-    # add validator here to make sure type in col_info matches data?
-        # Could be a lot of overhead to check every single value in the table 
+    # too much overhead? - strict mode
     @root_validator
     def types_match(cls, values):
         for row in values['data']:
@@ -237,7 +230,6 @@ class TableInitData(Model):
                     raise ValueError(f"Column Info doesn't match type in data: {col, row[i]}")
         return values
         
-    
 
 
 """ ====================== NOOODLE COMPONENTS ====================== """
@@ -441,8 +433,9 @@ class Invoke(Model):
     context: Optional[InvokeIDType] = None # if empty - document
     signal_data: list[Any]
 
-
-class MethodException(Exception):
+# Note: this isn't technically an exception
+# for now this uses a model so that it can be validated / sent as message easier
+class MethodException(Model):
     code: int
     message: Optional[str] = None
     data: Optional[Any] = None

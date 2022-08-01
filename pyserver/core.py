@@ -1,13 +1,22 @@
+from __future__ import annotations
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from . import interface
+    
+
 from queue import Queue
 from types import NoneType
 from typing import Type, Union
+from matplotlib.style import available
 from numpy import sign
 from pydantic import BaseModel
 
+import weakref
+
 import websockets
+from cbor2 import dumps
 
 from . import noodle_objects as nooobs
-from cbor2 import dumps
 
 
 class Server(object):
@@ -20,7 +29,7 @@ class Server(object):
             map object type to slot tracking info (next_slot, on_deck)
     """
 
-    def __init__(self, methods, hardcoded_state, delegates):
+    def __init__(self, methods: dict, hardcoded_state: dict, delegates: dict):
         self.clients = set()
         self.custom_delegates = delegates
         self.delegates = {}
@@ -161,11 +170,12 @@ class Server(object):
         reply_obj = nooobs.Reply(invoke_id="-1")
         try:
             self.invoke_method(message, reply_obj)
-        except nooobs.MethodException as e:
-            reply_obj.method_exception = e       
         except Exception as e:
-            print(f"\033[91mServerside Error: {e}\033[0m")
-            reply_obj.method_exception = nooobs.MethodException(-32603, "Internal Error")
+            if type(e) is nooobs.MethodException:
+                reply_obj.method_exception = e
+            else:
+                print(f"\033[91mServerside Error: {e}\033[0m")
+                reply_obj.method_exception = nooobs.MethodException(code=-32603, message="Internal Error")
             
         return self.prepare_message("reply", reply_obj)
 
@@ -180,14 +190,14 @@ class Server(object):
             args: list = message["args"]
             reply.invoke_id = invoke_id
         except:
-            raise nooobs.MethodException(-32700, "Parse Error")
+            raise Exception(nooobs.MethodException(code=-32700, message="Parse Error"))
 
         # Locate method
         try:
             method_name = self.objects[nooobs.Method][method_id].name                
             method = getattr(self, method_name)
         except:
-            raise nooobs.MethodException(-32601, "Method Not Found")
+            raise Exception(nooobs.MethodException(code=-32601, message="Method Not Found"))
         
         # Invoke
         reply.result = method(context, *args)
@@ -211,21 +221,30 @@ class Server(object):
 
         # Return delegate instance if applicable
         if type in self.custom_delegates:
-            delegate = self.custom_delegates[type](self, new_component)
+            weak_component = weakref.ref(new_component)
+            print(f"WEAK REF IN CREATE: {weakref.getweakrefcount(new_component)}")
+            delegate = self.custom_delegates[type](self, weak_component)
             self.delegates[type][id] = delegate 
             return delegate
         else:
             return new_component
 
 
-    def delete_component(self, obj: nooobs.Component):
-        """Delete object in state and update clients"""
+    def delete_component(self, obj: Union[nooobs.Component, interface.Delegate]):
+        """Delete object in state and update clients
         
-        # Update ID's available
-        self.ids[type(obj)].on_deck.put(obj.id)
-        
-        # Update State - Component class takes care of broadcast
-        del self.objects[type(obj)][obj.id]
+        Update State - Component class takes care of ID's / broadcast
+
+        obj should be a noodles component or delegate containing one
+        """
+
+        # Need to handle delegates as well = not deleted yet
+        if type(obj) in self.custom_delegates.values():
+            comp = obj.component()
+            del self.delegates[type(comp)][comp.id]
+            del self.objects[type(comp)][comp.id]
+        elif type(obj) in self.components:
+            del self.objects[type(obj)][obj.id]
 
     
     def update_component(self, obj: nooobs.Component):

@@ -1,4 +1,7 @@
 import asyncio
+import sys
+import gc
+import weakref
 
 import pandas as pd
 
@@ -47,7 +50,7 @@ def new_point_plot(server: Server, context: dict, xs, ys, zs, colors=None, sizes
 
     tbl_delegate.dataframe = pd.DataFrame(data)
     print(tbl_delegate.dataframe)
-
+ 
     return 1
 
 
@@ -56,9 +59,9 @@ def subscribe(server: Server, context: dict):
     # Try to get delegate from context
     try:
         tbl_id = nooobs.IDGroup(*context["table"])
+        delegate: CustomTableDelegate = server.delegates[nooobs.Table][tbl_id]
     except:
-        raise nooobs.MethodException(-32600, "Invalid Request - Invalid Context for Subscribe")
-    delegate: CustomTableDelegate = server.delegates[nooobs.Table][tbl_id]
+        raise Exception(nooobs.MethodException(code=-32600, message="Invalid Request - Invalid Context for Subscribe"))
     
     tbl: pd.DataFrame = delegate.dataframe
     types = ["REAL", "REAL", "REAL", "REAL", "REAL", "REAL", "REAL", "REAL", "REAL", "TEXT"]
@@ -78,9 +81,9 @@ def insert(server: Server, context: dict, rows: list[list]):
     
     try:
         tbl_id = nooobs.IDGroup(*context["table"])
+        delegate: CustomTableDelegate = server.delegates[nooobs.Table][tbl_id]
     except:
-        raise nooobs.MethodException(-32600, "Invalid Request - Invalid Context for Subscribe")
-    delegate: CustomTableDelegate = server.delegates[nooobs.Table][tbl_id]
+        raise nooobs.MethodException(-32600, "Invalid Request - Invalid Context for insert")
 
     # Allow for rows without annotations
     for row in rows:
@@ -96,7 +99,7 @@ def insert(server: Server, context: dict, rows: list[list]):
 
     return keys
 
-# Client gets stuck cause there are now delete / update methods
+# Client gets stuck cause there are no delete / update methods
 methods = {
     "new_point_plot": new_point_plot,
     "noo::tbl_subscribe": subscribe,
@@ -121,7 +124,7 @@ starting_state = {
 
 class CustomTableDelegate(interface.ServerTableDelegate):
 
-    def __init__(self, server: Server, component: nooobs.Component):
+    def __init__(self, server: Server, component: weakref.ReferenceType):
         super().__init__(server, component)
         self.dataframe = pd.DataFrame()
 
@@ -177,7 +180,7 @@ class CustomTableDelegate(interface.ServerTableDelegate):
         data = [keys, rows]
 
         signal = self.server.objects[nooobs.Signal][nooobs.IDGroup(1, 0)]
-        self.server.invoke_signal(signal, self.component, data)
+        self.server.invoke_signal(signal, self.component(), data)
 
 
     def table_rows_removed(self, keys: list[int]):

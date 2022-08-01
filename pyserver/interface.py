@@ -1,9 +1,12 @@
 """Interface Methods for Specific Components"""
 from typing import Optional
+import weakref
+
 from .core import Server
 from . import noodle_objects as nooobs
 
 
+# Outline for component specific method
 # def create_method(server: Server, name: str, 
 #                   doc: Optional[str]=None, return_doc: Optional[str]=None, 
 #                   arg_doc: Optional[list[nooobs.MethodArg]]= None):
@@ -16,10 +19,17 @@ from . import noodle_objects as nooobs
 
 #     return component
 
+class Delegate(object):
 
-class ServerTableDelegate(object):
+    def __init__(self, server: Server, component: weakref.ReferenceType):
+        self.server = server
+        self.component = component
 
-    def __init__(self, server: Server, component: nooobs.Component):
+
+class ServerTableDelegate(Delegate):
+
+    def __init__(self, server: Server, component: weakref.ReferenceType):
+        super().__init__(server, component)
         self.server = server
         self.component = component
         self.selection = {}

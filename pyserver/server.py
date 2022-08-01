@@ -1,5 +1,6 @@
 import asyncio
 import functools
+import weakref
 
 import websockets
 from cbor2 import loads, dumps
