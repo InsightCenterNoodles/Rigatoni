@@ -1,10 +1,8 @@
-from ast import For
 from collections import namedtuple
 from enum import Enum
 from math import pi
 from queue import Queue
 from typing import ClassVar, Literal, Optional, Any, Union
-import weakref
 
 import cbor2
 import websockets

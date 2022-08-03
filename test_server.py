@@ -12,18 +12,22 @@ import pyserver.noodle_objects as nooobs
 import pyserver.interface as interface
 
 def new_point_plot(server: Server, context: dict, xs, ys, zs, colors=None, sizes=None):
-    
-    # Circle back to make better user method for getting method id from name
-    subscribe = nooobs.IDGroup(1, 0)
-    insert = nooobs.IDGroup(2, 0)
 
     # Create component and state and get delegate reference
     tbl_delegate: CustomTableDelegate = server.create_component(
         nooobs.Table, 
         name="Custom Table", 
         meta="Table for testing", 
-        methods_list=[subscribe, insert], 
-        signals_list=[nooobs.IDGroup(0, 0), nooobs.IDGroup(1, 0), nooobs.IDGroup(2, 0), nooobs.IDGroup(3, 0)]
+        methods_list=[
+            server.get_method("noo::tbl_subscribe"),
+            server.get_method("noo::tbl_insert")
+        ], 
+        signals_list=[
+            server.get_signal("noo::tbl_reset"),
+            server.get_signal("noo::tbl_updated"),
+            server.get_signal("noo::tbl_rows_removed"),
+            server.get_signal("noo::tbl_selection_updated")
+        ]
     )
 
     # Set default colors and sizes 
@@ -70,8 +74,6 @@ def subscribe(server: Server, context: dict):
     col_info = [nooobs.TableColumnInfo(name=col, type=type) for col, type in zip(tbl.columns, types)]
     
     # Formulate response info for subscription
-    #data = list(map(list, df.itertuples(index=False)))
-    #print(f"data: {data}")
     init_info = nooobs.TableInitData(columns=col_info, keys=tbl.index.values.tolist(), data=tbl.values.tolist())
 
     print(f"Init Info: {init_info}")

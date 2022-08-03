@@ -19,7 +19,7 @@ class Server(object):
         clients (set): clients connections
         reference_graph (dict)
         ids (dict): 
-            map object comp_type to slot tracking info (next_slot, on_deck)
+            map object type to slot tracking info (next_slot, on_deck)
     """
 
     def __init__(self, methods: dict, hardcoded_state: dict, delegates: dict):
@@ -87,7 +87,7 @@ class Server(object):
             injected = nooobs.InjectedMethod(self, method)
             setattr(self, name, injected)
 
-        # Initialize objects / Id's to use component comp_type as key
+        # Initialize objects / Id's to use component type as key
         for component in self.components:
             self.objects[component] = {}
             self.delegates[component] = {}
@@ -261,11 +261,11 @@ class Server(object):
         # Get context from on_component
         context = None
         if isinstance(on_component, nooobs.Entity):
-            context = nooobs.InvokeIDcomp_Type(entity=on_component.id)
+            context = nooobs.InvokeIDType(entity=on_component.id)
         elif isinstance(on_component, nooobs.Table):
-            context = nooobs.InvokeIDcomp_Type(table=on_component.id)
+            context = nooobs.InvokeIDType(table=on_component.id)
         elif isinstance(on_component, nooobs.Plot):
-            context = nooobs.InvokeIDcomp_Type(plot=on_component.id)
+            context = nooobs.InvokeIDType(plot=on_component.id)
 
         # Create invoke object and broadcast message
         invoke = nooobs.Invoke(id=signal.id, context=context, signal_data=signal_data)
@@ -285,4 +285,18 @@ class Server(object):
             slot_info.next_slot += 1
             return id
         else:
-            return slot_info.on_deck.get()             
+            return slot_info.on_deck.get() 
+
+
+    def get_method(self, name: str):
+        methods = self.objects[nooobs.Method]
+        for id, method in methods.items():
+            if method.name == name:
+                return id
+
+    
+    def get_signal(self, name: str):
+        signals = self.objects[nooobs.Signal]
+        for id, signal in signals.items():
+            if signal.name == name:
+                return id
