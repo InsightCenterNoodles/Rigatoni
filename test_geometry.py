@@ -70,6 +70,7 @@ def create_sphere(server: Server, *args):
     material = server.create_component(nooobs.Material, name="Test Material")
 
     patches = []
+    # change arguments to dataclass
     patch = maker.create_geometry_patch(
         vertices = vertices, 
         indices = indices, 
@@ -91,7 +92,7 @@ methods = {
 
 starting_state = {
     nooobs.Method: {
-        nooobs.IDGroup(0, 0): nooobs.Method(id=(0,0), name="new_point_plot")
+        nooobs.IDGroup(0, 0): nooobs.Method(id=(0,0), name="new_point_plot", arg_doc=[])
     }
 }
 
