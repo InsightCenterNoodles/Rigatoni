@@ -30,8 +30,6 @@ class ServerTableDelegate(Delegate):
 
     def __init__(self, server: Server, component: nooobs.Component):
         super().__init__(server, component)
-        self.server = server
-        self.component = component
         self.selection = {}
 
     def handle_insert(self, new_rows: list[list[int]]):
@@ -66,3 +64,12 @@ class ServerTableDelegate(Delegate):
 
     def table_selection_updated(self, selection: nooobs.Selection):
         pass
+
+
+# Idea: create geometry delegate to have object oriented methods
+# class ServerGeometryDelegate(Delegate):
+
+#     def __init__(self, server: Server, component: nooobs.Component):
+#         super().__init__(server, component)
+
+#     def create_geometry()

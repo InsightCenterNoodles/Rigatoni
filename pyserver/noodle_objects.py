@@ -1,3 +1,4 @@
+from ast import For
 from collections import namedtuple
 from enum import Enum
 from math import pi
@@ -22,6 +23,7 @@ class Component(BaseModel):
         """Validation Configuration"""
         
         arbitrary_types_allowed = True
+        use_enum_values = True
         #smart_union = True - used to avoid coercion of unions
 
     def broadcast(self, message: list):
@@ -50,7 +52,7 @@ class Model(BaseModel):
 
     class Config:
         arbitrary_types_allowed = True
-
+        use_enum_values = True
 
 
 """ ====================== Common Definitions ====================== """
@@ -464,3 +466,11 @@ class SlotTracker(object):
     def __init__(self):
         self.next_slot = 0
         self.on_deck = Queue()
+
+
+class AttributeInput(Model):
+    semantic: AttributeSemantic
+    format: Format
+    normalized: bool
+    offset: Optional[int]
+    stride: Optional[int]

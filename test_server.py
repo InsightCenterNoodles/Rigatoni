@@ -201,7 +201,7 @@ class CustomTableDelegate(interface.ServerTableDelegate):
 
 
 delegates = {
-    nooobs.Table: CustomTableDelegate
+    nooobs.Table: CustomTableDelegate,
 }
 
 

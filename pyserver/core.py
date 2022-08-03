@@ -1,18 +1,11 @@
 from __future__ import annotations
-from typing import TYPE_CHECKING
+from types import NoneType
+from typing import TYPE_CHECKING, Union
 if TYPE_CHECKING:
     from . import interface
-    
 
-from queue import Queue
-from types import NoneType
-from typing import Type, Union
 from matplotlib.style import available
 from numpy import sign
-from pydantic import BaseModel
-
-import weakref
-
 import websockets
 from cbor2 import dumps
 
@@ -26,7 +19,7 @@ class Server(object):
         clients (set): clients connections
         reference_graph (dict)
         ids (dict): 
-            map object type to slot tracking info (next_slot, on_deck)
+            map object comp_type to slot tracking info (next_slot, on_deck)
     """
 
     def __init__(self, methods: dict, hardcoded_state: dict, delegates: dict):
@@ -94,7 +87,7 @@ class Server(object):
             injected = nooobs.InjectedMethod(self, method)
             setattr(self, name, injected)
 
-        # Initialize objects / Id's to use component type as key
+        # Initialize objects / Id's to use component comp_type as key
         for component in self.components:
             self.objects[component] = {}
             self.delegates[component] = {}
@@ -204,25 +197,25 @@ class Server(object):
 
 
     # Interface methods to build server methods ================================
-    def create_component(self, type: Type, **kwargs) -> nooobs.Component:
+    def create_component(self, comp_type: type, **kwargs) -> nooobs.Component:
         """update state and clients with new object"""
 
-        id = self.get_id(type)
+        id = self.get_id(comp_type)
         try:
-            new_component = type(id=id, **kwargs)
+            new_component = comp_type(id=id, **kwargs)
         except:
-            raise Exception(f"Args: {kwargs}, invalid for initializing a {type}")
+            raise Exception(f"Args: {kwargs}, invalid for initializing a {comp_type}")
 
         # Overhaul to create object in it as well
-        self.objects[type][new_component.id] = new_component
+        self.objects[comp_type][new_component.id] = new_component
 
         message = self.prepare_message("create", new_component)
         self.broadcast(message)
 
         # Return delegate instance if applicable
-        if type in self.custom_delegates:
-            delegate = self.custom_delegates[type](self, new_component)
-            self.delegates[type][id] = delegate 
+        if self.custom_delegates and comp_type in self.custom_delegates:
+            delegate = self.custom_delegates[comp_type](self, new_component)
+            self.delegates[comp_type][id] = delegate 
             return delegate
         else:
             return new_component
@@ -237,12 +230,13 @@ class Server(object):
         """
 
         # Need to handle delegates as well = not deleted yet
-        if type(obj) in self.custom_delegates.values():
+        obj_type = type(obj)
+        if obj_type in self.custom_delegates.values():
             comp = obj.component
-            del self.delegates[type(comp)][comp.id]
-            del self.objects[type(comp)][comp.id]
-        elif type(obj) in self.components:
-            del self.objects[type(obj)][obj.id]
+            del self.delegates[obj_type][comp.id]
+            del self.objects[obj_type][comp.id]
+        elif obj_type in self.components:
+            del self.objects[obj_type][obj.id]
 
     
     def update_component(self, obj: nooobs.Component):
@@ -267,11 +261,11 @@ class Server(object):
         # Get context from on_component
         context = None
         if isinstance(on_component, nooobs.Entity):
-            context = nooobs.InvokeIDType(entity=on_component.id)
+            context = nooobs.InvokeIDcomp_Type(entity=on_component.id)
         elif isinstance(on_component, nooobs.Table):
-            context = nooobs.InvokeIDType(table=on_component.id)
+            context = nooobs.InvokeIDcomp_Type(table=on_component.id)
         elif isinstance(on_component, nooobs.Plot):
-            context = nooobs.InvokeIDType(plot=on_component.id)
+            context = nooobs.InvokeIDcomp_Type(plot=on_component.id)
 
         # Create invoke object and broadcast message
         invoke = nooobs.Invoke(id=signal.id, context=context, signal_data=signal_data)
@@ -279,13 +273,13 @@ class Server(object):
         self.broadcast(message)
         
 
-    def get_id(self, type) -> nooobs.IDGroup:
+    def get_id(self, comp_type) -> nooobs.IDGroup:
         """Get ID with next open slot
         
         Check for open slots then take closest available slot
         """
 
-        slot_info = self.ids[type]
+        slot_info = self.ids[comp_type]
         if slot_info.on_deck.empty():
             id = nooobs.IDGroup(slot_info.next_slot, 0)
             slot_info.next_slot += 1
