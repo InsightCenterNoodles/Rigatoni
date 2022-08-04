@@ -1,6 +1,4 @@
 import asyncio
-import sys
-import gc
 import weakref
 
 import pandas as pd
@@ -110,16 +108,16 @@ methods = {
 
 starting_state = {
     nooobs.Method: {
-        nooobs.IDGroup(0, 0): Method(id=(0,0), name="new_point_plot"),
-        nooobs.IDGroup(1, 0): Method(id=(1,0), name="noo::tbl_subscribe"), # Resume here... need keyword args
-        nooobs.IDGroup(2, 0): Method(id=(2,0), name="noo::tbl_insert"),
-        nooobs.IDGroup(3, 0): Method(id=(3,0), name="Test Method 4")
+        nooobs.IDGroup(0, 0): Method(id=(0,0), name="new_point_plot", arg_doc=[]),
+        nooobs.IDGroup(1, 0): Method(id=(1,0), name="noo::tbl_subscribe", arg_doc=[]), # Resume here... need keyword args
+        nooobs.IDGroup(2, 0): Method(id=(2,0), name="noo::tbl_insert", arg_doc=[]),
+        nooobs.IDGroup(3, 0): Method(id=(3,0), name="Test Method 4", arg_doc=[])
     },
     nooobs.Signal: {
-        nooobs.IDGroup(0, 0): nooobs.Signal(id=(0,0), name="noo::tbl_reset"),
-        nooobs.IDGroup(1, 0): nooobs.Signal(id=(1,0), name="noo::tbl_updated"),
-        nooobs.IDGroup(2, 0): nooobs.Signal(id=(2,0), name="noo::tbl_rows_removed"),
-        nooobs.IDGroup(3, 0): nooobs.Signal(id=(3,0), name="noo::tbl_selection_updated")
+        nooobs.IDGroup(0, 0): nooobs.Signal(id=(0,0), name="noo::tbl_reset", arg_doc=[]),
+        nooobs.IDGroup(1, 0): nooobs.Signal(id=(1,0), name="noo::tbl_updated", arg_doc=[]),
+        nooobs.IDGroup(2, 0): nooobs.Signal(id=(2,0), name="noo::tbl_rows_removed", arg_doc=[]),
+        nooobs.IDGroup(3, 0): nooobs.Signal(id=(3,0), name="noo::tbl_selection_updated", arg_doc=[])
     }
 }
 

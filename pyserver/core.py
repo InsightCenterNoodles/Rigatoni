@@ -206,7 +206,6 @@ class Server(object):
         except:
             raise Exception(f"Args: {kwargs}, invalid for initializing a {comp_type}")
 
-        # Overhaul to create object in it as well
         self.objects[comp_type][new_component.id] = new_component
 
         message = self.prepare_message("create", new_component)

@@ -69,8 +69,10 @@ def create_sphere(server: Server, *args):
     )
     patches.append(geo_make.create_geometry_patch(server, "Sphere", patch_info))
 
+    sphere = server.create_component(nooobs.Geometry, name=name, patches=patches)
 
-    server.create_component(nooobs.Geometry, name=name, patches=patches)
+    # Test Delete
+    server.delete_component(sphere)
 
 
 # Using new_point_plot just so it gets called in test client
