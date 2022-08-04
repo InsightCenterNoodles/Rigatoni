@@ -56,33 +56,21 @@ def create_sphere(server: Server, *args):
     
     # Set up creater object
     name = "Test Sphere"
-    maker = geo_make.GeometryCreator(server, name)
-
-    # Define attributes
-    # Maybe can take out offset and stride
-    attributes  = [
-        nooobs.AttributeInput(semantic="POSITION", format="VEC3", normalized=False),
-        nooobs.AttributeInput(semantic="COLOR", format="U8VEC4", normalized=True)
-    ]
-
-    maker.set_up_attributes(attributes)
-
+ 
     material = server.create_component(nooobs.Material, name="Test Material")
 
     patches = []
-    # change arguments to dataclass
-    patch = maker.create_geometry_patch(
+    patch_info = nooobs.GeometryPatchInput(
         vertices = vertices, 
         indices = indices, 
         index_type = "TRIANGLES",
         material = material.id,
         colors = colors
     )
-    patches.append(patch)
+    patches.append(geo_make.create_geometry_patch(server, "Sphere", patch_info))
 
 
     server.create_component(nooobs.Geometry, name=name, patches=patches)
-
 
 
 # Using new_point_plot just so it gets called in test client

@@ -472,3 +472,14 @@ class AttributeInput(Model):
     normalized: bool
     offset: Optional[int]
     stride: Optional[int]
+
+
+class GeometryPatchInput(Model):
+    vertices: list
+    indices: list
+    index_type: str 
+    material: IDGroup
+    normals: Optional[list] 
+    tangents: Optional[list]
+    textures:Optional[list] 
+    colors: Optional[list]
