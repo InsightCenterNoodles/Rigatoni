@@ -1,4 +1,7 @@
 import asyncio
+import gc
+from sys import getrefcount
+
 
 from pyserver.geometry import geometry_creation as geo_make
 from pyserver.server import start_server
@@ -67,12 +70,15 @@ def create_sphere(server: Server, *args):
         material = material.id,
         colors = colors
     )
-    patches.append(geo_make.create_geometry_patch(server, "Sphere", patch_info))
+    patches.append(geo_make.create_geometry_patch(server, name, patch_info))
 
     sphere = server.create_component(nooobs.Geometry, name=name, patches=patches)
 
     # Test Delete
-    server.delete_component(sphere)
+    #assert(nooobs.BufferViewID(0, 0) != nooobs.GeometryID(0, 0))
+
+    server.delete_component(server.components[nooobs.BufferViewID(0, 0)])
+    server.delete_component(server.components[nooobs.GeometryID(0, 0)])
 
 
 # Using new_point_plot just so it gets called in test client
@@ -80,11 +86,10 @@ methods = {
     "new_point_plot": create_sphere
 }
 
-starting_state = {
-    nooobs.Method: {
-        nooobs.IDGroup(0, 0): nooobs.Method(id=(0,0), name="new_point_plot", arg_doc=[])
-    }
-}
+starting_state = [
+    nooobs.Method(id=nooobs.MethodID(0,0), name="new_point_plot", arg_doc=[])
+]
+
 
 def main():
     asyncio.run(start_server(50000, methods, starting_state))

@@ -113,15 +113,15 @@ def build_buffer_bytes(server: core.Server, name, input: nooobs.GeometryPatchInp
     for point in points:
         for info, attr in zip(point, attribute_info):
 
-            print(f"Point: {point}, P_Data: {info}")
+            # print(f"Point: {point}, P_Data: {info}")
             attr_size = format_map[attr.format]
             new_bytes = np.array(info, dtype=attr_size).tobytes(order='C')
             buffer_bytes.extend(new_bytes)
-            print(f"new bytes: {new_bytes}")
+            # print(f"new bytes: {new_bytes}")
 
     index_offset = len(buffer_bytes)
     index_bytes = np.array(input.indices, dtype=format_map[index_format]).tobytes(order='C')
-    print(f"Index Bytes: {index_bytes}")
+    #print(f"Index Bytes: {index_bytes}")
     buffer_bytes.extend(index_bytes)
 
     size = len(buffer_bytes)

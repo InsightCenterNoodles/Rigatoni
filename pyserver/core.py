@@ -1,4 +1,5 @@
 from __future__ import annotations
+from queue import Queue
 from types import NoneType
 from typing import TYPE_CHECKING, Union
 if TYPE_CHECKING:
@@ -28,6 +29,8 @@ class Server(object):
         self.delegates = {}
         self.ids = {}
         self.components = {}
+        self.references = {}
+        self.delete_queue = set()
         
         self.message_map = {
             ("create", nooobs.Method): 0,
@@ -93,7 +96,7 @@ class Server(object):
         raise Exception("No component found exception")
 
 
-    def prepare_message(self, action: str, object: Union[nooobs.Component, nooobs.Model]=None, delta: list[str] = None):
+    def prepare_message(self, action: str, object: Union[nooobs.Component, nooobs.NoodleObject]=None, delta: list[str] = None):
         """Given object and action, get id and message contents as dict
         
         Not sure how I feel about this rn, analogous to handle in client but kinda messy here
@@ -142,7 +145,7 @@ class Server(object):
 
         # Send create message for every object in state
         message = []
-        for comp_id, object, in self.components.items():
+        for object in self.components.values():
             msg_id, content = self.prepare_message("create", object)
             message.extend([msg_id, content])
         
@@ -188,19 +191,44 @@ class Server(object):
         
         # Invoke
         reply.result = method(context, *args)
+    
 
+    def update_references(self, comp: nooobs.Component, target: nooobs.NoodleObject):
+        """Update indegree for all objects referenced by this one"""
+
+        for key in target.__fields__.keys():
+            val = getattr(target, key)
+
+            # Found a reference
+            if key != "id" and isinstance(val, nooobs.ID):
+                self.references.setdefault(val, []).append(comp.id)
+
+            # Found another object to recurse on
+            elif isinstance(val, nooobs.NoodleObject):
+                self.update_references(comp, val)
+
+            # found list of objects to recurse on 
+            elif isinstance(val, list) and isinstance(val[0], nooobs.NoodleObject):
+                for obj in val:
+                    self.update_references(comp, obj)
+        
 
     # Interface methods to build server methods ================================
     def create_component(self, comp_type: type, **kwargs) -> nooobs.Component:
         """update state and clients with new object"""
 
+        # Get ID and try to create component from args
         id = self.get_id(comp_type)
         try:
             new_component = comp_type(id=id, **kwargs)
         except:
             raise Exception(f"Args: {kwargs}, invalid for initializing a {comp_type}")
 
+        # Update state
         self.components[id] = new_component
+
+        # Update references for each component referenced by this one
+        self.update_references(new_component, new_component)
 
         message = self.prepare_message("create", new_component)
         self.broadcast(message)
@@ -213,8 +241,16 @@ class Server(object):
         else:
             return new_component
 
+    
+    def delete_delegate(self, delegate):
+        """Delete a delegate and its contents"""
+        
+        comp_id = delegate.component.id
+        self.delete_component(comp_id)
+        del self.delegates[comp_id.id]
 
-    def delete_component(self, obj: Union[nooobs.Component, interface.Delegate]):
+
+    def delete_component(self, obj: Union[nooobs.Component, interface.Delegate, nooobs.ID]):
         """Delete object in state and update clients
         
         Update State - Component class takes care of ID's / broadcast
@@ -222,14 +258,32 @@ class Server(object):
         obj should be a noodles component or delegate containing one
         """
 
-        # Need to handle delegates as well = not deleted yet
-        obj_type = type(obj)
-        if obj_type in self.custom_delegates.values():
-            comp = obj.component
-            del self.delegates[comp.id]
-            del self.components[comp.id]
-        elif obj_type in self.components:
-            del self.components[obj.id]
+        # Handle cases so can except different input types
+        if type(obj) in self.custom_delegates.values():
+            self.delete_delegate(obj)
+        elif isinstance(obj, nooobs.Component):
+            id = obj.id
+        else:
+            id = obj
+            
+        # Delete if no references, or else queue it up for later
+        if not self.references.get(id):
+            self.broadcast(self.prepare_message("delete", self.components[id]))
+            del self.components[id]
+
+            # Clean out references from this object
+            for refs in self.references.values():
+                while id in refs: refs.remove(id)
+                    
+
+            # Check if anything in the queue is now clear to be deleted
+            for comp_id in self.delete_queue:
+                if not self.references.get(comp_id):
+                    self.delete_component(comp_id)
+
+        else:
+            print(f"Couldn't delete {obj}, referenced by {self.references[id]}, added to queue")
+            self.delete_queue.add(id)
 
     
     def update_component(self, obj: nooobs.Component):

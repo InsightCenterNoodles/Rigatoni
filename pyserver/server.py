@@ -1,12 +1,11 @@
 import asyncio
 import functools
-import weakref
 
 import websockets
 from cbor2 import loads, dumps
 
 from pyserver.core import Server
-from pyserver.noodle_objects import Component
+from pyserver.noodle_objects import Component, NoodleObject
 
 async def send(websocket, message: list):
     """Send CBOR message using websocket"""
@@ -39,7 +38,6 @@ async def handle_client(websocket, server: Server):
 
         # Handle the method invocation
         reply = server.handle_invoke(message[1])
-        print(f"Reply: {reply}")
 
         # Send method reply to client
         await send(websocket, reply)
@@ -49,13 +47,13 @@ async def handle_client(websocket, server: Server):
     server.clients.remove(websocket)
 
 
-async def start_server(port: int, methods: dict, starting_state: dict, delegates: dict[Component, object]=None):
+async def start_server(port: int, methods: dict, starting_state: dict, delegates: dict[Component, object]={}):
     """
     Main method for maintaining websocket connection
     """
 
     server = Server(methods, starting_state, delegates)
-    Component.host_server = server
+    NoodleObject.host_server = server
     print(f"Server initialized with objects: {server.components}")
 
     # Create partial to pass server to handler

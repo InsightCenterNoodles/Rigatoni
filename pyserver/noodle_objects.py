@@ -1,3 +1,9 @@
+"""Collection of Noodles Objects
+
+Follows the specification in the cddl document, and
+implements strict validation
+"""
+
 from collections import namedtuple
 from enum import Enum
 from math import pi
@@ -6,7 +12,7 @@ from typing import ClassVar, Literal, Optional, Any, Union
 
 import cbor2
 import websockets
-from pydantic import BaseModel, root_validator
+from pydantic import BaseModel, root_validator, Field
 
 
 """ =============================== ID's ============================= """
@@ -18,10 +24,19 @@ class ID(IDGroup):
 
     __slots__ = ()
     def __repr__(self):
-        return f"|{self.slot}/{self.gen}|"
+        return f"{self.__class__}|{self.slot}/{self.gen}|"
+
+    def __key(self):
+        return (type(self), self.slot, self.gen)
+
+    def __eq__(self, __o: object) -> bool:
+        if isinstance(__o, ID):
+            return self.__key() == __o.__key()
+        else:
+            return False
 
     def __hash__(self):
-        return hash((type(self), self.slot, self.gen))
+        return hash(self.__key())
 
 class MethodID(ID):
     pass
@@ -65,47 +80,26 @@ class TableID(ID):
 
 """ ====================== Generic Parent Class ====================== """
 
-class Component(BaseModel):
+class NoodleObject(BaseModel):
+    """Parent Class for all noodle objects"""
 
     host_server: ClassVar = None
-    __slots__ = ['__weakref__']
+
+    class Config:
+        arbitrary_types_allowed = True
+        use_enum_values = True
+
+    def __repr__(self) -> str:
+        return f"{type(self)}"
+
+class Component(NoodleObject):
+    """Parent class for all components"""
+
     id: ID = None
 
-    class Config:
-        """Validation Configuration"""
-        
-        arbitrary_types_allowed = True
-        use_enum_values = True
-        #smart_union = True - used to avoid coercion of unions
+    def __repr__(self):
+        return f"Component | {self.id}"
 
-    def broadcast(self, message: list):
-        """Broadcast message to all connected clients"""
-        
-        print(f"Broadcasting Message: {message}")
-        encoded = cbor2.dumps(message)
-        websockets.broadcast(Component.host_server.clients, encoded)
-
-
-    def __del__(self):
-
-        # Update ID's available
-        #available_id = IDGroup(self.id.slot, self.id.gen + 1)
-        available_id = type(self.id)(self.id.slot, self.id.gen + 1)
-        self.host_server.ids[type(self)].on_deck.put(available_id)
-
-        # Broadcast
-        message = Component.host_server.prepare_message("delete", self)
-        self.broadcast(message)
-
-        print(f"OFFICIALLY DELETED COMPONENT '{self}'")
-
-
-class Model(BaseModel):
-    """Parent Class for Non-Components"""
-
-    class Config:
-        arbitrary_types_allowed = True
-        use_enum_values = True
 
 
 """ ====================== Common Definitions ====================== """
@@ -159,48 +153,48 @@ class SelectionRange(BaseModel):
     key_from_inclusive: int
     key_to_exclusive: int
 
-class Selection(Model):
+class Selection(NoodleObject):
     name: str
     rows: Optional[list[int]] = None
     row_ranges: Optional[list[SelectionRange]] = None
 
-class MethodArg(Model): 
+class MethodArg(NoodleObject): 
     name: str
     doc: Optional[str] = None 
     editor_hint: Optional[str] = None
 
-class BoundingBox(Model):
+class BoundingBox(NoodleObject):
     min: Vec3
     max: Vec3
 
-class TextRepresentation(Model):
+class TextRepresentation(NoodleObject):
     txt: str
     font: Optional[str] = "Arial"
     height: Optional[float] = .25
     width: Optional[float] = -1
 
-class WebRepresentation(Model):
+class WebRepresentation(NoodleObject):
     source: str
     height: Optional[float] = .5
     width: Optional[float] = .5
 
-class InstanceSource(Model):
+class InstanceSource(NoodleObject):
     view: BufferViewID # view of mat4
     stride: int 
     bb: Optional[BoundingBox] = None
 
-class RenderRepresentation(Model):
+class RenderRepresentation(NoodleObject):
     mesh: EntityID # Entity ID
     instances: Optional[InstanceSource] = None
 
-class TextureRef(Model):
+class TextureRef(NoodleObject):
     texture: TextureID
     transform: Optional[Mat3] = [1, 0, 0,
                        0, 1, 0,
                        0, 0, 1,]
     texture_coord_slot: Optional[int] = 0
 
-class PBRInfo(Model):
+class PBRInfo(NoodleObject):
     base_color: RGBA = [255, 255, 255, 1]
     base_color_texture: Optional[TextureRef] = None # assume SRGB, no premult alpha
 
@@ -208,18 +202,18 @@ class PBRInfo(Model):
     roughness: Optional[float] = 1
     metal_rough_texture: Optional[TextureRef] = None # assume linear, ONLY RG used
 
-class PointLight(Model):
+class PointLight(NoodleObject):
     range: float = -1
 
-class SpotLight(Model):
+class SpotLight(NoodleObject):
     range: float = -1
     inner_cone_angle_rad: float = 0
     outer_cone_angle_rad: float = pi/4
 
-class DirectionalLight(Model):
+class DirectionalLight(NoodleObject):
     range: float = -1
 
-class Attribute(Model):
+class Attribute(NoodleObject):
     view: BufferViewID
     semantic: AttributeSemantic
     channel: Optional[int] = None
@@ -230,21 +224,21 @@ class Attribute(Model):
     maximum_value: Optional[list[float]] = None
     normalized: Optional[bool] = False
 
-class Index(Model):
+class Index(NoodleObject):
     view: IDGroup # Buffer View ID
     count: int
     offset: Optional[int] = 0
     stride: Optional[int] = 0
     format: Literal["U8", "U16", "U32"]
 
-class GeometryPatch(Model):
+class GeometryPatch(NoodleObject):
     attributes: list[Attribute]
     vertex_count: int
     indices: Optional[Index] = None
     type: PrimitiveType
     material: MaterialID # Material ID
 
-class InvokeIDType(Model):
+class InvokeIDType(NoodleObject):
     entity: Optional[EntityID] = None
     table: Optional[TableID] = None
     plot: Optional[PlotID] = None
@@ -263,11 +257,11 @@ class InvokeIDType(Model):
         else:
             return values
 
-class TableColumnInfo(Model):
+class TableColumnInfo(NoodleObject):
     name: str
     type: Literal["TEXT", "REAL", "INTEGER"]
 
-class TableInitData(Model):
+class TableInitData(NoodleObject):
     columns: list[TableColumnInfo]
     keys: list[int]
     data: list[list[Union[float, int, str]]]
@@ -483,7 +477,7 @@ class Table(Component):
 """ ====================== Communication Objects ====================== """
 
 
-class Invoke(Model):
+class Invoke(NoodleObject):
     id: SignalID
     context: Optional[InvokeIDType] = None # if empty - document
     signal_data: list[Any]
@@ -491,12 +485,12 @@ class Invoke(Model):
 
 # Note: this isn't technically an exception
 # for now this uses a model so that it can be validated / sent as message easier
-class MethodException(Model):
+class MethodException(NoodleObject):
     code: int
     message: Optional[str] = None
     data: Optional[Any] = None
 
-class Reply(Model):
+class Reply(NoodleObject):
     invoke_id: str
     result: Optional[Any] = None
     method_exception: Optional[MethodException] = None
@@ -537,7 +531,7 @@ class SlotTracker(object):
         self.on_deck = Queue()
 
 
-class AttributeInput(Model):
+class AttributeInput(NoodleObject):
     semantic: AttributeSemantic
     format: Format
     normalized: bool
@@ -545,7 +539,7 @@ class AttributeInput(Model):
     stride: Optional[int]
 
 
-class GeometryPatchInput(Model):
+class GeometryPatchInput(NoodleObject):
     vertices: list
     indices: list
     index_type: str 
