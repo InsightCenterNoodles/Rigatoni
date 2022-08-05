@@ -56,7 +56,7 @@ async def start_server(port: int, methods: dict, starting_state: dict, delegates
 
     server = Server(methods, starting_state, delegates)
     Component.host_server = server
-    print(f"Server initialized with objects: {server.objects}")
+    print(f"Server initialized with objects: {server.components}")
 
     # Create partial to pass server to handler
     handler = functools.partial(

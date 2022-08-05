@@ -27,22 +27,8 @@ class Server(object):
         self.custom_delegates = delegates
         self.delegates = {}
         self.ids = {}
-        self.objects = {}
-        self.components = [
-            nooobs.Method,
-            nooobs.Signal,
-            nooobs.Table,
-            nooobs.Plot,
-            nooobs.Entity,
-            nooobs.Material,
-            nooobs.Geometry,
-            nooobs.Geometry,
-            nooobs.Image,
-            nooobs.Texture,
-            nooobs.Sampler,
-            nooobs.Buffer,
-            nooobs.BufferView
-        ]
+        self.components = {}
+        
         self.message_map = {
             ("create", nooobs.Method): 0,
             ("delete", nooobs.Method): 1,
@@ -87,15 +73,24 @@ class Server(object):
             injected = nooobs.InjectedMethod(self, method)
             setattr(self, name, injected)
 
-        # Initialize objects / Id's to use component type as key
-        for component in self.components:
-            self.objects[component] = {}
-            self.delegates[component] = {}
-            self.ids[component] = nooobs.SlotTracker()
-
         # Set up hardcoded state for initial testing
-        for key, value in hardcoded_state.items():
-            self.objects[key] = value
+        for component in hardcoded_state:
+            self.components[component.id] = component
+
+    # Gettters
+    def get_ids_by_type(self, ctype) -> list:
+        """Helper to get all ids for certain component type"""
+
+        return [key for key, val in self.components.items() if isinstance(val, ctype)]
+
+
+    def get_component_id(self, type, name: str):
+        """Helper to get a component with a type and name"""
+
+        for id, comp in self.components.items():
+            if isinstance(comp, type) and hasattr(comp, "name") and comp.name == name:
+                return id
+        raise Exception("No component found exception")
 
 
     def prepare_message(self, action: str, object: Union[nooobs.Component, nooobs.Model]=None, delta: list[str] = None):
@@ -119,8 +114,8 @@ class Server(object):
 
             # Document case
             if object == None:
-                contents["methods_list"] = self.objects[nooobs.Method].keys()
-                contents["signals_list"] = self.objects[nooobs.Signal].keys()
+                contents["methods_list"] = self.get_ids_by_type(nooobs.Method)
+                contents["signals_list"] = self.get_ids_by_type(nooobs.Signal)
             # Normal update
             else:
                 contents = object.dict(include=delta)
@@ -147,10 +142,9 @@ class Server(object):
 
         # Send create message for every object in state
         message = []
-        for specifier, object_map, in self.objects.items():
-            for id, object in object_map.items():
-                id, content = self.prepare_message("create", object)
-                message.extend([id, content])
+        for comp_id, object, in self.components.items():
+            msg_id, content = self.prepare_message("create", object)
+            message.extend([msg_id, content])
         
         # Finish with initialization message
         message.extend(self.prepare_message("initialized"))    
@@ -177,7 +171,7 @@ class Server(object):
         
         # Parse message
         try:
-            method_id = nooobs.IDGroup(*message["method"])
+            method_id = nooobs.MethodID(*message["method"])
             context = message.get("context")
             invoke_id = message["invoke_id"]
             args: list = message["args"]
@@ -187,7 +181,7 @@ class Server(object):
 
         # Locate method
         try:
-            method_name = self.objects[nooobs.Method][method_id].name                
+            method_name = self.components[method_id].name                
             method = getattr(self, method_name)
         except:
             raise Exception(nooobs.MethodException(code=-32601, message="Method Not Found"))
@@ -206,7 +200,7 @@ class Server(object):
         except:
             raise Exception(f"Args: {kwargs}, invalid for initializing a {comp_type}")
 
-        self.objects[comp_type][new_component.id] = new_component
+        self.components[id] = new_component
 
         message = self.prepare_message("create", new_component)
         self.broadcast(message)
@@ -214,7 +208,7 @@ class Server(object):
         # Return delegate instance if applicable
         if self.custom_delegates and comp_type in self.custom_delegates:
             delegate = self.custom_delegates[comp_type](self, new_component)
-            self.delegates[comp_type][id] = delegate 
+            self.delegates[id] = delegate 
             return delegate
         else:
             return new_component
@@ -232,17 +226,17 @@ class Server(object):
         obj_type = type(obj)
         if obj_type in self.custom_delegates.values():
             comp = obj.component
-            del self.delegates[obj_type][comp.id]
-            del self.objects[obj_type][comp.id]
+            del self.delegates[comp.id]
+            del self.components[comp.id]
         elif obj_type in self.components:
-            del self.objects[obj_type][obj.id]
+            del self.components[obj.id]
 
     
     def update_component(self, obj: nooobs.Component):
         """Update object in stae and update clients"""
 
         # Update state
-        state_obj = self.objects[type(obj)][obj.id]
+        state_obj = self.components[obj.id]
         delta = []
         for field, val in obj.__fields__.items():
             if val != getattr(state_obj, field):
@@ -255,7 +249,10 @@ class Server(object):
 
 
     def invoke_signal(self, signal, on_component, signal_data):
-        """Send signal to target component"""
+        """Send signal to target component
+        
+        Takes Signal ID, on_component, and the data
+        """
 
         # Get context from on_component
         context = None
@@ -267,7 +264,7 @@ class Server(object):
             context = nooobs.InvokeIDType(plot=on_component.id)
 
         # Create invoke object and broadcast message
-        invoke = nooobs.Invoke(id=signal.id, context=context, signal_data=signal_data)
+        invoke = nooobs.Invoke(id=signal, context=context, signal_data=signal_data)
         message = self.prepare_message("invoke", invoke)
         self.broadcast(message)
         
@@ -278,24 +275,19 @@ class Server(object):
         Check for open slots then take closest available slot
         """
 
-        slot_info = self.ids[comp_type]
+        if comp_type in self.ids:
+            slot_info = self.ids[comp_type]
+        else:
+            slot_info = nooobs.SlotTracker()
+            self.ids[comp_type] = slot_info
+
         if slot_info.on_deck.empty():
-            id = nooobs.IDGroup(slot_info.next_slot, 0)
+            id_type = nooobs.id_map[comp_type]
+            id = id_type(slot_info.next_slot, 0)
             slot_info.next_slot += 1
             return id
         else:
             return slot_info.on_deck.get() 
 
 
-    def get_method(self, name: str):
-        methods = self.objects[nooobs.Method]
-        for id, method in methods.items():
-            if method.name == name:
-                return id
-
     
-    def get_signal(self, name: str):
-        signals = self.objects[nooobs.Signal]
-        for id, signal in signals.items():
-            if signal.name == name:
-                return id

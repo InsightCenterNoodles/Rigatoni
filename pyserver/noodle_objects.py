@@ -8,14 +8,68 @@ import cbor2
 import websockets
 from pydantic import BaseModel, root_validator
 
-""" ====================== Generic Parent Class ====================== """
+
+""" =============================== ID's ============================= """
+
 IDGroup = namedtuple("IDGroup", ["slot", "gen"])
+
+class ID(IDGroup):
+    """Extension of IDGroup to expand hashing capability"""
+
+    __slots__ = ()
+    def __repr__(self):
+        return f"|{self.slot}/{self.gen}|"
+
+    def __hash__(self):
+        return hash((type(self), self.slot, self.gen))
+
+class MethodID(ID):
+    pass
+
+class SignalID(ID):
+    pass
+
+class EntityID(ID):
+    pass
+
+class PlotID(ID):
+    pass
+
+class BufferID(ID):
+    pass
+
+class BufferViewID(ID):
+    pass
+
+class MaterialID(ID):
+    pass
+
+class ImageID(ID):
+    pass
+
+class TextureID(ID):
+    pass
+
+class SamplerID(ID):
+    pass
+
+class LightID(ID):
+    pass
+
+class GeometryID(ID):
+    pass
+
+class TableID(ID):
+    pass
+
+
+""" ====================== Generic Parent Class ====================== """
 
 class Component(BaseModel):
 
     host_server: ClassVar = None
     __slots__ = ['__weakref__']
-    id: IDGroup = None
+    id: ID = None
 
     class Config:
         """Validation Configuration"""
@@ -35,7 +89,8 @@ class Component(BaseModel):
     def __del__(self):
 
         # Update ID's available
-        available_id = IDGroup(self.id.slot, self.id.gen + 1)
+        #available_id = IDGroup(self.id.slot, self.id.gen + 1)
+        available_id = type(self.id)(self.id.slot, self.id.gen + 1)
         self.host_server.ids[type(self)].on_deck.put(available_id)
 
         # Broadcast
@@ -130,16 +185,16 @@ class WebRepresentation(Model):
     width: Optional[float] = .5
 
 class InstanceSource(Model):
-    view: IDGroup # Buffer View ID, view of mat4
+    view: BufferViewID # view of mat4
     stride: int 
     bb: Optional[BoundingBox] = None
 
 class RenderRepresentation(Model):
-    mesh: IDGroup # Entity ID
+    mesh: EntityID # Entity ID
     instances: Optional[InstanceSource] = None
 
 class TextureRef(Model):
-    texture: IDGroup
+    texture: TextureID
     transform: Optional[Mat3] = [1, 0, 0,
                        0, 1, 0,
                        0, 0, 1,]
@@ -165,7 +220,7 @@ class DirectionalLight(Model):
     range: float = -1
 
 class Attribute(Model):
-    view: IDGroup
+    view: BufferViewID
     semantic: AttributeSemantic
     channel: Optional[int] = None
     offset: Optional[int] = 0
@@ -187,12 +242,12 @@ class GeometryPatch(Model):
     vertex_count: int
     indices: Optional[Index] = None
     type: PrimitiveType
-    material: IDGroup # Material ID
+    material: MaterialID # Material ID
 
 class InvokeIDType(Model):
-    entity: Optional[IDGroup] = None
-    table: Optional[IDGroup] = None
-    plot: Optional[IDGroup] = None
+    entity: Optional[EntityID] = None
+    table: Optional[TableID] = None
+    plot: Optional[PlotID] = None
 
     @root_validator
     def one_of_three(cls, values):
@@ -236,7 +291,7 @@ class TableInitData(Model):
 
 
 class Method(Component):
-    id: IDGroup
+    id: MethodID
     name: str
     doc: Optional[str] = None
     return_doc: Optional[str] = None
@@ -244,17 +299,17 @@ class Method(Component):
 
 
 class Signal(Component):
-    id: IDGroup
+    id: SignalID
     name: str
     doc: Optional[str] = None
     arg_doc: list[MethodArg] = None
 
 
 class Entity(Component):
-    id: IDGroup
+    id: EntityID
     name: Optional[str] = None
 
-    parent: Optional[IDGroup] = None
+    parent: Optional[EntityID] = None
     transform: Optional[Mat4] = None
 
     null_rep: Optional[Any] = None
@@ -262,12 +317,12 @@ class Entity(Component):
     web_rep: Optional[WebRepresentation] = None
     render_rep: Optional[RenderRepresentation] = None
 
-    lights: Optional[list[IDGroup]] = None
-    tables: Optional[list[IDGroup]] = None
-    plots: Optional[list[IDGroup]] = None
+    lights: Optional[list[LightID]] = None
+    tables: Optional[list[TableID]] = None
+    plots: Optional[list[PlotID]] = None
     tags: Optional[list[str]] = None
-    methods_list: Optional[list[IDGroup]] = None
-    signals_list: Optional[list[IDGroup]] = None
+    methods_list: Optional[list[MethodID]] = None
+    signals_list: Optional[list[SignalID]] = None
 
     influence: Optional[BoundingBox] = None
 
@@ -287,16 +342,16 @@ class Entity(Component):
 
 
 class Plot(Component):
-    id: IDGroup
+    id: PlotID
     name: Optional[str] = None
 
-    table: Optional[IDGroup] = None
+    table: Optional[TableID] = None
 
     simple_plot: Optional[str] = None
     url_plot: Optional[str] = None
 
-    methods_list: Optional[list[IDGroup]] = None
-    signals_list: Optional[list[IDGroup]] = None
+    methods_list: Optional[list[MethodID]] = None
+    signals_list: Optional[list[SignalID]] = None
 
     @root_validator
     def one_of(cls, values):
@@ -307,7 +362,7 @@ class Plot(Component):
 
 
 class Buffer(Component):
-    id: IDGroup
+    id: BufferID
     name: Optional[str] = None
     size: int = None
 
@@ -323,9 +378,9 @@ class Buffer(Component):
 
 
 class BufferView(Component):
-    id: IDGroup
+    id: BufferViewID
     name: Optional[str] = None    
-    source_buffer: IDGroup # Buffer ID
+    source_buffer: BufferID
 
     type: Literal["UNK", "GEOMETRY", "IMAGE"]
     offset: int
@@ -333,7 +388,7 @@ class BufferView(Component):
 
     
 class Material(Component):
-    id: IDGroup
+    id: MaterialID
     name: Optional[str] = None
 
     pbr_info: Optional[PBRInfo] = PBRInfo()
@@ -352,10 +407,10 @@ class Material(Component):
 
 
 class Image(Component):
-    id: IDGroup
+    id: ImageID
     name: Optional[str] = None
 
-    buffer_source: IDGroup = None
+    buffer_source: BufferID = None
     uri_source: str = None
 
     @root_validator
@@ -367,14 +422,14 @@ class Image(Component):
 
 
 class Texture(Component):
-    id: IDGroup
+    id: TextureID
     name: Optional[str] = None
-    image: IDGroup # Image ID
-    sampler: Optional[IDGroup] = None
+    image: ImageID # Image ID
+    sampler: Optional[SamplerID] = None
 
 
 class Sampler(Component):
-    id: IDGroup
+    id: SamplerID
     name: Optional[str] = None
 
     mag_filter: Optional[Literal["NEAREST", "LINEAR"]] = "LINEAR"
@@ -385,7 +440,7 @@ class Sampler(Component):
 
 
 class Light(Component):
-    id: IDGroup
+    id: LightID
     name: Optional[str] = None
 
     color: Optional[RGB] = [255, 255, 255]
@@ -411,25 +466,25 @@ class Light(Component):
 
 
 class Geometry(Component):
-    id: IDGroup
+    id: GeometryID
     name: Optional[str] = None
     patches: list[GeometryPatch]
 
 
 class Table(Component):
-    id: IDGroup
+    id: TableID
     name: Optional[str] = None
 
     meta: Optional[str] = None
-    methods_list: Optional[list[IDGroup]] = None
-    signals_list: Optional[list[IDGroup]] = None 
+    methods_list: Optional[list[MethodID]] = None
+    signals_list: Optional[list[SignalID]] = None 
  
 
 """ ====================== Communication Objects ====================== """
 
 
 class Invoke(Model):
-    id: IDGroup # Signal ID
+    id: SignalID
     context: Optional[InvokeIDType] = None # if empty - document
     signal_data: list[Any]
 
@@ -448,6 +503,22 @@ class Reply(Model):
 
 
 """ ====================== Miscellaneous Objects ====================== """
+
+id_map = {
+    Method: MethodID,
+    Signal: SignalID,
+    Table: TableID,
+    Plot: PlotID,
+    Entity: PlotID,
+    Material: MaterialID,
+    Geometry: GeometryID,
+    Light: LightID,
+    Image: ImageID,
+    Texture: TextureID,
+    Sampler: SamplerID,
+    Buffer: BufferID,
+    BufferView: BufferViewID
+}
 
 class InjectedMethod(object):
 

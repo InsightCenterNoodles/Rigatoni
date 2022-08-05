@@ -3,7 +3,6 @@ import weakref
 
 import pandas as pd
 
-from pyserver.noodle_objects import Method
 from pyserver.server import start_server
 from pyserver.core import Server
 import pyserver.noodle_objects as nooobs
@@ -17,14 +16,14 @@ def new_point_plot(server: Server, context: dict, xs, ys, zs, colors=None, sizes
         name="Custom Table", 
         meta="Table for testing", 
         methods_list=[
-            server.get_method("noo::tbl_subscribe"),
-            server.get_method("noo::tbl_insert")
+            server.get_component_id(nooobs.Method, "noo::tbl_subscribe"),
+            server.get_component_id(nooobs.Method, "noo::tbl_insert")
         ], 
         signals_list=[
-            server.get_signal("noo::tbl_reset"),
-            server.get_signal("noo::tbl_updated"),
-            server.get_signal("noo::tbl_rows_removed"),
-            server.get_signal("noo::tbl_selection_updated")
+            server.get_component_id(nooobs.Signal, "noo::tbl_reset"),
+            server.get_component_id(nooobs.Signal, "noo::tbl_updated"),
+            server.get_component_id(nooobs.Signal, "noo::tbl_rows_removed"),
+            server.get_component_id(nooobs.Signal, "noo::tbl_selection_updated")
         ]
     )
 
@@ -60,8 +59,8 @@ def subscribe(server: Server, context: dict):
 
     # Try to get delegate from context
     try:
-        tbl_id = nooobs.IDGroup(*context["table"])
-        delegate: CustomTableDelegate = server.delegates[nooobs.Table][tbl_id]
+        tbl_id = nooobs.TableID(*context["table"])
+        delegate: CustomTableDelegate = server.delegates[tbl_id]
     except:
         raise Exception(nooobs.MethodException(code=-32600, message="Invalid Request - Invalid Context for Subscribe"))
     
@@ -80,8 +79,8 @@ def subscribe(server: Server, context: dict):
 def insert(server: Server, context: dict, rows: list[list]):
     
     try:
-        tbl_id = nooobs.IDGroup(*context["table"])
-        delegate: CustomTableDelegate = server.delegates[nooobs.Table][tbl_id]
+        tbl_id = nooobs.TableID(*context["table"])
+        delegate: CustomTableDelegate = server.delegates[tbl_id]
     except:
         raise nooobs.MethodException(-32600, "Invalid Request - Invalid Context for insert")
 
@@ -106,20 +105,17 @@ methods = {
     "noo::tbl_insert": insert
 }
 
-starting_state = {
-    nooobs.Method: {
-        nooobs.IDGroup(0, 0): Method(id=(0,0), name="new_point_plot", arg_doc=[]),
-        nooobs.IDGroup(1, 0): Method(id=(1,0), name="noo::tbl_subscribe", arg_doc=[]), # Resume here... need keyword args
-        nooobs.IDGroup(2, 0): Method(id=(2,0), name="noo::tbl_insert", arg_doc=[]),
-        nooobs.IDGroup(3, 0): Method(id=(3,0), name="Test Method 4", arg_doc=[])
-    },
-    nooobs.Signal: {
-        nooobs.IDGroup(0, 0): nooobs.Signal(id=(0,0), name="noo::tbl_reset", arg_doc=[]),
-        nooobs.IDGroup(1, 0): nooobs.Signal(id=(1,0), name="noo::tbl_updated", arg_doc=[]),
-        nooobs.IDGroup(2, 0): nooobs.Signal(id=(2,0), name="noo::tbl_rows_removed", arg_doc=[]),
-        nooobs.IDGroup(3, 0): nooobs.Signal(id=(3,0), name="noo::tbl_selection_updated", arg_doc=[])
-    }
-}
+starting_state = [
+    nooobs.Method(id=nooobs.MethodID(0,0), name="new_point_plot", arg_doc=[]),
+    nooobs.Method(id=nooobs.MethodID(1,0), name="noo::tbl_subscribe", arg_doc=[]),
+    nooobs.Method(id=nooobs.MethodID(2,0), name="noo::tbl_insert", arg_doc=[]),
+    nooobs.Method(id=nooobs.MethodID(3,0), name="Test Method 4", arg_doc=[]),
+    
+    nooobs.Signal(id=nooobs.SignalID(0,0), name="noo::tbl_reset", arg_doc=[]),
+    nooobs.Signal(id=nooobs.SignalID(1,0), name="noo::tbl_updated", arg_doc=[]),
+    nooobs.Signal(id=nooobs.SignalID(2,0), name="noo::tbl_rows_removed", arg_doc=[]),
+    nooobs.Signal(id=nooobs.SignalID(3,0), name="noo::tbl_selection_updated", arg_doc=[])
+]
 
 
 class CustomTableDelegate(interface.ServerTableDelegate):
@@ -171,7 +167,7 @@ class CustomTableDelegate(interface.ServerTableDelegate):
 
         data = [tbl_init]
 
-        signal = self.server.objects[nooobs.Signal][nooobs.IDGroup(0, 0)]
+        signal = self.server.get_component_id(nooobs.Signal, "noo::tbl_reset")
         self.server.invoke_signal(signal, self.component, data)
 
 
@@ -179,7 +175,7 @@ class CustomTableDelegate(interface.ServerTableDelegate):
 
         data = [keys, rows]
 
-        signal = self.server.objects[nooobs.Signal][nooobs.IDGroup(1, 0)]
+        signal = self.server.get_component_id(nooobs.Signal, "noo::tbl_updated")
         self.server.invoke_signal(signal, self.component, data)
 
 
@@ -187,7 +183,7 @@ class CustomTableDelegate(interface.ServerTableDelegate):
         
         data = [keys]
 
-        signal = self.server.objects[nooobs.Signal][nooobs.IDGroup(2, 0)]
+        signal = self.server.get_component_id(nooobs.Signal, "noo::tbl_rows_removed")
         self.server.invoke_signal(signal, self.component, data)
 
 
@@ -195,7 +191,7 @@ class CustomTableDelegate(interface.ServerTableDelegate):
     
         data = [selection]
 
-        signal = self.server.objects[nooobs.Signal][nooobs.IDGroup(3, 0)]
+        signal = self.server.get_component_id(nooobs.Signal, "noo::tbl_selection_updated")
         self.server.invoke_signal(signal, self.component, data)
 
 
