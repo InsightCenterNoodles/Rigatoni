@@ -75,10 +75,8 @@ def create_sphere(server: Server, *args):
     sphere = server.create_component(nooobs.Geometry, name=name, patches=patches)
 
     # Test Delete
-    #assert(nooobs.BufferViewID(0, 0) != nooobs.GeometryID(0, 0))
-
-    server.delete_component(server.components[nooobs.BufferViewID(0, 0)])
-    server.delete_component(server.components[nooobs.GeometryID(0, 0)])
+    # server.delete_component(server.components[nooobs.BufferViewID(0, 0)])
+    # server.delete_component(server.components[nooobs.GeometryID(0, 0)])
 
 
 # Using new_point_plot just so it gets called in test client
@@ -87,7 +85,7 @@ methods = {
 }
 
 starting_state = [
-    nooobs.Method(id=nooobs.MethodID(0,0), name="new_point_plot", arg_doc=[])
+    nooobs.Method(id=nooobs.MethodID(slot=0, gen=0), name="new_point_plot", arg_doc=[])
 ]
 
 

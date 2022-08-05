@@ -148,6 +148,9 @@ class Server(object):
         for object in self.components.values():
             msg_id, content = self.prepare_message("create", object)
             message.extend([msg_id, content])
+
+        # Add document update
+        message.extend(self.prepare_message("update", None))
         
         # Finish with initialization message
         message.extend(self.prepare_message("initialized"))    
@@ -174,7 +177,7 @@ class Server(object):
         
         # Parse message
         try:
-            method_id = nooobs.MethodID(*message["method"])
+            method_id = nooobs.MethodID(slot=message["method"][0], gen=message["method"][1])
             context = message.get("context")
             invoke_id = message["invoke_id"]
             args: list = message["args"]
@@ -277,8 +280,9 @@ class Server(object):
                     
 
             # Check if anything in the queue is now clear to be deleted
-            for comp_id in self.delete_queue:
+            for comp_id in list(self.delete_queue):
                 if not self.references.get(comp_id):
+                    self.delete_queue.remove(comp_id)
                     self.delete_component(comp_id)
 
         else:
@@ -337,7 +341,7 @@ class Server(object):
 
         if slot_info.on_deck.empty():
             id_type = nooobs.id_map[comp_type]
-            id = id_type(slot_info.next_slot, 0)
+            id = id_type(slot=slot_info.next_slot, gen=0)
             slot_info.next_slot += 1
             return id
         else:

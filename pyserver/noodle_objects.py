@@ -20,11 +20,12 @@ from pydantic import BaseModel, root_validator, Field
 IDGroup = namedtuple("IDGroup", ["slot", "gen"])
 
 class ID(IDGroup):
-    """Extension of IDGroup to expand hashing capability"""
+    # slot: int
+    # gen: int
 
     __slots__ = ()
     def __repr__(self):
-        return f"{self.__class__}|{self.slot}/{self.gen}|"
+        return f"|{self.slot}/{self.gen}|"
 
     def __key(self):
         return (type(self), self.slot, self.gen)
