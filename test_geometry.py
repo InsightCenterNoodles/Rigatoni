@@ -70,13 +70,22 @@ def create_sphere(server: Server, *args):
         material = material.id,
         colors = colors
     )
-    patches.append(geo_make.create_geometry_patch(server, name, patch_info))
+    patches.append(geo_make.build_geometry_patch(server, name, patch_info))
 
     sphere = server.create_component(nooobs.Geometry, name=name, patches=patches)
 
     # Test Delete
     # server.delete_component(server.components[nooobs.BufferViewID(0, 0)])
     # server.delete_component(server.components[nooobs.GeometryID(0, 0)])
+
+    mat = [0, 0, 0, -1,
+           1, 1, 1, 1,
+           0, 0, 0, 0,
+           1, 1, 1, 1]
+    
+    entity = geo_make.build_entity(server, geometry=sphere, matrix=mat)
+
+    return 1
 
 
 # Using new_point_plot just so it gets called in test client

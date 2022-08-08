@@ -90,7 +90,7 @@ def set_up_attributes(input: nooobs.GeometryPatchInput):
     return attribute_info
 
             
-def build_buffer_bytes(server: core.Server, name, input: nooobs.GeometryPatchInput, 
+def build_geometry_buffer(server: core.Server, name, input: nooobs.GeometryPatchInput, 
     index_format: str, attribute_info: list) -> Tuple[nooobs.Buffer, int]:
 
     format_map = {
@@ -126,7 +126,7 @@ def build_buffer_bytes(server: core.Server, name, input: nooobs.GeometryPatchInp
 
     size = len(buffer_bytes)
     if size > 1000:
-        # TODO
+        # TODO - uri bytes
         raise Exception("TOO BIG")
     else:
         buffer = server.create_component(
@@ -138,7 +138,7 @@ def build_buffer_bytes(server: core.Server, name, input: nooobs.GeometryPatchInp
         return buffer, index_offset
 
 
-def create_geometry_patch(server: core.Server, name: str, input: nooobs.GeometryPatchInput):
+def build_geometry_patch(server: core.Server, name: str, input: nooobs.GeometryPatchInput):
 
     vert_count = len(input.vertices)
     index_count = len(input.indices)
@@ -149,7 +149,7 @@ def create_geometry_patch(server: core.Server, name: str, input: nooobs.Geometry
 
     # Build buffer with given lists
     buffer: nooobs.Buffer
-    buffer, index_offset = build_buffer_bytes(server, name, input, index_format, attribute_info)
+    buffer, index_offset = build_geometry_buffer(server, name, input, index_format, attribute_info)
 
     # Make buffer component
     buffer_view: nooobs.BufferView = server.create_component(
@@ -185,3 +185,42 @@ def create_geometry_patch(server: core.Server, name: str, input: nooobs.Geometry
     )
 
     return patch
+
+
+def build_instance_buffer(server, name, matrix):
+    """Build MAT4 Buffer"""
+    
+    buffer_bytes = np.array(matrix, dtype=np.single).tobytes(order='C')
+    print(f"Instance buffer bytes: {buffer_bytes}")
+
+    buffer = server.create_component(
+        nooobs.Buffer,
+        name = name,
+        size = len(buffer_bytes),
+        inline_bytes = buffer_bytes
+    )
+
+    return buffer
+
+
+def build_entity(server: core.Server, geometry: nooobs.Geometry, matrix: nooobs.Mat4):
+
+    name = geometry.name if geometry.name else None
+
+    buffer: nooobs.Buffer = build_instance_buffer(server, name, matrix)
+    
+    buffer_view = server.create_component(
+        nooobs.BufferView,
+        name = f"Instance View for {name}",
+        source_buffer = buffer.id,
+        type = "UNK",
+        offset = 0,
+        length = buffer.size
+    )
+    
+    instance = nooobs.InstanceSource(view=buffer_view.id, stride=0, bb=None)
+    rep = nooobs.RenderRepresentation(mesh=geometry.id, instances=instance)
+
+    entity = server.create_component(nooobs.Entity, name=name, render_rep=rep)
+    
+    return entity

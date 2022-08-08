@@ -185,7 +185,7 @@ class InstanceSource(NoodleObject):
     bb: Optional[BoundingBox] = None
 
 class RenderRepresentation(NoodleObject):
-    mesh: EntityID # Entity ID
+    mesh: GeometryID
     instances: Optional[InstanceSource] = None
 
 class TextureRef(NoodleObject):
