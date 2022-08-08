@@ -31,6 +31,7 @@ vertices = [[-0.000000, -0.500000, -0.000000], [0.361804, -0.223610, 0.262863],
             [0.262865, 0.425326, -0.000000],   [-0.212661, 0.425327, 0.154506],
             [-0.212661, 0.425327, -0.154506],  [0.081228, 0.425327, -0.249998]]
 
+# 80 triangles
 indices =  [[0, 13, 12],  [1, 13, 15],  [0, 12, 17],  [0, 17, 19],
             [0, 19, 16],  [1, 15, 22],  [2, 14, 24],  [3, 18, 26],
             [4, 20, 28],  [5, 21, 30],  [1, 22, 25],  [2, 24, 27],
@@ -78,10 +79,10 @@ def create_sphere(server: Server, *args):
     # server.delete_component(server.components[nooobs.BufferViewID(0, 0)])
     # server.delete_component(server.components[nooobs.GeometryID(0, 0)])
 
-    mat = [0, 0, 0, -1,
-           1, 1, 1, 1,
-           0, 0, 0, 0,
-           1, 1, 1, 1]
+    mat = [0.0, 0.0, 0.0, 0.0,
+           1.0, 1.0, 1.0, 1.0,
+           0.0, 0.0, 0.0, 0.0,
+           1.0, 1.0, 1.0, 0.0]
     
     entity = geo_make.build_entity(server, geometry=sphere, matrix=mat)
 

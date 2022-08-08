@@ -172,7 +172,7 @@ class TextRepresentation(NoodleObject):
     txt: str
     font: Optional[str] = "Arial"
     height: Optional[float] = .25
-    width: Optional[float] = -1
+    width: Optional[float] = -1.0
 
 class WebRepresentation(NoodleObject):
     source: str
@@ -190,29 +190,29 @@ class RenderRepresentation(NoodleObject):
 
 class TextureRef(NoodleObject):
     texture: TextureID
-    transform: Optional[Mat3] = [1, 0, 0,
-                       0, 1, 0,
-                       0, 0, 1,]
-    texture_coord_slot: Optional[int] = 0
+    transform: Optional[Mat3] = [1.0, 0.0, 0.0,
+                       0.0, 1.0, 0.0,
+                       0.0, 0.0, 1.0,]
+    texture_coord_slot: Optional[int] = 0.0
 
 class PBRInfo(NoodleObject):
-    base_color: RGBA = [255, 255, 255, 1]
+    base_color: RGBA = [1.0, 1.0, 1.0, 1.0]
     base_color_texture: Optional[TextureRef] = None # assume SRGB, no premult alpha
 
-    metallic: Optional[float] = 1
-    roughness: Optional[float] = 1
+    metallic: Optional[float] = 1.0
+    roughness: Optional[float] = 1.0
     metal_rough_texture: Optional[TextureRef] = None # assume linear, ONLY RG used
 
 class PointLight(NoodleObject):
-    range: float = -1
+    range: float = -1.0
 
 class SpotLight(NoodleObject):
-    range: float = -1
-    inner_cone_angle_rad: float = 0
+    range: float = -1.0
+    inner_cone_angle_rad: float = 0.0
     outer_cone_angle_rad: float = pi/4
 
 class DirectionalLight(NoodleObject):
-    range: float = -1
+    range: float = -1.0
 
 class Attribute(NoodleObject):
     view: BufferViewID
@@ -226,7 +226,7 @@ class Attribute(NoodleObject):
     normalized: Optional[bool] = False
 
 class Index(NoodleObject):
-    view: IDGroup # Buffer View ID
+    view: BufferViewID 
     count: int
     offset: Optional[int] = 0
     stride: Optional[int] = 0
@@ -390,10 +390,10 @@ class Material(Component):
     normal_texture: Optional[TextureRef] = None
 
     occlusion_texture: Optional[TextureRef] = None # assumed to be linear, ONLY R used
-    occlusion_texture_factor: Optional[float] = 1
+    occlusion_texture_factor: Optional[float] = 1.0
 
     emissive_texture: Optional[TextureRef] = None # assumed to be SRGB, ignore A
-    emissive_factor: Optional[Vec3] = [1, 1, 1]
+    emissive_factor: Optional[Vec3] = [1.0, 1.0, 1.0]
 
     use_alpha: Optional[bool] = False
     alpha_cutoff: Optional[float] = .5
