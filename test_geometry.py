@@ -95,48 +95,45 @@ def create_new_instance(server: Server, context, entity, position=None, color=No
     geo_make.create_instance(server, entity, position, color, rotation, scale)
 
 
-def normalize_col(col):
-    pass
+def normalize_df(df: pd.DataFrame):
+    normalized_df = df.copy()
+    for column in normalized_df:
+            normalized_df[column] = (df[column] - df[column].min()) / (df[column].max() - df[column].min())    
 
+    return normalized_df
 
 def make_point_plot(server: Server, context, *args):
     name = "Test Plot"
 
+    # Create Point geometry
     material = server.create_component(nooobs.Material, name="Test Material")
-
     patches = []
     patch_info = nooobs.GeometryPatchInput(
         vertices = vertices, 
         indices = indices, 
         index_type = "TRIANGLES",
         material = material.id,
-        colors = colors
-    )
+        colors = colors)
     patches.append(geo_make.build_geometry_patch(server, name, patch_info))
-
     sphere = server.create_component(nooobs.Geometry, name=name, patches=patches)
 
     df = pd.read_csv("/Users/aracape/development/pyserver/pyserver/geometry/data.csv")
-    df_scaled = df.copy()
-    column = 'CNG_price_incentive'
-    df_scaled[column] = (df_scaled[column] - df_scaled[column].min()) / (df_scaled[column].max() - df_scaled[column].min())    
-    column = 'FCI_incentive_amount[CNG]'
-    df_scaled[column] = (df_scaled[column] - df_scaled[column].min()) / (df_scaled[column].max() - df_scaled[column].min())    
-
+    df_scaled = normalize_df(df)
+    print(df_scaled)
+    
     # Positions
-    # x = list(df['Total_CNG'])
-    # y = list(df['Total_Elec'])
-    # z = list(df['Elec_price_incentive'])
+    x = list(df_scaled['Total_CNG'].apply(lambda x: x*5-2.5))
+    y = list(df_scaled['Total_Elec'].apply(lambda x: x*5))
+    z = list(df_scaled['Elec_price_incentive'].apply(lambda x: x*5-2.5))
 
-    x = [[1,1,1,1]]
-    y = []
-    z = []
     # Colors
-    cmap = matplotlib.cm.get_cmap("viridis")
+    cmap = matplotlib.cm.get_cmap("plasma")
     cols = df_scaled['CNG_price_incentive']
     cols = [cmap(i) for i in cols]
 
-    scls = [(i*.02, i*.02, i*.02, i*.02) for i in list(df_scaled['FCI_incentive_amount[CNG]'])]
+    # Scales
+    s = .1
+    scls = [(i*s, i*s, i*s, i*s) for i in list(df_scaled['FCI_incentive_amount[CNG]'])]
 
     instances = geo_make.create_instances(
         positions=[*zip(x, y, z)],
@@ -175,5 +172,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
-

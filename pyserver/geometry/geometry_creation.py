@@ -196,7 +196,6 @@ def build_instance_buffer(server, name, matrices) -> nooobs.Buffer:
     """Build MAT4 Buffer"""
     
     buffer_bytes = np.array(matrices, dtype=np.single).tobytes(order='C')
-    print(f"Instance buffer bytes: {buffer_bytes}")
 
     buffer = server.create_component(
         nooobs.Buffer,
@@ -204,6 +203,8 @@ def build_instance_buffer(server, name, matrices) -> nooobs.Buffer:
         size = len(buffer_bytes),
         inline_bytes = buffer_bytes
     )
+
+    print(f"100th Instance: {np.frombuffer(buffer_bytes[6400:6464], dtype=np.single)}")
 
     return buffer
 
@@ -273,3 +274,28 @@ def create_instances(
         instances.extend([position, color, rotation, scale])
 
     return instances
+
+
+def update_entity(server: core.Server, entity: nooobs.Entity, geometry: nooobs.Geometry=None, instances: list=None):
+    
+    name = geometry.name if geometry.name else None
+
+    if instances:
+        buffer = build_instance_buffer(server, name, instances)
+        buffer_view = server.create_component(
+            nooobs.BufferView,
+            name = f"Instance View for {name}",
+            source_buffer = buffer.id,
+            type = "UNK",
+            offset = 0,
+            length = buffer.size
+        )
+        instance = nooobs.InstanceSource(view=buffer_view.id, stride=0, bb=None)
+    else:
+        instance = None
+
+    rep = nooobs.RenderRepresentation(mesh=geometry.id, instances=instance)
+
+    entity = server.create_component(nooobs.Entity, name=name, render_rep=rep)
+    
+    return entity
