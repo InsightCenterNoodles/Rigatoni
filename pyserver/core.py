@@ -97,7 +97,7 @@ class Server(object):
         raise Exception("No component found exception")
 
 
-    def prepare_message(self, action: str, object: Union[nooobs.Component, nooobs.NoodleObject]=None, delta: list[str] = None):
+    def prepare_message(self, action: str, object: Union[nooobs.Component, nooobs.NoodleObject]=None, delta: set[str] = {}):
         """Given object and action, get id and message contents as dict
         
         Not sure how I feel about this rn, analogous to handle in client but kinda messy here
@@ -122,7 +122,7 @@ class Server(object):
                 contents["signals_list"] = self.get_ids_by_type(nooobs.Signal)
             # Normal update
             else:
-                contents = object.dict(include=delta)
+                contents = object.dict(exclude_none=True, include=delta.update("id"))
 
         elif action == "delete":
             contents["id"] = object.id
@@ -136,7 +136,7 @@ class Server(object):
     def broadcast(self, message: list):
         """Broadcast message to all connected clients"""
         
-        print(f"Broadcasting Message: {message}")
+        print(f"Broadcasting Message: ID {message[0]}")
         encoded = dumps(message)
         websockets.broadcast(self.clients, encoded)
 
@@ -290,7 +290,7 @@ class Server(object):
             self.delete_queue.add(id)
 
     
-    def update_component(self, obj: nooobs.Component, delta: list[str]):
+    def update_component(self, obj: nooobs.Component, delta: set[str]):
         """Update object in stae and update clients"""
 
         # Broadcast update with only changed values

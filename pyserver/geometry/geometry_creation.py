@@ -117,15 +117,12 @@ def build_geometry_buffer(server: core.Server, name, input: nooobs.GeometryPatch
     for point in points:
         for info, attr in zip(point, attribute_info):
 
-            # print(f"Point: {point}, P_Data: {info}")
             attr_size = format_map[attr.format]
             new_bytes = np.array(info, dtype=attr_size).tobytes(order='C')
             buffer_bytes.extend(new_bytes)
-            # print(f"new bytes: {new_bytes}")
 
     index_offset = len(buffer_bytes)
     index_bytes = np.array(input.indices, dtype=format_map[index_format]).tobytes(order='C')
-    #print(f"Index Bytes: {index_bytes}")
     buffer_bytes.extend(index_bytes)
 
     size = len(buffer_bytes)
@@ -204,7 +201,7 @@ def build_instance_buffer(server, name, matrices) -> nooobs.Buffer:
         inline_bytes = buffer_bytes
     )
 
-    print(f"100th Instance: {np.frombuffer(buffer_bytes[6400:6464], dtype=np.single)}")
+    #print(f"100th Instance: {np.frombuffer(buffer_bytes[6400:6464], dtype=np.single)}")
 
     return buffer
 
@@ -278,8 +275,19 @@ def create_instances(
 
 def update_entity(server: core.Server, entity: nooobs.Entity, geometry: nooobs.Geometry=None, instances: list=None):
     
-    name = geometry.name if geometry.name else None
+    name = entity.name if entity.name else None
 
+    # Get render rep and ensure entity is working with geometry
+    rep = entity.render_rep
+    if not rep:
+        raise Exception("Entity isn't renderable")
+
+    if geometry:
+        mesh = geometry.id
+    else: 
+        mesh = rep.mesh
+
+    # Build new buffer / view for instances or use existing instances
     if instances:
         buffer = build_instance_buffer(server, name, instances)
         buffer_view = server.create_component(
@@ -292,10 +300,28 @@ def update_entity(server: core.Server, entity: nooobs.Entity, geometry: nooobs.G
         )
         instance = nooobs.InstanceSource(view=buffer_view.id, stride=0, bb=None)
     else:
-        instance = None
+        instance = rep.instances
 
-    rep = nooobs.RenderRepresentation(mesh=geometry.id, instances=instance)
-
-    entity = server.create_component(nooobs.Entity, name=name, render_rep=rep)
+    # Create new render rep for entity and update entity
+    rep = nooobs.RenderRepresentation(mesh=mesh, instances=instance)
+    entity.render_rep = rep
+    entity = server.update_component(entity, delta={"render_rep"})
     
     return entity
+
+
+def add_instances(server: core.Server, entity: nooobs.Entity, instances: list):
+    
+    try:
+        rep = entity.render_rep
+    except:
+        raise Exception("Entity isn't renderable")
+
+    if rep:
+        old_view: nooobs.BufferView = server.components[rep.instances.view]
+        old_buffer: nooobs.Buffer = server.components[old_view.source_buffer]
+        old_instances = np.frombuffer(old_buffer.inline_bytes, dtype=np.single)
+        print(f"Old instances from buffer: {old_instances}")
+        combined = np.append(old_instances, instances)
+
+    update_entity(server, entity, instances=combined.tolist())

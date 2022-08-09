@@ -119,7 +119,6 @@ def make_point_plot(server: Server, context, *args):
 
     df = pd.read_csv("/Users/aracape/development/pyserver/pyserver/geometry/data.csv")
     df_scaled = normalize_df(df)
-    print(df_scaled)
     
     # Positions
     x = list(df_scaled['Total_CNG'].apply(lambda x: x*5-2.5))
@@ -141,14 +140,19 @@ def make_point_plot(server: Server, context, *args):
         scales=scls
     )
     entity = geo_make.build_entity(server, geometry=sphere, instances=instances)
+
+    new_instance = geo_make.create_instances(positions=[[0,1,1]])
+
+    geo_make.add_instances(server, entity, new_instance)
+
     return 1
 
 
 # Using new_point_plot just so it gets called in test client
 methods = {
-    "new_point_plot": create_sphere,
+    "new_point_plot": make_point_plot,
     "create_new_instance": create_new_instance,
-    "make_point_plot": make_point_plot
+    "create_sphere": create_sphere
 }
 
 instance_args = [
@@ -163,7 +167,7 @@ instance_args = [
 starting_state = [
     nooobs.Method(id=nooobs.MethodID(slot=0, gen=0), name="new_point_plot", arg_doc=[]),
     nooobs.Method(id=nooobs.MethodID(slot=1, gen=0), name="create_new_instance", arg_doc=[*instance_args]),
-    nooobs.Method(id=nooobs.MethodID(slot=2, gen=0), name="make_point_plot", arg_doc=[])
+    nooobs.Method(id=nooobs.MethodID(slot=2, gen=0), name="create_sphere", arg_doc=[])
 ]
 
 

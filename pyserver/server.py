@@ -10,7 +10,7 @@ from pyserver.noodle_objects import Component, NoodleObject
 async def send(websocket, message: list):
     """Send CBOR message using websocket"""
     
-    print(f"Sending Message: {message}")
+    print(f"Sending Message: ID {message[0]}")
     await websocket.send(dumps(message))
 
 
