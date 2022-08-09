@@ -53,7 +53,7 @@ async def start_server(port: int, methods: dict, starting_state: dict, delegates
     """
 
     server = Server(methods, starting_state, delegates)
-    NoodleObject.host_server = server
+    #NoodleObject.host_server = server
     print(f"Server initialized with objects: {server.components}")
 
     # Create partial to pass server to handler

@@ -20,6 +20,10 @@ SIZES = {
     "MAT4": 64
 }
 
+DEFAULT_POSITION = [0.0, 0.0, 0.0, 0.0]
+DEFAULT_COLOR = [1.0, 1.0, 1.0, 1.0]
+DEFAULT_ROTATION = [0.0, 0.0, 0.0, 0.0]
+DEFAULT_SCALE = [1.0, 1.0, 1.0, 0.0]
 
 def get_format(num_vertices: int) -> str:
     """Helper to get format that can accomadate number of vertices"""
@@ -140,8 +144,9 @@ def build_geometry_buffer(server: core.Server, name, input: nooobs.GeometryPatch
 
 def build_geometry_patch(server: core.Server, name: str, input: nooobs.GeometryPatchInput):
 
+
     vert_count = len(input.vertices)
-    index_count = len(input.indices)
+    index_count = len(input.indices) * len(input.indices[0])
     index_format = get_format(vert_count)            
 
     # Set up attributes with given lists
@@ -187,15 +192,15 @@ def build_geometry_patch(server: core.Server, name: str, input: nooobs.GeometryP
     return patch
 
 
-def build_instance_buffer(server, name, matrix):
+def build_instance_buffer(server, name, matrices) -> nooobs.Buffer:
     """Build MAT4 Buffer"""
     
-    buffer_bytes = np.array(matrix, dtype=np.single).tobytes(order='C')
+    buffer_bytes = np.array(matrices, dtype=np.single).tobytes(order='C')
     print(f"Instance buffer bytes: {buffer_bytes}")
 
     buffer = server.create_component(
         nooobs.Buffer,
-        name = name,
+        name = f"Instance buffer for {name}",
         size = len(buffer_bytes),
         inline_bytes = buffer_bytes
     )
@@ -203,24 +208,68 @@ def build_instance_buffer(server, name, matrix):
     return buffer
 
 
-def build_entity(server: core.Server, geometry: nooobs.Geometry, matrix: nooobs.Mat4):
+def build_entity(server: core.Server, geometry: nooobs.Geometry, instances: nooobs.Mat4=None):
+    """Build Entity from Geometry
+    
+    Can specify instances here or add later with create_instances
+    """
 
     name = geometry.name if geometry.name else None
 
-    buffer: nooobs.Buffer = build_instance_buffer(server, name, matrix)
-    
-    buffer_view = server.create_component(
-        nooobs.BufferView,
-        name = f"Instance View for {name}",
-        source_buffer = buffer.id,
-        type = "UNK",
-        offset = 0,
-        length = buffer.size
-    )
-    
-    instance = nooobs.InstanceSource(view=buffer_view.id, stride=0, bb=None)
+    if instances:
+        buffer = build_instance_buffer(server, name, instances)
+        buffer_view = server.create_component(
+            nooobs.BufferView,
+            name = f"Instance View for {name}",
+            source_buffer = buffer.id,
+            type = "UNK",
+            offset = 0,
+            length = buffer.size
+        )
+        instance = nooobs.InstanceSource(view=buffer_view.id, stride=0, bb=None)
+    else:
+        instance = None
+
     rep = nooobs.RenderRepresentation(mesh=geometry.id, instances=instance)
 
     entity = server.create_component(nooobs.Entity, name=name, render_rep=rep)
     
     return entity
+
+
+def padded(lst: list):
+    lst = list(lst)
+    if len(lst) < 4:
+        lst += [0.0] * (4 - len(lst))
+    return lst
+
+
+def create_instances(
+    positions: list[nooobs.Vec3] = [], 
+    colors: list[nooobs.Vec4] = [], 
+    rotations: list[nooobs.Vec4] = [], 
+    scales: list[nooobs.Vec3] = []):
+    """Create new instances for an entity
+    
+    All lists are optional and will be filled with defaults
+    By default one instance is created at least
+    Lists are padded out to 4 values
+    """
+
+    # If no inputs specified create one default instance
+    if not (positions or colors or rotations or scales):
+        positions = [DEFAULT_POSITION]
+
+    # Use longest input as number of instances
+    num_instances = max([len(l) for l in [positions, colors, rotations, scales]])
+
+    # Build the matrices and extend
+    instances = []
+    for i in range(num_instances):
+        position = padded(positions[i]) if i < len(positions) else DEFAULT_POSITION
+        color = padded(colors[i]) if i < len(colors) else DEFAULT_COLOR
+        rotation = padded(rotations[i]) if i < len(rotations) else DEFAULT_ROTATION
+        scale = padded(scales[i]) if i < len(scales) else DEFAULT_SCALE
+        instances.extend([position, color, rotation, scale])
+
+    return instances

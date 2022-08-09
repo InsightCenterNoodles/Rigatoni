@@ -84,8 +84,6 @@ class TableID(ID):
 class NoodleObject(BaseModel):
     """Parent Class for all noodle objects"""
 
-    host_server: ClassVar = None
-
     class Config:
         arbitrary_types_allowed = True
         use_enum_values = True
@@ -544,7 +542,7 @@ class GeometryPatchInput(NoodleObject):
     vertices: list
     indices: list
     index_type: str 
-    material: IDGroup
+    material: MaterialID
     normals: Optional[list] 
     tangents: Optional[list]
     textures:Optional[list] 

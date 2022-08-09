@@ -2,6 +2,8 @@ import asyncio
 import gc
 from sys import getrefcount
 
+import pandas as pd
+import matplotlib
 
 from pyserver.geometry import geometry_creation as geo_make
 from pyserver.server import start_server
@@ -56,7 +58,7 @@ indices =  [[0, 13, 12],  [1, 13, 15],  [0, 12, 17],  [0, 17, 19],
 colors = [[255, 255, 255, 255]] * 42
 
 
-def create_sphere(server: Server, *args):
+def create_sphere(server: Server, context, *args):
     
     # Set up creater object
     name = "Test Sphere"
@@ -79,23 +81,92 @@ def create_sphere(server: Server, *args):
     # server.delete_component(server.components[nooobs.BufferViewID(0, 0)])
     # server.delete_component(server.components[nooobs.GeometryID(0, 0)])
 
-    mat = [0.0, 0.0, 0.0, 0.0,
-           1.0, 1.0, 1.0, 1.0,
-           0.0, 0.0, 0.0, 0.0,
-           1.0, 1.0, 1.0, 0.0]
-    
-    entity = geo_make.build_entity(server, geometry=sphere, matrix=mat)
+    instances = geo_make.create_instances(
+        positions=[(1,1,1,1),(2,2,2,2)],
+        colors=[(1,.5,.5,1)],
+        rotations=[(45, 20, 0, 0)]
+    )
+    entity = geo_make.build_entity(server, geometry=sphere, instances=instances)
+    return 1
 
+
+def create_new_instance(server: Server, context, entity, position=None, color=None, rotation=None, scale=None):
+    
+    geo_make.create_instance(server, entity, position, color, rotation, scale)
+
+
+def normalize_col(col):
+    pass
+
+
+def make_point_plot(server: Server, context, *args):
+    name = "Test Plot"
+
+    material = server.create_component(nooobs.Material, name="Test Material")
+
+    patches = []
+    patch_info = nooobs.GeometryPatchInput(
+        vertices = vertices, 
+        indices = indices, 
+        index_type = "TRIANGLES",
+        material = material.id,
+        colors = colors
+    )
+    patches.append(geo_make.build_geometry_patch(server, name, patch_info))
+
+    sphere = server.create_component(nooobs.Geometry, name=name, patches=patches)
+
+    df = pd.read_csv("/Users/aracape/development/pyserver/pyserver/geometry/data.csv")
+    df_scaled = df.copy()
+    column = 'CNG_price_incentive'
+    df_scaled[column] = (df_scaled[column] - df_scaled[column].min()) / (df_scaled[column].max() - df_scaled[column].min())    
+    column = 'FCI_incentive_amount[CNG]'
+    df_scaled[column] = (df_scaled[column] - df_scaled[column].min()) / (df_scaled[column].max() - df_scaled[column].min())    
+
+    # Positions
+    # x = list(df['Total_CNG'])
+    # y = list(df['Total_Elec'])
+    # z = list(df['Elec_price_incentive'])
+
+    x = [[1,1,1,1]]
+    y = []
+    z = []
+    # Colors
+    cmap = matplotlib.cm.get_cmap("viridis")
+    cols = df_scaled['CNG_price_incentive']
+    cols = [cmap(i) for i in cols]
+
+    scls = [(i*.02, i*.02, i*.02, i*.02) for i in list(df_scaled['FCI_incentive_amount[CNG]'])]
+
+    instances = geo_make.create_instances(
+        positions=[*zip(x, y, z)],
+        colors=cols,
+        scales=scls
+    )
+    entity = geo_make.build_entity(server, geometry=sphere, instances=instances)
     return 1
 
 
 # Using new_point_plot just so it gets called in test client
 methods = {
-    "new_point_plot": create_sphere
+    "new_point_plot": create_sphere,
+    "create_new_instance": create_new_instance,
+    "make_point_plot": make_point_plot
 }
 
+instance_args = [
+    nooobs.MethodArg(name="entity_slot", doc="What're you creating an instance of?", editor_hint="ID"),
+    nooobs.MethodArg(name="entity_gen", doc="What're you creating an instance of?", editor_hint="ID"),
+    nooobs.MethodArg(name="position", doc="Where are you putting this instance", editor_hint="Vector"),
+    nooobs.MethodArg(name="color", doc="What color is this instance?", editor_hint="RGBA Vector"),
+    nooobs.MethodArg(name="rotation", doc="How is this instance rotated?", editor_hint="Vector"),
+    nooobs.MethodArg(name="scale", doc="How is this instance scaled?", editor_hint="Vector")
+]
+
 starting_state = [
-    nooobs.Method(id=nooobs.MethodID(slot=0, gen=0), name="new_point_plot", arg_doc=[])
+    nooobs.Method(id=nooobs.MethodID(slot=0, gen=0), name="new_point_plot", arg_doc=[]),
+    nooobs.Method(id=nooobs.MethodID(slot=1, gen=0), name="create_new_instance", arg_doc=[*instance_args]),
+    nooobs.Method(id=nooobs.MethodID(slot=2, gen=0), name="make_point_plot", arg_doc=[])
 ]
 
 

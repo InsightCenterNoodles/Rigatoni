@@ -1,4 +1,5 @@
 from __future__ import annotations
+from copy import copy, deepcopy
 from queue import Queue
 from types import NoneType
 from typing import TYPE_CHECKING, Union
@@ -243,7 +244,6 @@ class Server(object):
             return delegate
         else:
             return new_component
-
     
     def delete_delegate(self, delegate):
         """Delete a delegate and its contents"""
@@ -290,16 +290,8 @@ class Server(object):
             self.delete_queue.add(id)
 
     
-    def update_component(self, obj: nooobs.Component):
+    def update_component(self, obj: nooobs.Component, delta: list[str]):
         """Update object in stae and update clients"""
-
-        # Update state
-        state_obj = self.components[obj.id]
-        delta = []
-        for field, val in obj.__fields__.items():
-            if val != getattr(state_obj, field):
-                setattr(state_obj, field, val)
-                delta.append(field)
 
         # Broadcast update with only changed values
         message = self.prepare_message("update", obj, delta)
