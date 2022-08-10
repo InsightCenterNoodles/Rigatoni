@@ -165,9 +165,9 @@ instance_args = [
 ]
 
 starting_state = [
-    nooobs.Method(id=nooobs.MethodID(slot=0, gen=0), name="new_point_plot", arg_doc=[]),
-    nooobs.Method(id=nooobs.MethodID(slot=1, gen=0), name="create_new_instance", arg_doc=[*instance_args]),
-    nooobs.Method(id=nooobs.MethodID(slot=2, gen=0), name="create_sphere", arg_doc=[])
+    nooobs.StartingComponent(nooobs.Method, {"name": "new_point_plot", "arg_doc": []}, make_point_plot),
+    nooobs.StartingComponent(nooobs.Method, {"name": "create_new_instance", "arg_doc": [*instance_args]}, create_new_instance),
+    nooobs.StartingComponent(nooobs.Method, {"name": "create_sphere", "arg_doc": []}, create_sphere)
 ]
 
 

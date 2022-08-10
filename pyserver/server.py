@@ -1,21 +1,40 @@
 import asyncio
 import functools
+from typing import Type
 
 import websockets
 from cbor2 import loads, dumps
 
 from pyserver.core import Server
-from pyserver.noodle_objects import Component, NoodleObject
+from pyserver.noodle_objects import Component
+from pyserver.interface import Delegate
 
 async def send(websocket, message: list):
-    """Send CBOR message using websocket"""
+    """Send CBOR message using websocket
     
-    print(f"Sending Message: ID {message[0]}")
+    Args:
+        websocket (WebSocketClientProtocol):
+            recipient of this message
+        message (list):
+            message to be sent, in list format
+            [id, content, id, content...]
+    """
+    
+    print(f"Sending Message: ID's {message[::2]}")
     await websocket.send(dumps(message))
 
 
 async def handle_client(websocket, server: Server):
-    """Coroutine for receiving and transmitting all messages"""
+    """Coroutine for handling a client's connection
+    
+    Receives and transmits all messages
+    
+    args:
+        websocket (WebSocketClientProtocol):
+            client connection being handled 
+        server (Server):
+            object for maintaining state of the scene
+    """
 
     # Update state
     server.clients.add(websocket)
@@ -47,13 +66,18 @@ async def handle_client(websocket, server: Server):
     server.clients.remove(websocket)
 
 
-async def start_server(port: int, methods: dict, starting_state: dict, delegates: dict[Component, object]={}):
-    """
-    Main method for maintaining websocket connection
+async def start_server(port: int, methods: dict, starting_state: dict, 
+    delegates: dict[Type[Component], Type[Delegate]] = {}):
+    """Main method for maintaining websocket connection and handling new clients
+
+    Args:
+        port (int): port to be used by this server
+        methods (dict): map containing methods to be injected onto the server
+        starting_state (dict): hardcoded starting state for the server
+        delegates (dict): mapping of noodles component to delegate object
     """
 
-    server = Server(methods, starting_state, delegates)
-    #NoodleObject.host_server = server
+    server = Server(starting_state, delegates)
     print(f"Server initialized with objects: {server.components}")
 
     # Create partial to pass server to handler

@@ -8,7 +8,7 @@ from collections import namedtuple
 from enum import Enum
 from math import pi
 from queue import Queue
-from typing import ClassVar, Literal, Optional, Any, Union
+from typing import Callable, ClassVar, Literal, Optional, Any, Union
 
 import cbor2
 import websockets
@@ -92,12 +92,15 @@ class NoodleObject(BaseModel):
         return f"{type(self)}"
 
 class Component(NoodleObject):
-    """Parent class for all components"""
+    """Parent class for all components
+    
+    Necessary?
+    """
 
     id: ID = None
 
     def __repr__(self):
-        return f"Component | {self.id}"
+        return f"{type(self)} | {self.id}"
 
 
 
@@ -547,3 +550,11 @@ class GeometryPatchInput(NoodleObject):
     tangents: Optional[list]
     textures:Optional[list] 
     colors: Optional[list]
+
+
+class StartingComponent(object):
+
+    def __init__(self, type, component_attrs: dict[str, Any], method: Optional[Callable]=None):
+        self.type = type
+        self.component_attrs = component_attrs
+        self.method = method
