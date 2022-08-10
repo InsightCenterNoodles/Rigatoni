@@ -3,6 +3,7 @@ from typing import Tuple
 import numpy as np
 
 from .. import noodle_objects as nooobs
+from . import geometry_objects as geoobs
 from .. import core 
 
 
@@ -25,6 +26,7 @@ DEFAULT_COLOR = [1.0, 1.0, 1.0, 1.0]
 DEFAULT_ROTATION = [0.0, 0.0, 0.0, 0.0]
 DEFAULT_SCALE = [1.0, 1.0, 1.0, 0.0]
 
+
 def get_format(num_vertices: int) -> str:
     """Helper to get format that can accomadate number of vertices"""
 
@@ -36,13 +38,12 @@ def get_format(num_vertices: int) -> str:
         return 'U32'
 
 
-
-def set_up_attributes(input: nooobs.GeometryPatchInput):
+def set_up_attributes(input: geoobs.GeometryPatchInput):
     """Constructs attribute info from input lists"""
 
     # Add attribute info based on the input lists
     attribute_info = [] 
-    position = nooobs.AttributeInput(
+    position = geoobs.AttributeInput(
         semantic = "POSITION",
         format = "VEC3",
         normalized = False,
@@ -50,7 +51,7 @@ def set_up_attributes(input: nooobs.GeometryPatchInput):
     attribute_info.append(position)
 
     if input.normals:
-        normal = nooobs.AttributeInput(
+        normal = geoobs.AttributeInput(
             semantic = "NORMAL",
             format = "VEC3",
             normalized = False,
@@ -58,7 +59,7 @@ def set_up_attributes(input: nooobs.GeometryPatchInput):
         attribute_info.append(normal)
 
     if input.tangents:
-        tangent = nooobs.AttributeInput(
+        tangent = geoobs.AttributeInput(
             semantic = "TANGENT",
             format = "VEC3",
             normalized = False,
@@ -66,7 +67,7 @@ def set_up_attributes(input: nooobs.GeometryPatchInput):
         attribute_info.append(tangent)
 
     if input.textures:
-        texture = nooobs.AttributeInput(
+        texture = geoobs.AttributeInput(
             semantic = "TEXTURE",
             format = "U16VEC2",
             normalized = True,
@@ -74,7 +75,7 @@ def set_up_attributes(input: nooobs.GeometryPatchInput):
         attribute_info.append(texture)
 
     if input.colors:
-        color = nooobs.AttributeInput(
+        color = geoobs.AttributeInput(
             semantic = "COLOR",
             format = "U8VEC4",
             normalized = True,
@@ -94,8 +95,8 @@ def set_up_attributes(input: nooobs.GeometryPatchInput):
     return attribute_info
 
             
-def build_geometry_buffer(server: core.Server, name, input: nooobs.GeometryPatchInput, 
-    index_format: str, attribute_info: list) -> Tuple[nooobs.Buffer, int]:
+def build_geometry_buffer(server: core.Server, name, input: geoobs.GeometryPatchInput, 
+    index_format: str, attribute_info: list[geoobs.AttributeInput]) -> Tuple[nooobs.Buffer, int]:
 
     format_map = {
         "U8": np.int8,
@@ -139,7 +140,7 @@ def build_geometry_buffer(server: core.Server, name, input: nooobs.GeometryPatch
         return buffer, index_offset
 
 
-def build_geometry_patch(server: core.Server, name: str, input: nooobs.GeometryPatchInput):
+def build_geometry_patch(server: core.Server, name: str, input: geoobs.GeometryPatchInput):
 
 
     vert_count = len(input.vertices)
@@ -284,7 +285,8 @@ def update_entity(server: core.Server, entity: nooobs.Entity, geometry: nooobs.G
 
     if geometry:
         mesh = geometry.id
-    else: 
+        server.delete_component(rep.mesh)
+    else:
         mesh = rep.mesh
 
     # Build new buffer / view for instances or use existing instances
@@ -299,6 +301,8 @@ def update_entity(server: core.Server, entity: nooobs.Entity, geometry: nooobs.G
             length = buffer.size
         )
         instance = nooobs.InstanceSource(view=buffer_view.id, stride=0, bb=None)
+        server.delete_component(server.components[rep.instances.view].source_buffer)
+        server.delete_component(rep.instances.view)
     else:
         instance = rep.instances
 

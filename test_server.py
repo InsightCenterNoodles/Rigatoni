@@ -98,23 +98,16 @@ def insert(server: Server, context: dict, rows: list[list]):
 
     return keys
 
-# Client gets stuck cause there are no delete / update methods
-methods = {
-    "new_point_plot": new_point_plot,
-    "noo::tbl_subscribe": subscribe,
-    "noo::tbl_insert": insert
-}
-
 starting_state = [
-    nooobs.Method(id=nooobs.MethodID(0,0), name="new_point_plot", arg_doc=[]),
-    nooobs.Method(id=nooobs.MethodID(1,0), name="noo::tbl_subscribe", arg_doc=[]),
-    nooobs.Method(id=nooobs.MethodID(2,0), name="noo::tbl_insert", arg_doc=[]),
-    nooobs.Method(id=nooobs.MethodID(3,0), name="Test Method 4", arg_doc=[]),
-    
-    nooobs.Signal(id=nooobs.SignalID(0,0), name="noo::tbl_reset", arg_doc=[]),
-    nooobs.Signal(id=nooobs.SignalID(1,0), name="noo::tbl_updated", arg_doc=[]),
-    nooobs.Signal(id=nooobs.SignalID(2,0), name="noo::tbl_rows_removed", arg_doc=[]),
-    nooobs.Signal(id=nooobs.SignalID(3,0), name="noo::tbl_selection_updated", arg_doc=[])
+    nooobs.StartingComponent(nooobs.Method, {"name": "new_point_plot", "arg_doc":[]}, new_point_plot), 
+    nooobs.StartingComponent(nooobs.Method, {"name": "noo::tbl_subscribe", "arg_doc":[]}, subscribe), 
+    nooobs.StartingComponent(nooobs.Method, {"name": "noo::tbl_insert", "arg_doc":[]}, insert), 
+    nooobs.StartingComponent(nooobs.Method, {"name": "Test Method 4", "arg_doc":[]}, print), 
+
+    nooobs.StartingComponent(nooobs.Signal, {"name": "noo::tbl_reset", "arg_doc":[]}),
+    nooobs.StartingComponent(nooobs.Signal, {"name": "noo::tbl_updated", "arg_doc":[]}),
+    nooobs.StartingComponent(nooobs.Signal, {"name": "noo::tbl_rows_removed", "arg_doc":[]}),
+    nooobs.StartingComponent(nooobs.Signal, {"name": "noo::tbl_selection_updated", "arg_doc":[]})
 ]
 
 
@@ -202,7 +195,7 @@ delegates = {
 
 
 def main():
-    asyncio.run(start_server(50000, methods, starting_state, delegates))
+    asyncio.run(start_server(50000, starting_state, delegates))
 
 if __name__ == "__main__":
     main()

@@ -1,6 +1,4 @@
 import asyncio
-import gc
-from sys import getrefcount
 
 import pandas as pd
 import matplotlib
@@ -8,6 +6,7 @@ import matplotlib
 from pyserver.geometry import geometry_creation as geo_make
 from pyserver.server import start_server
 import pyserver.noodle_objects as nooobs
+import pyserver.geometry.geometry_objects as geoobs
 from pyserver.core import Server
 
 # 42 vertices for sphere
@@ -58,15 +57,15 @@ indices =  [[0, 13, 12],  [1, 13, 15],  [0, 12, 17],  [0, 17, 19],
 colors = [[255, 255, 255, 255]] * 42
 
 
-def create_sphere(server: Server, context, *args):
+def create_spheres(server: Server, context, *args):
+    """Test method to create two spheres"""
     
-    # Set up creater object
     name = "Test Sphere"
- 
     material = server.create_component(nooobs.Material, name="Test Material")
 
+    # Create Patch
     patches = []
-    patch_info = nooobs.GeometryPatchInput(
+    patch_info = geoobs.GeometryPatchInput(
         vertices = vertices, 
         indices = indices, 
         index_type = "TRIANGLES",
@@ -75,12 +74,10 @@ def create_sphere(server: Server, context, *args):
     )
     patches.append(geo_make.build_geometry_patch(server, name, patch_info))
 
+    # Create geometry using patches
     sphere = server.create_component(nooobs.Geometry, name=name, patches=patches)
 
-    # Test Delete
-    # server.delete_component(server.components[nooobs.BufferViewID(0, 0)])
-    # server.delete_component(server.components[nooobs.GeometryID(0, 0)])
-
+    # Set instances and create an entity
     instances = geo_make.create_instances(
         positions=[(1,1,1,1),(2,2,2,2)],
         colors=[(1,.5,.5,1)],
@@ -90,12 +87,17 @@ def create_sphere(server: Server, context, *args):
     return 1
 
 
-def create_new_instance(server: Server, context, entity, position=None, color=None, rotation=None, scale=None):
+def create_new_instance(server: Server, context, entity_slot, entity_gen, position=None, color=None, rotation=None, scale=None):
+    """Method to test instance updating"""
     
-    geo_make.create_instance(server, entity, position, color, rotation, scale)
+    entity = server.components[nooobs.EntityID(entity_slot, entity_gen)]
+    new_instance = geo_make.create_instances(position, color, rotation, scale)
+    geo_make.add_instances(server, entity, new_instance)
 
 
 def normalize_df(df: pd.DataFrame):
+    """Helper to normalize values in a dataframe"""
+
     normalized_df = df.copy()
     for column in normalized_df:
             normalized_df[column] = (df[column] - df[column].min()) / (df[column].max() - df[column].min())    
@@ -103,12 +105,14 @@ def normalize_df(df: pd.DataFrame):
     return normalized_df
 
 def make_point_plot(server: Server, context, *args):
-    name = "Test Plot"
+    """Test Method to generate plot-like render from data.csv"""
 
-    # Create Point geometry
+    name = "Test Plot"
     material = server.create_component(nooobs.Material, name="Test Material")
+
+    # Create patch / geometry for point geometry
     patches = []
-    patch_info = nooobs.GeometryPatchInput(
+    patch_info = geoobs.GeometryPatchInput(
         vertices = vertices, 
         indices = indices, 
         index_type = "TRIANGLES",
@@ -117,6 +121,7 @@ def make_point_plot(server: Server, context, *args):
     patches.append(geo_make.build_geometry_patch(server, name, patch_info))
     sphere = server.create_component(nooobs.Geometry, name=name, patches=patches)
 
+    # Read data from data.csv and normalize
     df = pd.read_csv("/Users/aracape/development/pyserver/pyserver/geometry/data.csv")
     df_scaled = normalize_df(df)
     
@@ -134,27 +139,19 @@ def make_point_plot(server: Server, context, *args):
     s = .1
     scls = [(i*s, i*s, i*s, i*s) for i in list(df_scaled['FCI_incentive_amount[CNG]'])]
 
+    # Create instances of sphere to represent csv data in an entity
     instances = geo_make.create_instances(
         positions=[*zip(x, y, z)],
         colors=cols,
         scales=scls
     )
     entity = geo_make.build_entity(server, geometry=sphere, instances=instances)
-
-    new_instance = geo_make.create_instances(positions=[[0,1,1]])
-
+    new_instance = geo_make.create_instances([[1,1,1]])
     geo_make.add_instances(server, entity, new_instance)
-
     return 1
 
 
-# Using new_point_plot just so it gets called in test client
-methods = {
-    "new_point_plot": make_point_plot,
-    "create_new_instance": create_new_instance,
-    "create_sphere": create_sphere
-}
-
+# define arg documentation for injected method
 instance_args = [
     nooobs.MethodArg(name="entity_slot", doc="What're you creating an instance of?", editor_hint="ID"),
     nooobs.MethodArg(name="entity_gen", doc="What're you creating an instance of?", editor_hint="ID"),
@@ -164,15 +161,15 @@ instance_args = [
     nooobs.MethodArg(name="scale", doc="How is this instance scaled?", editor_hint="Vector")
 ]
 
+# Define starting state
 starting_state = [
     nooobs.StartingComponent(nooobs.Method, {"name": "new_point_plot", "arg_doc": []}, make_point_plot),
     nooobs.StartingComponent(nooobs.Method, {"name": "create_new_instance", "arg_doc": [*instance_args]}, create_new_instance),
-    nooobs.StartingComponent(nooobs.Method, {"name": "create_sphere", "arg_doc": []}, create_sphere)
+    nooobs.StartingComponent(nooobs.Method, {"name": "create_sphere", "arg_doc": []}, create_spheres)
 ]
 
-
 def main():
-    asyncio.run(start_server(50000, methods, starting_state))
+    asyncio.run(start_server(50000, starting_state))
 
 if __name__ == "__main__":
     main()

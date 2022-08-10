@@ -1,6 +1,7 @@
 from __future__ import annotations
 from types import NoneType
 from typing import TYPE_CHECKING, Type, Union
+from numpy import isin
 if TYPE_CHECKING:
     from . import interface
 
@@ -149,7 +150,8 @@ class Server(object):
                 contents["methods_list"] = self.get_ids_by_type(nooobs.Method)
                 contents["signals_list"] = self.get_ids_by_type(nooobs.Signal)
             else: # Normal update, include id, and any field in delta
-                contents = object.dict(exclude_none=True, include=delta.update("id"))
+                delta.add("id")
+                contents = object.dict(exclude_none=True, include=delta)
 
         elif action == "delete":
             contents["id"] = object.id
@@ -384,7 +386,6 @@ class Server(object):
             for refs in self.references.values():
                 while id in refs: refs.remove(id)
                     
-
             # Check if anything in the queue is now clear to be deleted
             for comp_id in list(self.delete_queue):
                 if not self.references.get(comp_id):
@@ -392,7 +393,10 @@ class Server(object):
                     self.delete_component(comp_id)
 
         else:
-            print(f"Couldn't delete {obj}, referenced by {self.references[id]}, added to queue")
+            if isinstance(obj, nooobs.ID):
+                print(f"Couldn't delete {self.components[obj]}, referenced by {self.references[id]}, added to queue")
+            else:
+                print(f"Couldn't delete {obj}, referenced by {self.references[id]}, added to queue")
             self.delete_queue.add(id)
 
     
@@ -407,6 +411,9 @@ class Server(object):
                 should be a component with an update message
             delta (Set): Field names that should be included in the update
         """
+
+        # Update references?
+        # self.update_references(obj, obj)
 
         try:
             message = self.prepare_message("update", obj, delta)

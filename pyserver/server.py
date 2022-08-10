@@ -66,7 +66,7 @@ async def handle_client(websocket, server: Server):
     server.clients.remove(websocket)
 
 
-async def start_server(port: int, methods: dict, starting_state: dict, 
+async def start_server(port: int, starting_state: dict, 
     delegates: dict[Type[Component], Type[Delegate]] = {}):
     """Main method for maintaining websocket connection and handling new clients
 

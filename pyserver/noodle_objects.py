@@ -8,11 +8,9 @@ from collections import namedtuple
 from enum import Enum
 from math import pi
 from queue import Queue
-from typing import Callable, ClassVar, Literal, Optional, Any, Union
+from typing import Callable, Literal, Optional, Any, Union
 
-import cbor2
-import websockets
-from pydantic import BaseModel, root_validator, Field
+from pydantic import BaseModel, root_validator
 
 
 """ =============================== ID's ============================= """
@@ -20,12 +18,10 @@ from pydantic import BaseModel, root_validator, Field
 IDGroup = namedtuple("IDGroup", ["slot", "gen"])
 
 class ID(IDGroup):
-    # slot: int
-    # gen: int
 
     __slots__ = ()
     def __repr__(self):
-        return f"|{self.slot}/{self.gen}|"
+        return f"{self.__class__}|{self.slot}/{self.gen}|"
 
     def __key(self):
         return (type(self), self.slot, self.gen)
@@ -85,6 +81,8 @@ class NoodleObject(BaseModel):
     """Parent Class for all noodle objects"""
 
     class Config:
+        """Configuration for Validation"""
+
         arbitrary_types_allowed = True
         use_enum_values = True
 
@@ -92,16 +90,12 @@ class NoodleObject(BaseModel):
         return f"{type(self)}"
 
 class Component(NoodleObject):
-    """Parent class for all components
-    
-    Necessary?
-    """
+    """Parent class for all components"""
 
     id: ID = None
 
     def __repr__(self):
         return f"{type(self)} | {self.id}"
-
 
 
 """ ====================== Common Definitions ====================== """
@@ -517,6 +511,11 @@ id_map = {
 }
 
 class InjectedMethod(object):
+    """Representation of user Injecte Method
+    
+    Note that the call method automatically inserts a server
+    reference as an argument to all user defined fuctions
+    """
 
     def __init__(self, server, method) -> None:
         self.server = server
@@ -525,34 +524,19 @@ class InjectedMethod(object):
     def __call__(self, *args, **kwds):
         return self.method(self.server, *args, **kwds)
 
-
 class SlotTracker(object):
+    """Object to keep track of next available slot
+    
+    Next slot is next unused slot while on_deck
+    keeps track of slots that have opened up
+    """
 
     def __init__(self):
         self.next_slot = 0
         self.on_deck = Queue()
 
-
-class AttributeInput(NoodleObject):
-    semantic: AttributeSemantic
-    format: Format
-    normalized: bool
-    offset: Optional[int]
-    stride: Optional[int]
-
-
-class GeometryPatchInput(NoodleObject):
-    vertices: list
-    indices: list
-    index_type: str 
-    material: MaterialID
-    normals: Optional[list] 
-    tangents: Optional[list]
-    textures:Optional[list] 
-    colors: Optional[list]
-
-
 class StartingComponent(object):
+    """User input object for setting starting components on server"""
 
     def __init__(self, type, component_attrs: dict[str, Any], method: Optional[Callable]=None):
         self.type = type
