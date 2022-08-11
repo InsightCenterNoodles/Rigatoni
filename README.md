@@ -11,8 +11,8 @@ The server handles incoming websocket connections and maintains a list of client
 ```mermaid
 sequenceDiagram
     participant User
-    participant Server
     participant Method
+    participant Server
     participant Client
     User->>Method: Defines Methods and Components
     User->>Server: Starts Server with Starting State
@@ -63,7 +63,7 @@ server.get_component_id(type: Type[Component], name: str)
 ```
 
 ### Geometry Library
-Creating a renderable entity is an involved process that makes use of several different components. To help simplify this process the library provides methods to to create all the linked components necessary for a mesh.
+Creating a renderable entity is an involved process that makes use of several different components. To help simplify this process the library provides methods to create all the linked components necessary for a mesh.
 
 ```python
 pyserver.geometry.GeometryPatchInput(
