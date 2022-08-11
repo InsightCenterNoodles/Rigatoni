@@ -499,7 +499,7 @@ id_map = {
     Signal: SignalID,
     Table: TableID,
     Plot: PlotID,
-    Entity: PlotID,
+    Entity: EntityID,
     Material: MaterialID,
     Geometry: GeometryID,
     Light: LightID,

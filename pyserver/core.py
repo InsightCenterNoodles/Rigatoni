@@ -112,14 +112,14 @@ class Server(object):
                     setattr(self, comp.name, injected)
 
 
-    def get_ids_by_type(self, comp: Type[nooobs.Component]) -> list:
+    def get_ids_by_type(self, component: Type[nooobs.Component]) -> list:
         """Helper to get all ids for certain component type
         
         Args:
             comp (type): type of component to get ID's for
         """
 
-        return [key for key, val in self.components.items() if isinstance(val, comp)]
+        return [key for key, val in self.components.items() if isinstance(val, component)]
 
 
     def get_component_id(self, type: Type[nooobs.Component], name: str):
@@ -192,7 +192,8 @@ class Server(object):
 
         # Add create message for every object in state
         message = []
-        for object in self.components.values():
+        ordered_components = order_components(self.components, self.references)
+        for object in ordered_components:
             msg_id, content = self.prepare_message("create", object)
             message.extend([msg_id, content])
 
@@ -447,4 +448,27 @@ class Server(object):
         invoke = nooobs.Invoke(id=signal, context=context, signal_data=signal_data)
         message = self.prepare_message("invoke", invoke)
         self.broadcast(message)
-        
+
+def top_sort_recurse(id, refs, visited, components, stack):
+    
+    visited[id] = True
+    if id in refs:
+        for ref in refs[id]:
+            if not visited[ref]:
+                top_sort_recurse(ref, refs, visited, components, stack)
+
+    stack.append(components[id])
+
+
+def order_components(components: dict[nooobs.ID, nooobs.Component], 
+    refs: dict[nooobs.ID, list[nooobs.ID]]):
+    """Helper for creating topological sort of components"""
+
+    visited = {key: False for key in components}
+    stack = []
+
+    for id in components:
+        if not visited[id]:
+            top_sort_recurse(id, refs, visited, components, stack)
+    
+    return stack[::-1]
