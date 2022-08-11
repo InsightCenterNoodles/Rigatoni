@@ -449,8 +449,10 @@ class Server(object):
         message = self.prepare_message("invoke", invoke)
         self.broadcast(message)
 
+
 def top_sort_recurse(id, refs, visited, components, stack):
-    
+    """Helper for order_components to recurse"""
+
     visited[id] = True
     if id in refs:
         for ref in refs[id]:

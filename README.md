@@ -36,6 +36,7 @@ sequenceDiagram
 pyserver.StartingComponent(Type[Component], dict[Component_Attr, Value])
 ```
 - You can refer to the objects listed in `noodle_objects.py` to find all the available components along with their mandatory, default, and optional attributes. Additional information on NOODLE components and their attributes can be found [here](https://github.com/InsightCenterNoodles/message_spec)
+- Note that components must be initialized with keyword arguments to allow for validation
 - When creating methods, an additional callable object should be attached. This method will be injected onto the server object, and it will be associated with its corresponding method component.
 
 ```python
@@ -59,6 +60,34 @@ server.update_component(obj: Component, delta: Set[str)
 server.invoke_signal(signal: ID, on_component: Component, signal_data: list[Any])
 server.get_ids_by_type(component: Type[Component])
 server.get_component_id(type: Type[Component], name: str)
+```
+
+### Geometry Library
+Creating a renderable entity is an involved process that makes use of several different components. To help simplify this process the library provides methods to to create all the linked components necessary for a mesh.
+
+```python
+pyserver.geometry.GeometryPatchInput(
+    vertices: list
+    indices: list
+    index_type: str 
+    material: MaterialID
+    normals: Optional[list] 
+    tangents: Optional[list]
+    textures:Optional[list] 
+    colors: Optional[list]
+)
+pyserver.geometry.build_geometry_patch(server: Server, name: str, input: GeometryPatchInput)
+
+instances = geo_make.create_instances(
+    positions: Optional[list[nooobs.Vec3]], 
+    colors: Optional[list[nooobs.Vec4]], 
+    rotations: Optional[list[nooobs.Vec4]], 
+    scales: Optional[list[nooobs.Vec3]]
+)
+pyserver.geometry.build_entity(server: Server, geometry: Geometry, instances: Optional[Mat4])
+
+pyserver.geometry.update_entity(server: Server, entity: Entity, geometry: Optional[Geometry], instances: Optional[Mat4])
+pyserver.add_instances(server: Server, entity: Entity, instances: Mat4)
 ```
 
 
