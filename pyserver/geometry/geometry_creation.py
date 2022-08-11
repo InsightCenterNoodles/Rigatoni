@@ -279,15 +279,14 @@ def update_entity(server: core.Server, entity: nooobs.Entity, geometry: nooobs.G
     name = entity.name if entity.name else None
 
     # Get render rep and ensure entity is working with geometry
-    rep = entity.render_rep
-    if not rep:
+    old_rep = entity.render_rep
+    if not old_rep:
         raise Exception("Entity isn't renderable")
 
     if geometry:
         mesh = geometry.id
-        server.delete_component(rep.mesh)
     else:
-        mesh = rep.mesh
+        mesh = old_rep.mesh
 
     # Build new buffer / view for instances or use existing instances
     if instances:
@@ -301,15 +300,20 @@ def update_entity(server: core.Server, entity: nooobs.Entity, geometry: nooobs.G
             length = buffer.size
         )
         instance = nooobs.InstanceSource(view=buffer_view.id, stride=0, bb=None)
-        server.delete_component(server.components[rep.instances.view].source_buffer)
-        server.delete_component(rep.instances.view)
     else:
-        instance = rep.instances
+        instance = old_rep.instances
 
     # Create new render rep for entity and update entity
     rep = nooobs.RenderRepresentation(mesh=mesh, instances=instance)
     entity.render_rep = rep
-    entity = server.update_component(entity, delta={"render_rep"})
+    entity = server.update_component(entity)
+
+    # Clean up with deletes
+    if instances:
+        server.delete_component(server.components[old_rep.instances.view].source_buffer)
+        server.delete_component(old_rep.instances.view)
+    elif geometry:
+        server.delete_component(old_rep.mesh)
     
     return entity
 

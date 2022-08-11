@@ -1,4 +1,5 @@
 from __future__ import annotations
+from copy import deepcopy
 from types import NoneType
 from typing import TYPE_CHECKING, Type, Union
 from numpy import isin
@@ -263,7 +264,7 @@ class Server(object):
         reply.result = method(context, *args)
     
 
-    def update_references(self, comp: nooobs.Component, current: nooobs.NoodleObject):
+    def update_references(self, comp: nooobs.Component, current: nooobs.NoodleObject, removing=False):
         """Update indegree for all objects referenced by this one
 
         Recursively updates references for all components under a parent one. Here,
@@ -273,6 +274,7 @@ class Server(object):
         Args:
             comp (Component): parent component with new references to be tracked
             current (NooodleObject): current object being examined
+            removing (bool): flag so function can be used to both add and remove references
         """
 
         for key in current.__fields__.keys():
@@ -280,16 +282,19 @@ class Server(object):
 
             # Found a reference
             if key != "id" and isinstance(val, nooobs.ID):
-                self.references.setdefault(val, []).append(comp.id)
+                if removing:
+                    self.references[val].remove(comp.id)
+                else:
+                    self.references.setdefault(val, set()).add(comp.id)
 
             # Found another object to recurse on
             elif isinstance(val, nooobs.NoodleObject):
-                self.update_references(comp, val)
+                self.update_references(comp, val, removing)
 
             # found list of objects to recurse on 
             elif val and isinstance(val, list) and isinstance(val[0], nooobs.NoodleObject):
                 for obj in val:
-                    self.update_references(comp, obj)
+                    self.update_references(comp, obj, removing)
 
 
     def get_id(self, comp_type: Type[nooobs.Component]) -> nooobs.IDGroup:
@@ -355,7 +360,7 @@ class Server(object):
             self.delegates[id] = delegate 
             return delegate
         else:
-            return new_component
+            return new_component.copy(deep=True)
 
     def delete_component(self, obj: Union[nooobs.Component, interface.Delegate, nooobs.ID]):
         """Delete object in state and update clients
@@ -400,8 +405,26 @@ class Server(object):
                 print(f"Couldn't delete {obj}, referenced by {self.references[id]}, added to queue")
             self.delete_queue.add(id)
 
+
+    def find_delta(self, state, edited):
+        """Helper to find differences between two objects
+        
+        Also checks to find recursive cases and cases where references
+        should be updated
+        """
+
+        delta = set()
+        for field_name, value in edited:
+            state_val = getattr(state, field_name)
+            if value != state_val:
+                delta.add(field_name)
+                self.update_references(state, state_val, removing=True)
+                self.update_references(edited, value)
+
+        return delta
+
     
-    def update_component(self, obj: nooobs.Component, delta: set[str]):
+    def update_component(self, obj: nooobs.Component):
         """Update clients with changes to a component
         
         This method broadcasts changes to all clients including only fields
@@ -413,9 +436,14 @@ class Server(object):
             delta (Set): Field names that should be included in the update
         """
 
-        # Update references?
-        # self.update_references(obj, obj)
+        # Update references and find delta
+        state_obj = self.components[obj.id]
+        delta = self.find_delta(state_obj, obj)
 
+        # Update State
+        self.components[obj.id] = obj
+
+        # Form message and broadcast
         try:
             message = self.prepare_message("update", obj, delta)
             self.broadcast(message)
