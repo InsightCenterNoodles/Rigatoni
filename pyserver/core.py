@@ -132,6 +132,15 @@ class Server(object):
         raise Exception("No Component Found")
 
 
+    def get_component(self, id: nooobs.ID):
+        """Getter for users to acces components in state"""
+
+        try:
+            return self.components[id].copy(deep=True)
+        except:
+            raise Exception("No Component Found")
+
+
     def get_message_contents(self, action: str, 
         object: nooobs.NoodleObject=None, delta: set[str]={}):
         """Helper to handle construction of message dict

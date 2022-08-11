@@ -62,6 +62,7 @@ server.update_component(obj: Component, delta: Set[str)
 server.invoke_signal(signal: ID, on_component: Component, signal_data: list[Any])
 server.get_ids_by_type(component: Type[Component])
 server.get_component_id(type: Type[Component], name: str)
+server.get_component(id: ID)
 ```
 
 ### Geometry Library
