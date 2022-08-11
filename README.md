@@ -18,11 +18,13 @@ sequenceDiagram
     User->>Server: Starts Server with Starting State
     Client->>Server: Sends Intro Message
     Server->>Client: Updates the Client with Current State
-    Client->>Server: Request to Invoke Method
-    Server->>Method: Invokes Method
-    Method->>Server: Creates, Updates, and Deletes Components
-    Server->>Client: Broadcasts Component Changes to All Clients
-    Server->>Client: Sends Method Reply with Response or Exception
+    loop until end of session
+        Client->>Server: Request to Invoke Method
+        Server->>Method: Invokes Method
+        Method->>Server: Invokes Signals, Creates, Updates, and Deletes Components
+        Server->>Client: Broadcasts Component Changes to All Clients
+        Server->>Client: Sends Method Reply with Response or Exception
+    end
 ```
 
 ## Getting Started
