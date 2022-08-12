@@ -1,3 +1,8 @@
+"""Module containing logic for maintaining a client connection
+
+Handles new clients and delegates most work to the server object
+"""
+
 import asyncio
 import functools
 from typing import Type
@@ -27,7 +32,7 @@ async def send(websocket, message: list):
 async def handle_client(websocket, server: Server):
     """Coroutine for handling a client's connection
     
-    Receives and transmits all messages
+    Receives and delegates message handling to server
     
     args:
         websocket (WebSocketClientProtocol):

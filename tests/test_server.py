@@ -1,3 +1,9 @@
+"""Test script to work with penne's test client
+
+Roughly modeled off of PlottyN, this script shows how a user
+could overwrite the table delegate to add table functionality
+"""
+
 import asyncio
 import weakref
 

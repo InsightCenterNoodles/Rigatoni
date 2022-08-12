@@ -1,23 +1,11 @@
 """Interface Methods for Specific Components"""
+
 from typing import Optional
 import weakref
 
 from .core import Server
 from . import noodle_objects as nooobs
 
-
-# Outline for component specific method
-# def create_method(server: Server, name: str, 
-#                   doc: Optional[str]=None, return_doc: Optional[str]=None, 
-#                   arg_doc: Optional[list[nooobs.MethodArg]]= None):
-
-#     component_type = nooobs.Method
-#     id = server.get_id(component_type)
-
-#     method = nooobs.Method(id, name, doc, return_doc, arg_doc)
-#     component = server.create_object(component_type, method)
-
-#     return component
 
 class Delegate(object):
 
@@ -65,11 +53,3 @@ class ServerTableDelegate(Delegate):
     def table_selection_updated(self, selection: nooobs.Selection):
         pass
 
-
-# Idea: create geometry delegate to have object oriented methods
-# class ServerGeometryDelegate(Delegate):
-
-#     def __init__(self, server: Server, component: nooobs.Component):
-#         super().__init__(server, component)
-
-#     def create_geometry()

@@ -1,3 +1,8 @@
+"""Test script for testing geometry creation library
+
+Offers sample methods a server could implement using a sphere
+"""
+
 import asyncio
 
 import pandas as pd

@@ -1,3 +1,5 @@
+"""Module with core implementation of Server Object"""
+
 from __future__ import annotations
 from copy import deepcopy
 from types import NoneType
