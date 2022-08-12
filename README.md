@@ -30,25 +30,25 @@ sequenceDiagram
 ## Getting Started
 ### 1. Install the server library
 
-```pip install pyserver```
+```pip install rigatoni```
 
 ### 2. Define components to be held in the server's starting state
 - Use starting component objects to help with the creation of these components
 ```python
-pyserver.StartingComponent(Type[Component], dict[Component_Attr, Value])
+rigatoni.StartingComponent(Type[Component], dict[Component_Attr, Value])
 ```
 - You can refer to the objects listed in `noodle_objects.py` to find all the available components along with their mandatory, default, and optional attributes. Additional information on NOODLE components and their attributes can be found [here](https://github.com/InsightCenterNoodles/message_spec)
 - Note that components must be initialized with keyword arguments to allow for validation
 - When creating methods, an additional callable object should be attached. This method will be injected onto the server object, and it will be associated with its corresponding method component.
 
 ```python
-pyserver.StartingComponent(Type[Component], dict[Component_Attr, Value], Callable)
+rigatoni.StartingComponent(Type[Component], dict[Component_Attr, Value], Callable)
 ```
 
 ### 3. Start running the server
 
 ```python
-asyncio.run(pyserver.start_server(port: [int], starting_state: list[StartingComponent]))
+asyncio.run(rigatoni.start_server(port: [int], starting_state: list[StartingComponent]))
 ```
 
 ## More Info on Creating Methods
@@ -69,7 +69,7 @@ server.get_component(id: ID)
 Creating a renderable entity is an involved process that makes use of several different components. To help simplify this process the library provides methods to create all the linked components necessary for a mesh.
 
 ```python
-pyserver.geometry.GeometryPatchInput(
+rigatoni.geometry.GeometryPatchInput(
     vertices: list
     indices: list
     index_type: str 
@@ -79,18 +79,18 @@ pyserver.geometry.GeometryPatchInput(
     textures:Optional[list] 
     colors: Optional[list]
 )
-pyserver.geometry.build_geometry_patch(server: Server, name: str, input: GeometryPatchInput)
+rigatoni.geometry.build_geometry_patch(server: Server, name: str, input: GeometryPatchInput)
 
-instances = geo_make.create_instances(
+instances = rigatoni.geometry.create_instances(
     positions: Optional[list[nooobs.Vec3]], 
     colors: Optional[list[nooobs.Vec4]], 
     rotations: Optional[list[nooobs.Vec4]], 
     scales: Optional[list[nooobs.Vec3]]
 )
-pyserver.geometry.build_entity(server: Server, geometry: Geometry, instances: Optional[Mat4])
+rigatoni.geometry.build_entity(server: Server, geometry: Geometry, instances: Optional[Mat4])
 
-pyserver.geometry.update_entity(server: Server, entity: Entity, geometry: Optional[Geometry], instances: Optional[Mat4])
-pyserver.add_instances(server: Server, entity: Entity, instances: Mat4)
+rigatoni.geometry.update_entity(server: Server, entity: Entity, geometry: Optional[Geometry], instances: Optional[Mat4])
+rigatoni.geometry.add_instances(server: Server, entity: Entity, instances: Mat4)
 ```
 
 

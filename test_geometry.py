@@ -3,11 +3,11 @@ import asyncio
 import pandas as pd
 import matplotlib
 
-from pyserver.geometry import geometry_creation as geo_make
-from pyserver.server import start_server
-import pyserver.noodle_objects as nooobs
-import pyserver.geometry.geometry_objects as geoobs
-from pyserver.core import Server
+from rigatoni.geometry import geometry_creation as geo_make
+from rigatoni.server import start_server
+import rigatoni.noodle_objects as nooobs
+import rigatoni.geometry.geometry_objects as geoobs
+from rigatoni.core import Server
 
 # 42 vertices for sphere
 vertices = [[-0.000000, -0.500000, -0.000000], [0.361804, -0.223610, 0.262863],
@@ -122,7 +122,7 @@ def make_point_plot(server: Server, context, *args):
     sphere = server.create_component(nooobs.Geometry, name=name, patches=patches)
 
     # Read data from data.csv and normalize
-    df = pd.read_csv("/Users/aracape/development/pyserver/pyserver/geometry/data.csv")
+    df = pd.read_csv("/Users/aracape/development/rigatoni/rigatoni/geometry/data.csv")
     df_scaled = normalize_df(df)
     
     # Positions

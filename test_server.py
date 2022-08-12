@@ -3,10 +3,10 @@ import weakref
 
 import pandas as pd
 
-from pyserver.server import start_server
-from pyserver.core import Server
-import pyserver.noodle_objects as nooobs
-import pyserver.interface as interface
+from rigatoni.server import start_server
+from rigatoni.core import Server
+import rigatoni.noodle_objects as nooobs
+import rigatoni.interface as interface
 
 def new_point_plot(server: Server, context: dict, xs, ys, zs, colors=None, sizes=None):
 

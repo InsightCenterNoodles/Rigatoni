@@ -5,9 +5,9 @@ from typing import Type
 import websockets
 from cbor2 import loads, dumps
 
-from pyserver.core import Server
-from pyserver.noodle_objects import Component
-from pyserver.interface import Delegate
+from rigatoni.core import Server
+from rigatoni.noodle_objects import Component
+from rigatoni.interface import Delegate
 
 async def send(websocket, message: list):
     """Send CBOR message using websocket
