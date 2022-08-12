@@ -1,14 +1,16 @@
 [build-system]
-requires = ["setuptools", "setuptools-scm"]
-build-backend = "setuptools.build_meta"
+requires = ["flit_core >=3.2,<4"]
+build-backend = "flit_core.buildapi"
 
 [project]
-name = "pyserver"
-version = "0.0.1"
-description = "Python Server for NOODLES protocol"
-readme = "README.rst"
-requires-python = ">=3.7"
-keywords = ["noodles", "cbor", "Websockets"]
+name = "rigatoni"
+authors = [
+    {name = "Alex Racapé"},
+]
+dynamic = ["version", "description"]
+readme = "README.md"
+requires-python = ">=3.8"
+keywords = ["noodles", "cbor", "Websockets", "server", "NOODLES"]
 license = {text = "MIT"}
 classifiers = [
     "Intended Audience :: Science/Research",
@@ -16,7 +18,15 @@ classifiers = [
     "Topic :: Scientific/Engineering :: Visualization"
 ]
 dependencies = [
-    "asyncio",
     "websockets",
-    "cbor2"
+    "cbor2",
+    "pydantic"
 ]
+
+[project.optional-dependencies]
+geometry = [
+    "numpy"
+]
+
+[project.urls]
+Source = "https://github.com/InsightCenterNoodles/rigatoni"
