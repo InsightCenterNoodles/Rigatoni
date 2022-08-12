@@ -3,11 +3,10 @@ import asyncio
 import pandas as pd
 import matplotlib
 
-from rigatoni.geometry import geometry_creation as geo_make
+from context import rigatoni
 from rigatoni.server import start_server
 import rigatoni.noodle_objects as nooobs
 import rigatoni.geometry.geometry_objects as geoobs
-from rigatoni.core import Server
 
 # 42 vertices for sphere
 vertices = [[-0.000000, -0.500000, -0.000000], [0.361804, -0.223610, 0.262863],
@@ -57,7 +56,7 @@ indices =  [[0, 13, 12],  [1, 13, 15],  [0, 12, 17],  [0, 17, 19],
 colors = [[255, 255, 255, 255]] * 42
 
 
-def create_spheres(server: Server, context, *args):
+def create_spheres(server: rigatoni.Server, context, *args):
     """Test method to create two spheres"""
     
     name = "Test Sphere"
@@ -72,27 +71,27 @@ def create_spheres(server: Server, context, *args):
         material = material.id,
         colors = colors
     )
-    patches.append(geo_make.build_geometry_patch(server, name, patch_info))
+    patches.append(rigatoni.geometry.build_geometry_patch(server, name, patch_info))
 
     # Create geometry using patches
     sphere = server.create_component(nooobs.Geometry, name=name, patches=patches)
 
     # Set instances and create an entity
-    instances = geo_make.create_instances(
+    instances = rigatoni.geometry.create_instances(
         positions=[(1,1,1,1),(2,2,2,2)],
         colors=[(1,.5,.5,1)],
         rotations=[(45, 20, 0, 0)]
     )
-    entity = geo_make.build_entity(server, geometry=sphere, instances=instances)
+    entity = rigatoni.geometry.build_entity(server, geometry=sphere, instances=instances)
     return 1
 
 
-def create_new_instance(server: Server, context, entity_slot, entity_gen, position=None, color=None, rotation=None, scale=None):
+def create_new_instance(server: rigatoni.Server, context, entity_slot, entity_gen, position=None, color=None, rotation=None, scale=None):
     """Method to test instance updating"""
     
     entity = server.components[nooobs.EntityID(entity_slot, entity_gen)]
-    new_instance = geo_make.create_instances(position, color, rotation, scale)
-    geo_make.add_instances(server, entity, new_instance)
+    new_instance = rigatoni.geometry.create_instances(position, color, rotation, scale)
+    rigatoni.geometry.add_instances(server, entity, new_instance)
 
 
 def normalize_df(df: pd.DataFrame):
@@ -104,7 +103,7 @@ def normalize_df(df: pd.DataFrame):
 
     return normalized_df
 
-def make_point_plot(server: Server, context, *args):
+def make_point_plot(server: rigatoni.Server, context, *args):
     """Test Method to generate plot-like render from data.csv"""
 
     name = "Test Plot"
@@ -118,11 +117,11 @@ def make_point_plot(server: Server, context, *args):
         index_type = "TRIANGLES",
         material = material.id,
         colors = colors)
-    patches.append(geo_make.build_geometry_patch(server, name, patch_info))
+    patches.append(rigatoni.geometry.build_geometry_patch(server, name, patch_info))
     sphere = server.create_component(nooobs.Geometry, name=name, patches=patches)
 
     # Read data from data.csv and normalize
-    df = pd.read_csv("/Users/aracape/development/rigatoni/rigatoni/geometry/data.csv")
+    df = pd.read_csv("/Users/aracape/development/rigatoni/tests/data.csv")
     df_scaled = normalize_df(df)
     
     # Positions
@@ -140,14 +139,14 @@ def make_point_plot(server: Server, context, *args):
     scls = [(i*s, i*s, i*s, i*s) for i in list(df_scaled['FCI_incentive_amount[CNG]'])]
 
     # Create instances of sphere to represent csv data in an entity
-    instances = geo_make.create_instances(
+    instances = rigatoni.geometry.create_instances(
         positions=[*zip(x, y, z)],
         colors=cols,
         scales=scls
     )
-    entity = geo_make.build_entity(server, geometry=sphere, instances=instances)
-    new_instance = geo_make.create_instances([[1,1,1]])
-    geo_make.add_instances(server, entity, new_instance)
+    entity = rigatoni.geometry.build_entity(server, geometry=sphere, instances=instances)
+    new_instance = rigatoni.geometry.create_instances([[1,1,1]])
+    rigatoni.geometry.add_instances(server, entity, new_instance)
     return 1
 
 

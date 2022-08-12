@@ -3,6 +3,7 @@ import weakref
 
 import pandas as pd
 
+from context import rigatoni
 from rigatoni.server import start_server
 from rigatoni.core import Server
 import rigatoni.noodle_objects as nooobs
