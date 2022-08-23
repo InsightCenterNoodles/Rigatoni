@@ -1,10 +1,8 @@
 """Module with core implementation of Server Object"""
 
 from __future__ import annotations
-from copy import deepcopy
 from types import NoneType
 from typing import TYPE_CHECKING, Type, Union
-from numpy import isin
 if TYPE_CHECKING:
     from . import interface
 
@@ -421,7 +419,7 @@ class Server(object):
         """Helper to find differences between two objects
         
         Also checks to find recursive cases and cases where references
-        should be updated
+        should be updated, Does this get recursive deltas tho? should it?
         """
 
         delta = set()

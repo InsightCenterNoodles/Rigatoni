@@ -17,10 +17,11 @@ Modules:
 """
 
 
-__version__ = "0.1.2"
+__version__ = "0.1.1"
 
 from .server import start_server
 from .interface import ServerTableDelegate, Delegate
 from .core import Server
 from . import geometry
+from .noodle_objects import *
 
