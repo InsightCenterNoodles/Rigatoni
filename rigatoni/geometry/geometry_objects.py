@@ -3,30 +3,33 @@
 These are based on the noodle_objects.py module and impliment validation
 """
 
-from ..noodle_objects import *
+from typing import Optional
 
+from .. import noodle_objects as nooobs
 
-class AttributeInput(NoodleObject):
+class AttributeInput(nooobs.NoodleObject):
     """Input for setting attributes of a buffer 
     
     User should not have to concern themselves with this input
     """
 
-    semantic: AttributeSemantic
-    format: Format
+    semantic: nooobs.AttributeSemantic
+    format: nooobs.Format
     normalized: bool
     offset: Optional[int]
     stride: Optional[int]
 
 
-class GeometryPatchInput(NoodleObject):
+class GeometryPatchInput(nooobs.NoodleObject):
     """User input object for creating a geometry patch"""
 
     vertices: list
     indices: list
     index_type: str 
-    material: MaterialID
+    material: nooobs.MaterialID
     normals: Optional[list] 
     tangents: Optional[list]
-    textures:Optional[list] 
+    textures: Optional[list] 
     colors: Optional[list]
+
+

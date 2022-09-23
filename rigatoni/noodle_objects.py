@@ -145,7 +145,10 @@ class SamplerMode(Enum):
     mirrored_repeat = "MIRRORED_REPEAT"
     repeat = "REPEAT"
 
-class SelectionRange(BaseModel):
+class URL(NoodleObject):
+    url: str
+
+class SelectionRange(NoodleObject):
     key_from_inclusive: int
     key_to_exclusive: int
 
@@ -357,7 +360,7 @@ class Buffer(Component):
     size: int = None
 
     inline_bytes: bytes = None
-    uri_bytes: str = None
+    uri_bytes: URL = None
 
     @root_validator
     def one_of(cls, values):

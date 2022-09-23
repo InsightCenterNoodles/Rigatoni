@@ -7,9 +7,16 @@ if TYPE_CHECKING:
     from . import interface
 
 import websockets
-from cbor2 import dumps
+from cbor2 import dumps, CBORTag
 
 from . import noodle_objects as nooobs
+
+
+def uri_encoder(encoder, value):
+    """Default encoder to use for URI Bytes"""
+
+    encoder.encode(CBORTag(32, value))
+
 
 class Server(object):
     """NOODLES Server
@@ -155,6 +162,10 @@ class Server(object):
         if action in {"create", "invoke", "reply"}:
             contents = object.dict(exclude_none=True)
 
+            # Change type to url to facilitate proper encoding
+            if "uri_bytes" in contents:
+                contents["uri_bytes"] = nooobs.URL(contents["uri_bytes"])
+
         elif action == "update":
             if object == None: # Document case
                 contents["methods_list"] = self.get_ids_by_type(nooobs.Method)
@@ -193,7 +204,7 @@ class Server(object):
         """
         
         print(f"Broadcasting Message: ID's {message[::2]}")
-        encoded = dumps(message)
+        encoded = dumps(message, default=uri_encoder)
         websockets.broadcast(self.clients, encoded)
 
 
