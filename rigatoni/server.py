@@ -6,11 +6,12 @@ Handles new clients and delegates most work to the server object
 import asyncio
 import functools
 from typing import Type
+import json
 
 import websockets
 from cbor2 import loads, dumps
 
-from rigatoni.core import Server
+from rigatoni.core import Server, uri_encoder
 from rigatoni.noodle_objects import Component
 from rigatoni.interface import Delegate
 
@@ -24,9 +25,11 @@ async def send(websocket, message: list):
             message to be sent, in list format
             [id, content, id, content...]
     """
-    
+    json_message = json.dumps(message)
+    with open("sample_messages.json", "a") as outfile:
+        outfile.write(json_message)
     print(f"Sending Message: ID's {message[::2]}")
-    await websocket.send(dumps(message))
+    await websocket.send(dumps(message, default=uri_encoder))
 
 
 async def handle_client(websocket, server: Server):

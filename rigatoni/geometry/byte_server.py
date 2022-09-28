@@ -108,7 +108,7 @@ class ByteServer(object):
 
             # Send HTTP response
             # client_connection.sendall(response.encode())
-            print(f'Response:\n{response}')
+            # print(f'Response:\n{response}')
             client_connection.sendall(response)
             client_connection.close()
 

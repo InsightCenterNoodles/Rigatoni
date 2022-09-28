@@ -445,6 +445,7 @@ def meshlab_load(server: Server, byte_server: ByteServer, file,
     ms.load_new_mesh(file)
     mesh = ms.current_mesh()
     #mesh.compute_normal_per_vertex("Simple Average")
+    print(f"Finished Loading Mesh...")
 
     # Extract data from mesh set structure
     vertices = mesh.vertex_matrix().tolist()
@@ -596,7 +597,7 @@ def generate_normals(vertices: list[list], indices: list[list]):
     """TODO"""
     
     # Idea: go through all the triangles, and calculate normal for each one and attach average to each vertex
-
+    print(f"Generating normals for {len(vertices)} vertices")
     normals = {}
     adjacents = {}
     for triangle in indices:
@@ -651,6 +652,7 @@ def generate_normals(vertices: list[list], indices: list[list]):
     discovered.append((starting_index, starting_index))
     while discovered:
         
+        print(f"Orienting normal {len(visited)}/{len(discovered)}")
         current_index, neighbor = discovered.popleft()
         dot = dot_product(normals[current_index], normals[neighbor])
         if dot < 0: # Flip vector

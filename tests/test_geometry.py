@@ -158,14 +158,14 @@ def make_point_plot(server: rigatoni.Server, context, *args):
 def create_from_mesh(server: rigatoni.Server, context, *args):
     """Test Method to generate render from mesh"""
 
-    name = "Test Plot"
+    name = "Test Mesh"
     material = server.create_component(rigatoni.Material, name="Test Material")
 
     # use libraries from mesh option    
-    uri_server = geo.ByteServer(port=40000)
-    mesh = geo.geometry_from_mesh(server, "/Users/aracape/development/geometry_tools/tests/stanford-bunny.obj", material, name, uri_server)
+    uri_server = geo.ByteServer(port=60000)
+    #mesh = geo.geometry_from_mesh(server, "/Users/aracape/development/rigatoni/tests/stanford-bunny.obj", material, name, uri_server)
     #mesh = geo.geometry_from_mesh(server, "/Users/aracape/development/test_sphere.vtk", material)
-    #mesh = geo.geometry_from_mesh(server, "/Users/aracape/development/geometry_tools/tests/magvort.x3d", material)
+    mesh = geo.geometry_from_mesh(server, "/Users/aracape/development/rigatoni/tests/magvort.x3d", material, name, uri_server)
 
 
     # Create instances of sphere to represent csv data in an entity

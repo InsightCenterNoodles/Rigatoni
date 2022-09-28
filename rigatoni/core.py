@@ -8,6 +8,7 @@ if TYPE_CHECKING:
 
 import websockets
 from cbor2 import dumps, CBORTag
+import json
 
 from . import noodle_objects as nooobs
 
@@ -15,8 +16,13 @@ from . import noodle_objects as nooobs
 def uri_encoder(encoder, value):
     """Default encoder to use for URI Bytes"""
 
-    encoder.encode(CBORTag(32, value))
+    encoder.encode(CBORTag(32, value.url))
 
+def default_json_encoder(value):
+    if isinstance(value, nooobs.URL):
+        return value.url
+    else:
+        return str(value)
 
 class Server(object):
     """NOODLES Server
@@ -164,7 +170,7 @@ class Server(object):
 
             # Change type to url to facilitate proper encoding
             if "uri_bytes" in contents:
-                contents["uri_bytes"] = nooobs.URL(contents["uri_bytes"])
+                contents["uri_bytes"] = nooobs.URL(url=contents["uri_bytes"])
 
         elif action == "update":
             if object == None: # Document case
@@ -204,6 +210,9 @@ class Server(object):
         """
         
         print(f"Broadcasting Message: ID's {message[::2]}")
+        json_message = json.dumps(message, default=default_json_encoder)
+        with open("sample_messages.json", "a") as outfile:
+            outfile.write(json_message)
         encoded = dumps(message, default=uri_encoder)
         websockets.broadcast(self.clients, encoded)
 

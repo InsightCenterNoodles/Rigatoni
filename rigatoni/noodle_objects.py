@@ -360,7 +360,7 @@ class Buffer(Component):
     size: int = None
 
     inline_bytes: bytes = None
-    uri_bytes: URL = None
+    uri_bytes: str = None
 
     @root_validator
     def one_of(cls, values):
