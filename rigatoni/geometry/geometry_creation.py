@@ -426,6 +426,19 @@ def add_instances(server: Server, entity: nooobs.Entity, instances: list):
 
 #---------------------------------- Mesh Importing ----------------------------------#
 
+def convert(color: int):
+    """Helper to convert decimal pymesh values to RGBA array"""
+
+    rgb = []
+    for i in range(4):
+        rgb.append(color % 256)
+        color = color // 256
+
+    alpha = rgb.pop(0)
+    rgb.append(alpha)
+    return rgb
+
+
 def meshlab_load(server: Server, byte_server: ByteServer, file, 
     material: nooobs.Material, mesh_name: Optional[str]=None):
     """Use pymeshlab to load types unsupported by meshio
@@ -450,10 +463,11 @@ def meshlab_load(server: Server, byte_server: ByteServer, file,
     # Extract data from mesh set structure
     vertices = mesh.vertex_matrix().tolist()
     indices = mesh.face_matrix().tolist()
-    normals = mesh.vertex_normal_matrix().tolist()
+    #normals = mesh.vertex_normal_matrix().tolist() # Look like they could be off
+    normals = None
     tangents = None # TBD
     textures = None # TBD
-    colors = mesh.vertex_color_array().tolist()
+    colors = [convert(color) for color in mesh.vertex_color_array().tolist()]
 
     # Create patch / geometry for point geometry
     patches = []
