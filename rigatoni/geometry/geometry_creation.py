@@ -680,4 +680,3 @@ def generate_normals(vertices: list[list], indices: list[list]):
     print(f"Finished getting normals...\nNum Inward: {num_inward}")
     print(f"Vertices {len(vertices)} vs. Normals {len(normals)}")
     return [normals.get(i, [0,0,0]) for i in range(len(vertices))]
-    return [center_normals[i] for i in range(len(vertices))]
