@@ -62,7 +62,7 @@ def get_format(num_vertices: int) -> str:
         return 'U32'
 
 
-def set_up_attributes(input: GeometryPatchInput):
+def set_up_attributes(input: GeometryPatchInput, generate_normals: bool):
     """Constructs attribute info from input type
     
     Takes list input and constructs objects 
@@ -75,8 +75,8 @@ def set_up_attributes(input: GeometryPatchInput):
     """
 
     # Generate normals if not indicated in input
-    if not input.normals:
-        input.normals = generate_normals(input.vertices, input.indices)
+    if not input.normals and generate_normals:
+        input.normals = calculate_normals(input.vertices, input.indices)
 
     # Add attribute info based on the input lists
     attribute_info = [] 
@@ -184,7 +184,7 @@ def build_geometry_buffer(server: Server, name, input: GeometryPatchInput,
 
 
 def build_geometry_patch(server: Server, name: str, input: GeometryPatchInput, 
-    byte_server: ByteServer=None) -> nooobs.GeometryPatch:
+    byte_server: ByteServer=None, generate_normals: bool=True) -> nooobs.GeometryPatch:
     """Build a Geometry Patch with related buffers and views
     
     Args:
@@ -200,7 +200,7 @@ def build_geometry_patch(server: Server, name: str, input: GeometryPatchInput,
     index_format = get_format(vert_count)            
 
     # Set up attributes with given lists
-    attribute_info = set_up_attributes(input)
+    attribute_info = set_up_attributes(input, generate_normals=generate_normals)
 
     # Build buffer with given lists
     buffer: nooobs.Buffer
@@ -440,7 +440,7 @@ def convert(color: int):
 
 
 def meshlab_load(server: Server, byte_server: ByteServer, file, 
-    material: nooobs.Material, mesh_name: Optional[str]=None):
+    material: nooobs.Material, mesh_name: Optional[str]=None, generate_normals: bool=True):
     """Use pymeshlab to load types unsupported by meshio
 
     This method is only called from geometry_from_mesh if needed
@@ -480,14 +480,14 @@ def meshlab_load(server: Server, byte_server: ByteServer, file,
         tangents = tangents,
         textures = textures,
         colors = colors)
-    patches.append(build_geometry_patch(server, mesh_name, patch_info, byte_server))
+    patches.append(build_geometry_patch(server, mesh_name, patch_info, byte_server, generate_normals=generate_normals))
     geometry = server.create_component(nooobs.Geometry, name=mesh_name, patches=patches)
 
     return geometry
 
 
 def geometry_from_mesh(server: Server, file, material: nooobs.Material, 
-    mesh_name: Optional[str]=None, byte_server: ByteServer=None):
+    mesh_name: Optional[str]=None, byte_server: ByteServer=None, generate_normals: bool=True):
     """Construct geometry from mesh file
     
     Can specify byte server if it is a big mesh and needs uri bytes
@@ -497,7 +497,7 @@ def geometry_from_mesh(server: Server, file, material: nooobs.Material,
     try: 
         mesh = meshio.read(file)
     except:
-        return meshlab_load(server, byte_server, file, material, mesh_name) 
+        return meshlab_load(server, byte_server, file, material, mesh_name, generate_normals=generate_normals) 
 
     # Define Meshio helper functions 
     def get_point_attr(mesh, attr: str):
@@ -537,7 +537,7 @@ def geometry_from_mesh(server: Server, file, material: nooobs.Material,
         tangents = tangents,
         textures = textures,
         colors = colors)
-    patches.append(build_geometry_patch(server, mesh_name, patch_info, byte_server))
+    patches.append(build_geometry_patch(server, mesh_name, patch_info, byte_server, generate_normals=generate_normals))
     geometry = server.create_component(nooobs.Geometry, name=mesh_name, patches=patches)
 
     return geometry
@@ -607,7 +607,7 @@ def dot_product(v1, v2):
     return product
 
 
-def generate_normals(vertices: list[list], indices: list[list]):
+def calculate_normals(vertices: list[list], indices: list[list]):
     """TODO"""
     
     # Idea: go through all the triangles, and calculate normal for each one and attach average to each vertex
