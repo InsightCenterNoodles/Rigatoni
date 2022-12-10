@@ -305,7 +305,6 @@ class Entity(Component):
     parent: Optional[EntityID] = None
     transform: Optional[Mat4] = None
 
-    null_rep: Optional[Any] = None
     text_rep: Optional[TextRepresentation] = None
     web_rep: Optional[WebRepresentation] = None
     render_rep: Optional[RenderRepresentation] = None
@@ -318,20 +317,6 @@ class Entity(Component):
     signals_list: Optional[list[SignalID]] = None
 
     influence: Optional[BoundingBox] = None
-
-    @root_validator
-    def one_of(cls, values):
-        already_found  = False
-        for field in ['null_rep', 'text_rep', 'web_rep', 'render_rep']:
-            if values[field] and already_found:
-                raise ValueError("More than one field entered")
-            elif values[field]:
-                already_found = True
-        
-        if not already_found:
-            raise ValueError("No field provided")
-        else:
-            return values
 
 
 class Plot(Component):
@@ -436,8 +421,8 @@ class Light(Component):
     id: LightID
     name: Optional[str] = None
 
-    color: Optional[RGB] = [255, 255, 255]
-    intensity: Optional[float] = 1
+    color: Optional[RGB] = [1.0, 1.0, 1.0]
+    intensity: Optional[float] = 1.0
 
     point: PointLight = None
     spot: SpotLight = None

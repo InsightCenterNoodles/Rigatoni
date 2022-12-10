@@ -18,6 +18,7 @@ def uri_encoder(encoder, value):
 
     encoder.encode(CBORTag(32, value.url))
 
+
 def default_json_encoder(value):
     if isinstance(value, nooobs.URL):
         return value.url
@@ -320,10 +321,21 @@ class Server(object):
             elif isinstance(val, nooobs.NoodleObject):
                 self.update_references(comp, val, removing)
 
-            # found list of objects to recurse on 
-            elif val and isinstance(val, list) and isinstance(val[0], nooobs.NoodleObject):
-                for obj in val:
-                    self.update_references(comp, obj, removing)
+            # Found list of objects or id's to recurse on 
+            elif val and isinstance(val, list):
+                
+                # Objects
+                if isinstance(val[0], nooobs.NoodleObject):
+                    for obj in val:
+                        self.update_references(comp, obj, removing)
+
+                # Id's
+                elif isinstance(val[0], nooobs.ID):
+                    for id in val:
+                        if removing:
+                            self.references[id].remove(comp.id)
+                        else:
+                            self.references.setdefault(id, set()).add(comp.id)
 
 
     def get_id(self, comp_type: Type[nooobs.Component]) -> nooobs.IDGroup:

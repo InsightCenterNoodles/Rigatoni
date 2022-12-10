@@ -12,7 +12,7 @@ from ..core import Server
 from .geometry_objects import AttributeInput, GeometryPatchInput
 from .byte_server import ByteServer
 
-INLINE_LIMIT = 100
+INLINE_LIMIT = 10000
 
 SIZES = {
     # in bytes

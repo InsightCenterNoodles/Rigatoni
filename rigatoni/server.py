@@ -25,9 +25,9 @@ async def send(websocket, message: list):
             message to be sent, in list format
             [id, content, id, content...]
     """
-    json_message = json.dumps(message)
-    with open("sample_messages.json", "a") as outfile:
-        outfile.write(json_message)
+    # json_message = json.dumps(message)
+    # with open("sample_messages.json", "a") as outfile:
+    #     outfile.write(json_message)
     print(f"Sending Message: ID's {message[::2]}")
     await websocket.send(dumps(message, default=uri_encoder))
 
