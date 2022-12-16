@@ -41,10 +41,10 @@ FORMAT_MAP = {
         "MAT4": np.single
     }
 
-DEFAULT_POSITION = [0.0, 0.0, 0.0, 0.0]
+DEFAULT_POSITION = [0.0, 0.0, 0.0, 1.0]
 DEFAULT_COLOR = [1.0, 1.0, 1.0, 1.0]
-DEFAULT_ROTATION = [0.0, 0.0, 0.0, 0.0]
-DEFAULT_SCALE = [1.0, 1.0, 1.0, 0.0]
+DEFAULT_ROTATION = [0.0, 0.0, 0.0, 1.0]
+DEFAULT_SCALE = [1.0, 1.0, 1.0, 1.0]
 
 
 def get_format(num_vertices: int) -> str:
@@ -117,6 +117,11 @@ def set_up_attributes(input: GeometryPatchInput, generate_normals: bool):
             normalized = True,
             )
         attribute_info.append(color)
+
+        # Check color format and correct
+        if any(i > 1 for i in input.colors[0]):
+            for i in range(len(input.colors)):
+                input.colors[i] = [x / 255 for x in input.colors[i]]
 
     # Use input to get offsets
     offset = 0
@@ -251,7 +256,7 @@ def build_instance_buffer(server: Server, name: str, matrices: nooobs.Mat4) -> n
         matrices (Mat4): instance matrices
     """
     
-    buffer_bytes = np.array(matrices, dtype=np.single).tobytes(order='C')
+    buffer_bytes = np.array(matrices, dtype=np.single).tobytes()
 
     buffer = server.create_component(
         nooobs.Buffer,
@@ -315,12 +320,12 @@ def create_instances(
         scales (list[Vec3]): Scales for each instance
     """
 
-    def padded(lst: list):
+    def padded(lst: list, defuault_val: float=1.0):
         """Helper to pad the lists"""
 
         lst = list(lst)
         if len(lst) < 4:
-            lst += [0.0] * (4 - len(lst))
+            lst += [defuault_val] * (4 - len(lst))
         return lst
 
     # If no inputs specified create one default instance

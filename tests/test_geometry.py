@@ -56,7 +56,7 @@ indices =  [[0, 13, 12],  [1, 13, 15],  [0, 12, 17],  [0, 17, 19],
             [17, 12, 18], [12, 2, 18],  [15, 16, 5],  [15, 13, 16],
             [13, 0, 16],  [12, 14, 2],  [12, 13, 14], [13, 1, 14]]
 
-colors = [[0, 255, 0, 255]] * 42
+#colors = [[0.0, 1, 0.0, 1]] * 42
 
 
 def create_spheres(server: rigatoni.Server, context, *args):
@@ -72,8 +72,7 @@ def create_spheres(server: rigatoni.Server, context, *args):
         vertices = vertices, 
         indices = indices, 
         index_type = "TRIANGLES",
-        material = material.id,
-        colors = colors
+        material = material.id
     )
     patches.append(geo.build_geometry_patch(server, name, patch_info))
 
@@ -83,7 +82,7 @@ def create_spheres(server: rigatoni.Server, context, *args):
     # Set instances and create an entity
     instances = geo.create_instances(
         positions=[(1,1,1,1),(2,2,2,2)],
-        colors=[(1,.5,.5,1)],
+        colors=[(1.0,.5,.5,1.0)],
     )
     entity = geo.build_entity(server, geometry=sphere, instances=instances)
     geo.export_mesh(server, sphere, "test_sphere.obj")
@@ -91,10 +90,10 @@ def create_spheres(server: rigatoni.Server, context, *args):
     # Add Lighting
     point_info = rigatoni.PointLight(range=-1)
     mat = [
-        0,0,0,0,
-        0,0,0,0,
-        0,0,0,0,
-        0,0,0,1
+        1,0,0,0,
+        0,1,0,0,
+        0,0,1,0,
+        3,3,3,1
     ]
     light = server.create_component(rigatoni.Light, name="Test Point Light", point=point_info)
     #light2 = server.create_component(rigatoni.Light, name="Sun", intensity=5, directional=rigatoni.DirectionalLight())
@@ -188,7 +187,6 @@ def create_from_mesh(server: rigatoni.Server, context, *args):
     # Test export
     geo.export_mesh(server, mesh, "test_mesh.obj", uri_server)
     return 1
-
 
 
 # define arg documentation for injected method
