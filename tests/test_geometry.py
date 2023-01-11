@@ -99,6 +99,16 @@ def create_spheres(server: rigatoni.Server, context, *args):
     #light2 = server.create_component(rigatoni.Light, name="Sun", intensity=5, directional=rigatoni.DirectionalLight())
     server.create_component(rigatoni.Entity, transform=mat, lights=[light.id])
 
+    spot_info = rigatoni.SpotLight()
+    mat = [
+        1,0,0,0,
+        0,1,0,0,
+        0,0,1,0,
+        0,0,3,1
+    ]
+    spot = server.create_component(rigatoni.Light, name="Test Spot Light", spot=spot_info)
+    server.create_component(rigatoni.Entity, transform=mat, lights=[spot.id])
+
     return 1
 
 
@@ -126,14 +136,37 @@ def make_point_plot(server: rigatoni.Server, context, *args):
     name = "Test Plot"
     material = server.create_component(rigatoni.Material, name="Test Material")
 
+    # Add Lighting
+    point_info = rigatoni.PointLight(range=-1)
+    mat = [
+        1,0,0,0,
+        0,1,0,0,
+        0,0,1,0,
+        3,3,3,1
+    ]
+    light = server.create_component(rigatoni.Light, name="Test Point Light", point=point_info)
+    sun = server.create_component(rigatoni.Light, name="Sun", intensity=1, directional=rigatoni.DirectionalLight())
+    server.create_component(rigatoni.Entity, transform=mat, lights=[light.id])
+
+    spot_info = rigatoni.SpotLight()
+    mat = [
+        1,0,0,0,
+        0,1,0,0,
+        0,0,1,0,
+        0,3,0,1
+    ]
+    spot = server.create_component(rigatoni.Light, name="Test Spot Light", spot=spot_info)
+    server.create_component(rigatoni.Entity, transform=mat, lights=[spot.id])
+
+
     # Create patch / geometry for point geometry
     patches = []
     patch_info = geo.GeometryPatchInput(
         vertices = vertices, 
         indices = indices, 
         index_type = "TRIANGLES",
-        material = material.id,
-        colors = colors)
+        material = material.id
+        )
     patches.append(geo.build_geometry_patch(server, name, patch_info))
     sphere = server.create_component(rigatoni.Geometry, name=name, patches=patches)
 
@@ -162,9 +195,9 @@ def make_point_plot(server: rigatoni.Server, context, *args):
         scales=scls
     )
     entity = geo.build_entity(server, geometry=sphere, instances=instances)
-    new_instance = geo.create_instances([[1,1,1]])
-    geo.add_instances(server, entity, new_instance)
-    return 1
+    #new_instance = geo.create_instances([[1,1,1]])
+    #geo.add_instances(server, entity, new_instance)
+    return 0
 
 
 def create_from_mesh(server: rigatoni.Server, context, *args):
@@ -175,10 +208,10 @@ def create_from_mesh(server: rigatoni.Server, context, *args):
 
     # use libraries from mesh option    
     uri_server = geo.ByteServer(port=60000)
-    # mesh = geo.geometry_from_mesh(server, "/Users/aracape/development/rigatoni/tests/stanford-bunny.obj", material, name, uri_server)
+    mesh = geo.geometry_from_mesh(server, "/Users/aracape/development/rigatoni/tests/stanford-bunny.obj", material, name, uri_server)
     #mesh = geo.geometry_from_mesh(server, "/Users/aracape/development/test_sphere.vtk", material)
     #mesh = geo.geometry_from_mesh(server, "/Users/aracape/development/rigatoni/tests/magvort.x3d", material, name, uri_server, generate_normals=False)
-    mesh = geo.geometry_from_mesh(server, "/Users/aracape/development/rigatoni/tests/boot.obj", material, name, uri_server)
+    #mesh = geo.geometry_from_mesh(server, "/Users/aracape/development/rigatoni/tests/boot.obj", material, name, uri_server)
 
     # Create instances of sphere to represent csv data in an entity
     instances = geo.create_instances()
@@ -186,7 +219,14 @@ def create_from_mesh(server: rigatoni.Server, context, *args):
 
     # Test export
     geo.export_mesh(server, mesh, "test_mesh.obj", uri_server)
-    return 1
+    return 0
+
+def delete_sphere(server: rigatoni.Server, context, *args):
+
+    sphere = server.get_component_id(rigatoni.Entity, "Test Sphere")
+    server.delete_component(sphere)
+    
+    return 0
 
 
 # define arg documentation for injected method
@@ -204,7 +244,8 @@ starting_state = [
     rigatoni.StartingComponent(rigatoni.Method, {"name": "new_point_plot", "arg_doc": []}, make_point_plot),
     rigatoni.StartingComponent(rigatoni.Method, {"name": "create_new_instance", "arg_doc": [*instance_args]}, create_new_instance),
     rigatoni.StartingComponent(rigatoni.Method, {"name": "create_sphere", "arg_doc": []}, create_spheres),
-    rigatoni.StartingComponent(rigatoni.Method, {"name": "create_from_mesh", "arg_doc": []}, create_from_mesh)
+    rigatoni.StartingComponent(rigatoni.Method, {"name": "create_from_mesh", "arg_doc": []}, create_from_mesh),
+    rigatoni.StartingComponent(rigatoni.Method, {"name": "delete_sphere", "arg_doc": []}, delete_sphere)
 ]
 
 def main():

@@ -671,7 +671,7 @@ def calculate_normals(vertices: list[list], indices: list[list]):
     discovered.append((starting_index, starting_index))
     while discovered:
         
-        print(f"Orienting normal {len(visited)}/{len(discovered)}")
+        #print(f"Orienting normal {len(visited)}/{len(discovered)}")
         current_index, neighbor = discovered.popleft()
         dot = dot_product(normals[current_index], normals[neighbor])
         if dot < 0: # Flip vector
