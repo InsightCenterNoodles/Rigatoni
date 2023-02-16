@@ -328,8 +328,13 @@ def create_instances(
             lst += [defuault_val] * (4 - len(lst))
         return lst
 
+    # Safeguard against None values for input
+    if rotations is None: rotations = []
+    if colors is None: colors = []
+    if scales is None: scales = []
+    
     # If no inputs specified create one default instance
-    if not (positions or colors or rotations or scales):
+    if not positions:
         positions = [DEFAULT_POSITION]
 
     # Use longest input as number of instances
@@ -414,19 +419,17 @@ def add_instances(server: Server, entity: nooobs.Entity, instances: list):
     # Ensure we're working with an renderable entity
     try:
         rep = entity.render_rep
+        
+        # Get old instance buffer from entity's render rep
+        old_view: nooobs.BufferView = server.components[rep.instances.view]
+        old_buffer: nooobs.Buffer = server.components[old_view.source_buffer]
+        old_instances = np.frombuffer(old_buffer.inline_bytes, dtype=np.single)
+
+        # Combine new and old instances
+        combined = np.append(old_instances, instances)
+        update_entity(server, entity, instances=combined.tolist())
     except:
         raise Exception("Entity isn't renderable")
-
-    # Get old instance buffer from entity's render rep
-    old_view: nooobs.BufferView = server.components[rep.instances.view]
-    old_buffer: nooobs.Buffer = server.components[old_view.source_buffer]
-    old_instances = np.frombuffer(old_buffer.inline_bytes, dtype=np.single)
-
-    # Combine new and old instances
-    combined = np.append(old_instances, instances)
-
-    update_entity(server, entity, instances=combined.tolist())
-
 
 
 #---------------------------------- Mesh Importing ----------------------------------#

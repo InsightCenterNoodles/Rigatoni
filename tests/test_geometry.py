@@ -109,13 +109,23 @@ def create_spheres(server: rigatoni.Server, context, *args):
     spot = server.create_component(rigatoni.Light, name="Test Spot Light", spot=spot_info)
     server.create_component(rigatoni.Entity, transform=mat, lights=[spot.id])
 
+    direction_info = rigatoni.DirectionalLight()
+    mat = [
+        1,0,0,0,
+        0,1,0,0,
+        0,0,1,0,
+        0,5,0,1
+    ]
+    directional = server.create_component(rigatoni.Light, name="Test Spot Light", directional=direction_info)
+    server.create_component(rigatoni.Entity, transform=mat, lights=[directional.id])
+
     return 1
 
 
-def create_new_instance(server: rigatoni.Server, context, entity_slot, entity_gen, position=None, color=None, rotation=None, scale=None):
+def create_new_instance(server: rigatoni.Server, context, entity_id: list[int], position=None, color=None, rotation=None, scale=None):
     """Method to test instance updating"""
     
-    entity = server.components[rigatoni.EntityID(entity_slot, entity_gen)]
+    entity = server.get_component(rigatoni.EntityID(*entity_id))
     new_instance = geo.create_instances(position, color, rotation, scale)
     geo.add_instances(server, entity, new_instance)
 
@@ -231,12 +241,11 @@ def delete_sphere(server: rigatoni.Server, context, *args):
 
 # define arg documentation for injected method
 instance_args = [
-    rigatoni.MethodArg(name="entity_slot", doc="What're you creating an instance of?", editor_hint="ID"),
-    rigatoni.MethodArg(name="entity_gen", doc="What're you creating an instance of?", editor_hint="ID"),
-    rigatoni.MethodArg(name="position", doc="Where are you putting this instance", editor_hint="Vector"),
-    rigatoni.MethodArg(name="color", doc="What color is this instance?", editor_hint="RGBA Vector"),
-    rigatoni.MethodArg(name="rotation", doc="How is this instance rotated?", editor_hint="Vector"),
-    rigatoni.MethodArg(name="scale", doc="How is this instance scaled?", editor_hint="Vector")
+    rigatoni.MethodArg(name="entity id", doc="What're you creating an instance of?", editor_hint="noo::entity_id"),
+    rigatoni.MethodArg(name="position", doc="Where are you putting this instance? vec3", editor_hint="noo::array"),
+    rigatoni.MethodArg(name="color", doc="What color is this instance? RGBA Vector", editor_hint="noo::array"),
+    rigatoni.MethodArg(name="rotation", doc="How is this instance rotated? Vec4", editor_hint="noo::array"),
+    rigatoni.MethodArg(name="scale", doc="How is this instance scaled? Vec3", editor_hint="noo::array")
 ]
 
 # Define starting state

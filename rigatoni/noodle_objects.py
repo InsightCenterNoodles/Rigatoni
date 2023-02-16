@@ -288,7 +288,7 @@ class Method(Component):
     name: str
     doc: Optional[str] = None
     return_doc: Optional[str] = None
-    arg_doc: list[MethodArg] = None
+    arg_doc: list[MethodArg] = []
 
 
 class Signal(Component):
