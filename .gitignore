@@ -1,5 +1,6 @@
 # Added
 *.x3d
+.idea
 
 # Standard from Github
 # Byte-compiled / optimized / DLL files

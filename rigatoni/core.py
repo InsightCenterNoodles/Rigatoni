@@ -3,8 +3,9 @@
 from __future__ import annotations
 from types import NoneType
 from typing import TYPE_CHECKING, Type, Union
+
 if TYPE_CHECKING:
-    from . import interface
+    from . import delegates
 
 import websockets
 from cbor2 import dumps, CBORTag
@@ -24,6 +25,7 @@ def default_json_encoder(value):
         return value.url
     else:
         return str(value)
+
 
 class Server(object):
     """NOODLES Server
@@ -46,17 +48,19 @@ class Server(object):
         message_map (dict):
             maps action and type to message ID
     """
+    from .interface import create_method, create_signal, create_entity, create_plot, create_buffer, create_bufferview, \
+    create_material, create_image,create_texture, create_sampler, create_light, create_geometry, create_table
 
-    def __init__(self, starting_state: list[nooobs.StartingComponent], 
-        delegates: dict[Type[nooobs.Component], Type[interface.Delegate]]):
+    #from .interface import create_method
+
+    def __init__(self, starting_state: list[nooobs.StartingComponent],
+                 delegate_map: dict[Type[nooobs.Component], Type[delegates.Delegate]]):
         """Constructor
         
-        Args: 
-            methods (dict): 
-                maps method names to the functions to be injected
-            starting_state (list[nooobs.StartingComponent]):
+        Args:
+            starting_state (list[StartingComponent]):
                 list of objects containing the info to create components on initialization
-            delegates (dict):
+            delegate_map (dict):
                 maps noodles component type to instance of delegate class
 
         Raises:
@@ -64,13 +68,13 @@ class Server(object):
         """
 
         self.clients = set()
-        self.custom_delegates = delegates
+        self.custom_delegates = delegate_map
         self.delegates = {}
         self.ids = {}
         self.components = {}
         self.references = {}
         self.delete_queue = set()
-        
+
         self.message_map = {
             ("create", nooobs.Method): 0,
             ("delete", nooobs.Method): 1,
@@ -120,96 +124,92 @@ class Server(object):
                 raise Exception(f"Invalid arguments to create {comp_type}")
 
             if comp_type == nooobs.Method:
-                if comp_method == None:
-                    raise Exception("Method not specified for starting method")
-                else:
+                if comp_method:
                     injected = nooobs.InjectedMethod(self, comp_method)
                     setattr(self, comp.name, injected)
-
+                else:
+                    raise Exception("Method not specified for starting method")
 
     def get_ids_by_type(self, component: Type[nooobs.Component]) -> list:
         """Helper to get all ids for certain component type
         
         Args:
-            comp (type): type of component to get ID's for
+            component (type): type of component to get ID's for
         """
 
         return [key for key, val in self.components.items() if isinstance(val, component)]
 
-
-    def get_component_id(self, type: Type[nooobs.Component], name: str):
+    def get_component_id(self, kind: Type[nooobs.Component], name: str):
         """Helper to get a component with a type and name"""
 
-        for id, comp in self.components.items():
-            if isinstance(comp, type) and hasattr(comp, "name") and comp.name == name:
-                return id
+        for comp_id, comp in self.components.items():
+            if isinstance(comp, kind) and comp.name == name:
+                return comp_id
         raise Exception("No Component Found")
 
-
-    def get_component(self, id: nooobs.ID):
-        """Getter for users to acces components in state"""
+    def get_component(self, comp_id: nooobs.ID):
+        """Getter for users to access components in state"""
 
         try:
-            return self.components[id].copy(deep=True)
-        except:
+            return self.components[comp_id].copy(deep=True)
+        except ValueError:
             raise Exception("No Component Found")
 
-
-    def get_message_contents(self, action: str, 
-        object: nooobs.NoodleObject=None, delta: set[str]={}):
+    def get_message_contents(self, action: str, noodle_object: nooobs.NoodleObject, delta: set[str]):
         """Helper to handle construction of message dict
         
         Args:
             action (str): action taken with message
-            object (NoodleObject): Component, Reply, or Invoke object
+            noodle_object (NoodleObject): Component, Reply, or Invoke object
             delta (set): field names to be included in update
         """
 
         contents = {}
         if action in {"create", "invoke", "reply"}:
-            contents = object.dict(exclude_none=True)
+            contents = noodle_object.dict(exclude_none=True)
 
             # Change type to url to facilitate proper encoding
             if "uri_bytes" in contents:
                 contents["uri_bytes"] = nooobs.URL(url=contents["uri_bytes"])
 
         elif action == "update":
-            if object == None: # Document case
+            if not noodle_object:  # Document case
                 contents["methods_list"] = self.get_ids_by_type(nooobs.Method)
                 contents["signals_list"] = self.get_ids_by_type(nooobs.Signal)
-            else: # Normal update, include id, and any field in delta
+            else:  # Normal update, include id, and any field in delta
+                delta = {} if not delta else delta
                 delta.add("id")
-                contents = object.dict(exclude_none=True, include=delta)
+                contents = noodle_object.dict(exclude_none=True, include=delta)
 
         elif action == "delete":
-            contents["id"] = object.id
+            try:
+                contents["id"] = noodle_object.id
+            except AttributeError:
+                raise Exception(f"Cannot delete a {noodle_object}")
 
         return contents
 
-
-    def prepare_message(self, action: str, 
-        object: nooobs.NoodleObject=None, delta: set[str]={}):
+    def prepare_message(self, action: str, noodle_object: nooobs.NoodleObject = None, delta: set[str] = None):
         """Given object and action, get id and message contents as dict
 
         Args:
             action (str): action taken with message
-            object (NoodleObject): Component, Reply, or Invoke object
+            noodle_object (NoodleObject): Component, Reply, or Invoke object
             delta (set): field names to be included in update
         """
 
-        id = self.message_map[(action, type(object))]
-        contents = self.get_message_contents(action, object, delta)
+        message_id = self.message_map[(action, type(noodle_object))]
+        contents = self.get_message_contents(action, noodle_object, delta)
 
-        return id, contents
+        return message_id, contents
 
-
-    def broadcast(self, message: list):
+    def broadcast(self, message: tuple):
         """Broadcast message to all connected clients
         
         Args:
-            message [list]: fully constructed message in list form
+            message [tuple]: fully constructed message in form (tag/id, contents)
         """
-        
+
         print(f"Broadcasting Message: ID's {message[::2]}")
         json_message = json.dumps(message, default=default_json_encoder)
         with open("sample_messages.json", "a") as outfile:
@@ -217,29 +217,27 @@ class Server(object):
         encoded = dumps(message, default=uri_encoder)
         websockets.broadcast(self.clients, encoded)
 
-
     def handle_intro(self):
         """Formulate response for new client"""
 
         # Add create message for every object in state
         message = []
         ordered_components = order_components(self.components, self.references)
-        for object in ordered_components:
-            msg_id, content = self.prepare_message("create", object)
+        for component in ordered_components:
+            msg_id, content = self.prepare_message("create", component)
             message.extend([msg_id, content])
 
         # Add document update
         message.extend(self.prepare_message("update", None))
-        
-        # Finish with initialization message
-        message.extend(self.prepare_message("initialized"))    
-        return message
 
+        # Finish with initialization message
+        message.extend(self.prepare_message("initialized"))
+        return message
 
     def handle_invoke(self, message: dict):
         """Handle all invokes coming from the client
         
-        Take message and formulate response for clients. Tryies to invoke and 
+        Take message and formulate response for clients. Tries to invoke and
         raises appropriate error codes if unsuccessful. Note that the method 
         technically doesn't raise any exceptions, instead the exception is 
         captured in a message and sent to the client.
@@ -262,7 +260,6 @@ class Server(object):
 
         return self.prepare_message("reply", reply_obj)
 
-
     def invoke_method(self, message: dict, reply: nooobs.Reply):
         """Invoke method and build out reply object
         
@@ -272,7 +269,7 @@ class Server(object):
             message (dict): Invoke message in dict form
             reply (Reply): Practically empty reply object to be updated 
         """
-        
+
         # Parse message
         try:
             method_id = nooobs.MethodID(slot=message["method"][0], gen=message["method"][1])
@@ -280,22 +277,21 @@ class Server(object):
             invoke_id = message["invoke_id"]
             args: list = message["args"]
             reply.invoke_id = invoke_id
-        except:
+        except Exception:
             raise Exception(nooobs.MethodException(code=-32700, message="Parse Error"))
 
         # Locate method
         try:
-            method_name = self.components[method_id].name                
+            method_name = self.components[method_id].name
             method = getattr(self, method_name)
-        except:
+        except Exception:
             raise Exception(nooobs.MethodException(code=-32601, message="Method Not Found"))
-        
+
         # Invoke
         reply.result = method(context, *args)
-    
 
     def update_references(self, comp: nooobs.Component, current: nooobs.NoodleObject, removing=False):
-        """Update indegree for all objects referenced by this one
+        """Update in-degree for all objects referenced by this one
 
         Recursively updates references for all components under a parent one. Here,
         the current object changes through the recursion while comp keeps track of 
@@ -303,7 +299,7 @@ class Server(object):
         
         Args:
             comp (Component): parent component with new references to be tracked
-            current (NooodleObject): current object being examined
+            current (NoodleObject): current object being examined
             removing (bool): flag so function can be used to both add and remove references
         """
 
@@ -323,13 +319,13 @@ class Server(object):
 
             # Found list of objects or id's to recurse on 
             elif val and isinstance(val, list):
-                
+
                 # Objects
                 if isinstance(val[0], nooobs.NoodleObject):
                     for obj in val:
                         self.update_references(comp, obj, removing)
 
-                # Id's
+                # ID's
                 elif isinstance(val[0], nooobs.ID):
                     for id in val:
                         if removing:
@@ -337,11 +333,10 @@ class Server(object):
                         else:
                             self.references.setdefault(id, set()).add(comp.id)
 
-
     def get_id(self, comp_type: Type[nooobs.Component]) -> nooobs.IDGroup:
         """Get next open ID
         
-        Check for open slots then take closest available slot
+        Check for open slots then take the closest available slot
 
         Args:
             comp_type (Component Type): type for desired ID
@@ -359,10 +354,10 @@ class Server(object):
             slot_info.next_slot += 1
             return id
         else:
-            return slot_info.on_deck.get() 
-        
+            return slot_info.on_deck.get()
 
-    # Interface methods to build server methods ===============================================
+            # Interface methods to build server methods ===============================================
+
     def create_component(self, comp_type: Type[nooobs.Component], **kwargs) -> nooobs.Component:
         """Officially create new component in state
         
@@ -375,18 +370,18 @@ class Server(object):
                 keyword arguments. Refer to the noodle objects to see which attributes
                 are required and optional. Any deviation from the spec will raise a 
                 validation exception. Note that since this method handles the ID, it 
-                should not be specified as one of the keword arguments.
+                should not be specified as one of the keyword arguments.
         """
 
         # Get ID and try to create component from args
-        id = self.get_id(comp_type)
+        comp_id = self.get_id(comp_type)
         try:
-            new_component = comp_type(id=id, **kwargs)
+            new_component = comp_type(id=comp_id, **kwargs)
         except:
             raise Exception(f"Args: {kwargs}, invalid for initializing a {comp_type}")
 
         # Update state
-        self.components[id] = new_component
+        self.components[comp_id] = new_component
 
         # Update references for each component referenced by this one
         self.update_references(new_component, new_component)
@@ -398,18 +393,18 @@ class Server(object):
         # Return component or delegate instance if applicable
         if self.custom_delegates and comp_type in self.custom_delegates:
             delegate = self.custom_delegates[comp_type](self, new_component)
-            self.delegates[id] = delegate 
+            self.delegates[id] = delegate
             return delegate
         else:
             return new_component.copy(deep=True)
 
-    def delete_component(self, obj: Union[nooobs.Component, interface.Delegate, nooobs.ID]):
+    def delete_component(self, obj: Union[nooobs.Component, delegates.Delegate, nooobs.ID]):
         """Delete object in state and update clients
         
         This method excepts a delegate, component, or component ID, and will attempt
         to delete the component as long as it is not referenced by any other component.
-        If this component is still being used by another, it will be added to a queue so
-        it can be deleted later once that refernece is no longer being used.
+        If this component is still being used by another, it will be added to a queue so that
+        it can be deleted later once that reference is no longer being used.
 
         Args:
             obj (Component, Delegate, or ID): component / delegate to be deleted
@@ -423,7 +418,7 @@ class Server(object):
             id = obj.id
         else:
             id = obj
-            
+
         # Delete if no references, or else queue it up for later
         if not self.references.get(id):
             self.broadcast(self.prepare_message("delete", self.components[id]))
@@ -432,7 +427,7 @@ class Server(object):
             # Clean out references from this object
             for refs in self.references.values():
                 while id in refs: refs.remove(id)
-                    
+
             # Check if anything in the queue is now clear to be deleted
             for comp_id in list(self.delete_queue):
                 if not self.references.get(comp_id):
@@ -445,7 +440,6 @@ class Server(object):
             else:
                 print(f"Couldn't delete {obj}, referenced by {self.references[id]}, added to queue")
             self.delete_queue.add(id)
-
 
     def find_delta(self, state, edited):
         """Helper to find differences between two objects
@@ -464,7 +458,6 @@ class Server(object):
 
         return delta
 
-    
     def update_component(self, obj: nooobs.Component):
         """Update clients with changes to a component
         
@@ -474,7 +467,6 @@ class Server(object):
         Args:
             obj (Component): component that has been updated, 
                 should be a component with an update message
-            delta (Set): Field names that should be included in the update
         """
 
         # Update references and find delta
@@ -491,7 +483,6 @@ class Server(object):
         except:
             raise Exception("This obj can not be updated")
 
-
     def invoke_signal(self, signal: nooobs.ID, on_component: nooobs.Component, signal_data: list):
         """Send signal to target component
         
@@ -503,7 +494,6 @@ class Server(object):
         """
 
         # Get context from on_component
-        context = None
         if isinstance(on_component, nooobs.Entity):
             context = nooobs.InvokeIDType(entity=on_component.id)
         elif isinstance(on_component, nooobs.Table):
@@ -531,8 +521,8 @@ def top_sort_recurse(id, refs, visited, components, stack):
     stack.append(components[id])
 
 
-def order_components(components: dict[nooobs.ID, nooobs.Component], 
-    refs: dict[nooobs.ID, list[nooobs.ID]]):
+def order_components(components: dict[nooobs.ID, nooobs.Component],
+                     refs: dict[nooobs.ID, list[nooobs.ID]]):
     """Helper for creating topological sort of components"""
 
     visited = {key: False for key in components}
@@ -541,5 +531,5 @@ def order_components(components: dict[nooobs.ID, nooobs.Component],
     for id in components:
         if not visited[id]:
             top_sort_recurse(id, refs, visited, components, stack)
-    
+
     return stack[::-1]

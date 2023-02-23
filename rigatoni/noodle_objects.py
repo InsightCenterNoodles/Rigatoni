@@ -12,19 +12,19 @@ from typing import Callable, Literal, Optional, Any, Union
 
 from pydantic import BaseModel, root_validator
 
-
 """ =============================== ID's ============================= """
 
 IDGroup = namedtuple("IDGroup", ["slot", "gen"])
 
-class ID(IDGroup):
 
+class ID(IDGroup):
     __slots__ = ()
+
     def __repr__(self):
         return f"{self.__class__}|{self.slot}/{self.gen}|"
 
     def __key(self):
-        return (type(self), self.slot, self.gen)
+        return type(self), self.slot, self.gen
 
     def __eq__(self, __o: object) -> bool:
         if isinstance(__o, ID):
@@ -35,47 +35,61 @@ class ID(IDGroup):
     def __hash__(self):
         return hash(self.__key())
 
+
 class MethodID(ID):
     pass
+
 
 class SignalID(ID):
     pass
 
+
 class EntityID(ID):
     pass
+
 
 class PlotID(ID):
     pass
 
+
 class BufferID(ID):
     pass
+
 
 class BufferViewID(ID):
     pass
 
+
 class MaterialID(ID):
     pass
+
 
 class ImageID(ID):
     pass
 
+
 class TextureID(ID):
     pass
+
 
 class SamplerID(ID):
     pass
 
+
 class LightID(ID):
     pass
 
+
 class GeometryID(ID):
     pass
+
 
 class TableID(ID):
     pass
 
 
 """ ====================== Generic Parent Class ====================== """
+
 
 class NoodleObject(BaseModel):
     """Parent Class for all noodle objects"""
@@ -88,6 +102,7 @@ class NoodleObject(BaseModel):
 
     def __repr__(self) -> str:
         return f"{type(self)}"
+
 
 class Component(NoodleObject):
     """Parent class for all components"""
@@ -102,8 +117,8 @@ class Component(NoodleObject):
 
 Vec3 = tuple[float, float, float]
 Vec4 = tuple[float, float, float, float]
-Mat3 = tuple[float, float, float, 
-             float, float, float, 
+Mat3 = tuple[float, float, float,
+             float, float, float,
              float, float, float]
 Mat4 = tuple[float, float, float, float,
              float, float, float, float,
@@ -113,12 +128,14 @@ Mat4 = tuple[float, float, float, float,
 RGB = Vec3
 RGBA = Vec4
 
+
 class AttributeSemantic(Enum):
     position = "POSITION"
     normal = "NORMAL"
     tangent = "TANGENT"
     texture = "TEXTURE"
     color = "COLOR"
+
 
 class Format(Enum):
     u8 = "U8"
@@ -132,6 +149,7 @@ class Format(Enum):
     mat3 = "MAT3"
     mat4 = "MAT4"
 
+
 class PrimitiveType(Enum):
     points = "POINTS"
     lines = "LINES"
@@ -140,31 +158,38 @@ class PrimitiveType(Enum):
     triangles = "TRIANGLES"
     triangle_strip = "TRIANGLE_STRIP"
 
+
 class SamplerMode(Enum):
     clamp_to_edge = "CLAMP_TO_EDGE"
     mirrored_repeat = "MIRRORED_REPEAT"
     repeat = "REPEAT"
 
+
 class URL(NoodleObject):
     url: str
+
 
 class SelectionRange(NoodleObject):
     key_from_inclusive: int
     key_to_exclusive: int
+
 
 class Selection(NoodleObject):
     name: str
     rows: Optional[list[int]] = None
     row_ranges: Optional[list[SelectionRange]] = None
 
-class MethodArg(NoodleObject): 
+
+class MethodArg(NoodleObject):
     name: str
-    doc: Optional[str] = None 
+    doc: Optional[str] = None
     editor_hint: Optional[str] = None
+
 
 class BoundingBox(NoodleObject):
     min: Vec3
     max: Vec3
+
 
 class TextRepresentation(NoodleObject):
     txt: str
@@ -172,45 +197,54 @@ class TextRepresentation(NoodleObject):
     height: Optional[float] = .25
     width: Optional[float] = -1.0
 
+
 class WebRepresentation(NoodleObject):
     source: str
     height: Optional[float] = .5
     width: Optional[float] = .5
 
+
 class InstanceSource(NoodleObject):
-    view: BufferViewID # view of mat4
-    stride: int 
+    view: BufferViewID  # view of mat4
+    stride: int
     bb: Optional[BoundingBox] = None
+
 
 class RenderRepresentation(NoodleObject):
     mesh: GeometryID
     instances: Optional[InstanceSource] = None
 
+
 class TextureRef(NoodleObject):
     texture: TextureID
     transform: Optional[Mat3] = [1.0, 0.0, 0.0,
-                       0.0, 1.0, 0.0,
-                       0.0, 0.0, 1.0,]
+                                 0.0, 1.0, 0.0,
+                                 0.0, 0.0, 1.0, ]
     texture_coord_slot: Optional[int] = 0.0
+
 
 class PBRInfo(NoodleObject):
     base_color: RGBA = [1.0, 1.0, 1.0, 1.0]
-    base_color_texture: Optional[TextureRef] = None # assume SRGB, no premult alpha
+    base_color_texture: Optional[TextureRef] = None  # assume SRGB, no premult alpha
 
     metallic: Optional[float] = 1.0
     roughness: Optional[float] = 1.0
-    metal_rough_texture: Optional[TextureRef] = None # assume linear, ONLY RG used
+    metal_rough_texture: Optional[TextureRef] = None  # assume linear, ONLY RG used
+
 
 class PointLight(NoodleObject):
     range: float = -1.0
 
+
 class SpotLight(NoodleObject):
     range: float = -1.0
     inner_cone_angle_rad: float = 0.0
-    outer_cone_angle_rad: float = pi/4
+    outer_cone_angle_rad: float = pi / 4
+
 
 class DirectionalLight(NoodleObject):
     range: float = -1.0
+
 
 class Attribute(NoodleObject):
     view: BufferViewID
@@ -223,19 +257,22 @@ class Attribute(NoodleObject):
     maximum_value: Optional[list[float]] = None
     normalized: Optional[bool] = False
 
+
 class Index(NoodleObject):
-    view: BufferViewID 
+    view: BufferViewID
     count: int
     offset: Optional[int] = 0
     stride: Optional[int] = 0
     format: Literal["U8", "U16", "U32"]
+
 
 class GeometryPatch(NoodleObject):
     attributes: list[Attribute]
     vertex_count: int
     indices: Optional[Index] = None
     type: PrimitiveType
-    material: MaterialID # Material ID
+    material: MaterialID  # Material ID
+
 
 class InvokeIDType(NoodleObject):
     entity: Optional[EntityID] = None
@@ -244,21 +281,23 @@ class InvokeIDType(NoodleObject):
 
     @root_validator
     def one_of_three(cls, values):
-        already_found  = False
+        already_found = False
         for field in values:
             if values[field] and already_found:
                 raise ValueError("More than one field entered")
             elif values[field]:
                 already_found = True
-        
+
         if not already_found:
             raise ValueError("No field provided")
         else:
             return values
 
+
 class TableColumnInfo(NoodleObject):
     name: str
     type: Literal["TEXT", "REAL", "INTEGER"]
+
 
 class TableInitData(NoodleObject):
     columns: list[TableColumnInfo]
@@ -277,10 +316,9 @@ class TableInitData(NoodleObject):
                 if text_mismatch or real_mismatch or int_mismatch:
                     raise ValueError(f"Column Info doesn't match type in data: {col, row[i]}")
         return values
-        
 
 
-""" ====================== NOOODLE COMPONENTS ====================== """
+""" ====================== NOODLE COMPONENTS ====================== """
 
 
 class Method(Component):
@@ -357,14 +395,14 @@ class Buffer(Component):
 
 class BufferView(Component):
     id: BufferViewID
-    name: Optional[str] = None    
+    name: Optional[str] = None
     source_buffer: BufferID
 
     type: Literal["UNK", "GEOMETRY", "IMAGE"]
     offset: int
     length: int
 
-    
+
 class Material(Component):
     id: MaterialID
     name: Optional[str] = None
@@ -372,10 +410,10 @@ class Material(Component):
     pbr_info: Optional[PBRInfo] = PBRInfo()
     normal_texture: Optional[TextureRef] = None
 
-    occlusion_texture: Optional[TextureRef] = None # assumed to be linear, ONLY R used
+    occlusion_texture: Optional[TextureRef] = None  # assumed to be linear, ONLY R used
     occlusion_texture_factor: Optional[float] = 1.0
 
-    emissive_texture: Optional[TextureRef] = None # assumed to be SRGB, ignore A
+    emissive_texture: Optional[TextureRef] = None  # assumed to be SRGB, ignore A
     emissive_factor: Optional[Vec3] = [1.0, 1.0, 1.0]
 
     use_alpha: Optional[bool] = False
@@ -402,7 +440,7 @@ class Image(Component):
 class Texture(Component):
     id: TextureID
     name: Optional[str] = None
-    image: ImageID # Image ID
+    image: ImageID  # Image ID
     sampler: Optional[SamplerID] = None
 
 
@@ -413,8 +451,8 @@ class Sampler(Component):
     mag_filter: Optional[Literal["NEAREST", "LINEAR"]] = "LINEAR"
     min_filter: Optional[Literal["NEAREST", "LINEAR", "LINEAR_MIPMAP_LINEAR"]] = "LINEAR_MIPMAP_LINEAR"
 
-    wrap_s: Optional[SamplerMode] = "REPEAT" 
-    wrap_t: Optional[SamplerMode] = "REPEAT" 
+    wrap_s: Optional[SamplerMode] = "REPEAT"
+    wrap_t: Optional[SamplerMode] = "REPEAT"
 
 
 class Light(Component):
@@ -430,13 +468,13 @@ class Light(Component):
 
     @root_validator
     def one_of(cls, values):
-        already_found  = False
+        already_found = False
         for field in ['point', 'spot', 'directional']:
             if values[field] and already_found:
                 raise ValueError("More than one field entered")
             elif values[field]:
                 already_found = True
-        
+
         if not already_found:
             raise ValueError("No field provided")
         else:
@@ -455,15 +493,15 @@ class Table(Component):
 
     meta: Optional[str] = None
     methods_list: Optional[list[MethodID]] = None
-    signals_list: Optional[list[SignalID]] = None 
- 
+    signals_list: Optional[list[SignalID]] = None
+
 
 """ ====================== Communication Objects ====================== """
 
 
 class Invoke(NoodleObject):
     id: SignalID
-    context: Optional[InvokeIDType] = None # if empty - document
+    context: Optional[InvokeIDType] = None  # if empty - document
     signal_data: list[Any]
 
 
@@ -473,6 +511,7 @@ class MethodException(NoodleObject):
     code: int
     message: Optional[str] = None
     data: Optional[Any] = None
+
 
 class Reply(NoodleObject):
     invoke_id: str
@@ -498,19 +537,21 @@ id_map = {
     BufferView: BufferViewID
 }
 
+
 class InjectedMethod(object):
-    """Representation of user Injecte Method
+    """Representation of user Injected Method
     
     Note that the call method automatically inserts a server
-    reference as an argument to all user defined fuctions
+    reference as an argument to all user defined functions
     """
 
     def __init__(self, server, method) -> None:
         self.server = server
         self.method = method
 
-    def __call__(self, *args, **kwds):
-        return self.method(self.server, *args, **kwds)
+    def __call__(self, *args, **kwargs):
+        return self.method(self.server, *args, **kwargs)
+
 
 class SlotTracker(object):
     """Object to keep track of next available slot
@@ -523,10 +564,11 @@ class SlotTracker(object):
         self.next_slot = 0
         self.on_deck = Queue()
 
+
 class StartingComponent(object):
     """User input object for setting starting components on server"""
 
-    def __init__(self, type, component_attrs: dict[str, Any], method: Optional[Callable]=None):
-        self.type = type
+    def __init__(self, kind, component_attrs: dict[str, Any], method: Optional[Callable] = None):
+        self.type = kind
         self.component_attrs = component_attrs
         self.method = method

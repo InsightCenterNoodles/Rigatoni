@@ -13,7 +13,7 @@ from context import rigatoni
 from rigatoni.server import start_server
 from rigatoni.core import Server
 import rigatoni.noodle_objects as nooobs
-import rigatoni.interface as interface
+import rigatoni.delegates as interface
 
 def new_point_plot(server: Server, context: dict, xs, ys, zs, colors=None, sizes=None):
 

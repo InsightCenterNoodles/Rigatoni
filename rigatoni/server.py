@@ -11,23 +11,27 @@ import json
 import websockets
 from cbor2 import loads, dumps
 
-from rigatoni.core import Server, uri_encoder
-from rigatoni.noodle_objects import Component
-from rigatoni.interface import Delegate
+from rigatoni.core import Server, uri_encoder, default_json_encoder
+from rigatoni.noodle_objects import Component, StartingComponent
+from rigatoni.delegates import Delegate
+
 
 async def send(websocket, message: list):
     """Send CBOR message using websocket
     
     Args:
         websocket (WebSocketClientProtocol):
-            recipient of this message
+            recipient of this data
         message (list):
             message to be sent, in list format
             [id, content, id, content...]
     """
-    # json_message = json.dumps(message)
-    # with open("sample_messages.json", "a") as outfile:
-    #     outfile.write(json_message)
+    # Log message in json file
+    json_message = json.dumps(message, default=default_json_encoder)
+    with open("sample_messages.json", "a") as outfile:
+        outfile.write(json_message)
+
+    # Print message and send
     print(f"Sending Message: ID's {message[::2]}")
     await websocket.send(dumps(message, default=uri_encoder))
 
@@ -74,25 +78,22 @@ async def handle_client(websocket, server: Server):
     server.clients.remove(websocket)
 
 
-async def start_server(port: int, starting_state: dict, 
-    delegates: dict[Type[Component], Type[Delegate]] = {}):
+async def start_server(port: int, starting_state: list[StartingComponent],
+                       delegates: dict[Type[Component], Type[Delegate]] = None):
     """Main method for maintaining websocket connection and handling new clients
 
     Args:
         port (int): port to be used by this server
-        methods (dict): map containing methods to be injected onto the server
         starting_state (dict): hardcoded starting state for the server
         delegates (dict): mapping of noodles component to delegate object
     """
-
+    if not delegates:
+        delegates = {}
     server = Server(starting_state, delegates)
     print(f"Server initialized with objects: {server.components}")
 
     # Create partial to pass server to handler
-    handler = functools.partial(
-        handle_client,
-        server = server
-    )
+    handler = functools.partial(handle_client, server=server)
 
     print("Starting up Server...")
     async with websockets.serve(handler, "", port):
