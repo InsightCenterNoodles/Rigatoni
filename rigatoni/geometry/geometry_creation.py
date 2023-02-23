@@ -2,7 +2,7 @@
 from math import sqrt
 from collections import deque
 from statistics import mean
-from typing import Optional, Tuple, Type
+from typing import Optional, Tuple
 import numpy as np
 import meshio
 
@@ -48,7 +48,7 @@ DEFAULT_SCALE = [1.0, 1.0, 1.0, 1.0]
 
 
 def get_format(num_vertices: int) -> str:
-    """Helper to get format that can accomadate number of vertices
+    """Helper to get format that can accommodate number of vertices
     
     Args:
         num_vertices (int): number of vertices needed to store in mesh
@@ -62,21 +62,22 @@ def get_format(num_vertices: int) -> str:
         return 'U32'
 
 
-def set_up_attributes(input: GeometryPatchInput, generate_normals: bool):
+def set_up_attributes(patch_input: GeometryPatchInput, generate_normals: bool):
     """Constructs attribute info from input type
     
     Takes list input and constructs objects 
     that can be used in build_geometry_patch
 
     Args:
-        input (GeometryPatchInput): stores lists of vertices, indices
+        patch_input (GeometryPatchInput): stores lists of vertices, indices
             index type, material, and possibly normals, tangents,
             textures, and colors
+        generate_normals (bool): calculate normals for mesh or not
     """
 
     # Generate normals if not indicated in input
-    if not input.normals and generate_normals:
-        input.normals = calculate_normals(input.vertices, input.indices)
+    if not patch_input.normals and generate_normals:
+        patch_input.normals = calculate_normals(patch_input.vertices, patch_input.indices)
 
     # Add attribute info based on the input lists
     attribute_info = [] 
@@ -94,7 +95,7 @@ def set_up_attributes(input: GeometryPatchInput, generate_normals: bool):
     )
     attribute_info.append(normal)
 
-    if input.tangents:
+    if patch_input.tangents:
         tangent = AttributeInput(
             semantic = "TANGENT",
             format = "VEC3",
@@ -102,7 +103,7 @@ def set_up_attributes(input: GeometryPatchInput, generate_normals: bool):
         )
         attribute_info.append(tangent)
 
-    if input.textures:
+    if patch_input.textures:
         texture = AttributeInput(
             semantic = "TEXTURE",
             format = "U16VEC2",
@@ -110,7 +111,7 @@ def set_up_attributes(input: GeometryPatchInput, generate_normals: bool):
         )
         attribute_info.append(texture)
 
-    if input.colors:
+    if patch_input.colors:
         color = AttributeInput(
             semantic = "COLOR",
             format = "U8VEC4",
@@ -119,9 +120,9 @@ def set_up_attributes(input: GeometryPatchInput, generate_normals: bool):
         attribute_info.append(color)
 
         # Check color format and correct
-        if any(i > 1 for i in input.colors[0]):
-            for i in range(len(input.colors)):
-                input.colors[i] = [x / 255 for x in input.colors[i]]
+        if any(i > 1 for i in patch_input.colors[0]):
+            for i in range(len(patch_input.colors)):
+                patch_input.colors[i] = [x / 255 for x in patch_input.colors[i]]
 
     # Use input to get offsets
     offset = 0
@@ -136,25 +137,25 @@ def set_up_attributes(input: GeometryPatchInput, generate_normals: bool):
     return attribute_info
 
             
-def build_geometry_buffer(server: Server, name, input: GeometryPatchInput, index_format: str,
+def build_geometry_buffer(server: Server, name, patch_input: GeometryPatchInput, index_format: str,
                           attribute_info: list[AttributeInput],
-                          byte_server: ByteServer=None) -> Tuple[Type[nooobs.Buffer], int]:
+                          byte_server: ByteServer=None) -> Tuple[nooobs.Buffer, int]:
     """Builds a buffer component
 
     Args:
         server (Server): server to create component on
         name (str): name to give component
-        input (GeometryPatchInput): lists of attributes and point data 
+        patch_input (GeometryPatchInput): lists of attributes and point data
         index_format (str): format the indices should take
         attribute_info (list[AttributeInput]): Info on the attributes, mostly used for formatting
         byte_server (ByteServer): byte server to use if needed
     """
 
     # Filter out inputs unspecified by user, and group attributes by point
-    data = [x for x in [input.vertices, input.normals, input.tangents, input.textures, input.colors] if x]
+    data = [x for x in [patch_input.vertices, patch_input.normals, patch_input.tangents, patch_input.textures, patch_input.colors] if x]
     points = zip(*data)
 
-    # Build byte array by iteating through points and their attributes
+    # Build byte array by iterating through points and their attributes
     buffer_bytes = bytearray(0)
     for point in points:
         for info, attr in zip(point, attribute_info):
@@ -164,7 +165,7 @@ def build_geometry_buffer(server: Server, name, input: GeometryPatchInput, index
 
     # Add index bytes to byte array
     index_offset = len(buffer_bytes)
-    index_bytes = np.array(input.indices, dtype=FORMAT_MAP[index_format]).tobytes(order='C')
+    index_bytes = np.array(patch_input.indices, dtype=FORMAT_MAP[index_format]).tobytes(order='C')
     buffer_bytes.extend(index_bytes)
 
     # Create buffer component using uri bytes if needed
@@ -172,21 +173,10 @@ def build_geometry_buffer(server: Server, name, input: GeometryPatchInput, index
     if size > INLINE_LIMIT:
         print(f"Large Mesh: Using URI Bytes")
         uri = byte_server.add_buffer(buffer_bytes)
-        buffer = server.create_buffer(
-            name=name,
-            size=size,
-            uri_bytes=uri
-        )
-        # buffer = server.create_component(
-        #     nooobs.Buffer,
-        #     name = name,
-        #     size = size,
-        #     uri_bytes = uri
-        # )
+        buffer = server.create_buffer(name=name, size=size, uri_bytes=uri)
         return buffer, index_offset
     else:
-        buffer = server.create_component(
-            nooobs.Buffer,
+        buffer = server.create_buffer(
             name = name,
             size = size,
             inline_bytes = buffer_bytes
@@ -194,28 +184,29 @@ def build_geometry_buffer(server: Server, name, input: GeometryPatchInput, index
         return buffer, index_offset
 
 
-def build_geometry_patch(server: Server, name: str, input: GeometryPatchInput, 
+def build_geometry_patch(server: Server, name: str, patch_input: GeometryPatchInput,
     byte_server: ByteServer=None, generate_normals: bool=True) -> nooobs.GeometryPatch:
     """Build a Geometry Patch with related buffers and views
     
     Args:
         server (Server): server to create components on
         name (str): name for the components
-        input (GeometryPatch): input lists with data to create the patch
+        patch_input (GeometryPatch): input lists with data to create the patch
         byte_server (ByteServer): optional server to use if mesh is larger than 10Kb
+        generate_normals (bool): whether to calculate normals for this mesh
     """
 
     # Set up some constants
-    vert_count = len(input.vertices)
-    index_count = len(input.indices) * len(input.indices[0])
+    vert_count = len(patch_input.vertices)
+    index_count = len(patch_input.indices) * len(patch_input.indices[0])
     index_format = get_format(vert_count)            
 
     # Set up attributes with given lists
-    attribute_info = set_up_attributes(input, generate_normals=generate_normals)
+    attribute_info = set_up_attributes(patch_input, generate_normals=generate_normals)
 
     # Build buffer with given lists
     buffer: nooobs.Buffer
-    buffer, index_offset = build_geometry_buffer(server, name, input, index_format, attribute_info, byte_server)
+    buffer, index_offset = build_geometry_buffer(server, name, patch_input, index_format, attribute_info, byte_server)
 
     # Make buffer view component
     buffer_view: nooobs.BufferView = server.create_component(
@@ -246,14 +237,14 @@ def build_geometry_patch(server: Server, name: str, input: GeometryPatchInput,
         attributes = attributes, 
         vertex_count = vert_count, 
         indices = index, 
-        type = input.index_type, 
-        material = input.material
+        type = patch_input.index_type,
+        material = patch_input.material
     )
 
     return patch
 
 
-def build_instance_buffer(server: Server, name: str, matrices: nooobs.Mat4) -> nooobs.Buffer:
+def build_instance_buffer(server: Server, name: str, matrices: list[nooobs.Mat4]) -> nooobs.Buffer:
     """Build Buffer from Mat4 to Represent Instances
     
     Args:
@@ -309,10 +300,10 @@ def build_entity(server: Server, geometry: nooobs.Geometry, instances: list[nooo
 
 
 def create_instances(
-    positions: list[nooobs.Vec3] = [], 
-    colors: list[nooobs.Vec4] = [], 
-    rotations: list[nooobs.Vec4] = [], 
-    scales: list[nooobs.Vec3] = []) -> list[nooobs.Mat4]:
+    positions: list[nooobs.Vec3] = None,
+    colors: list[nooobs.Vec4] = None,
+    rotations: list[nooobs.Vec4] = None,
+    scales: list[nooobs.Vec3] = None) -> list[list]:
     """Create new instances for an entity
     
     All lists are optional and will be filled with defaults
@@ -326,12 +317,12 @@ def create_instances(
         scales (list[Vec3]): Scales for each instance
     """
 
-    def padded(lst: list, defuault_val: float=1.0):
+    def padded(lst: list, default_val: float=1.0):
         """Helper to pad the lists"""
 
         lst = list(lst)
         if len(lst) < 4:
-            lst += [defuault_val] * (4 - len(lst))
+            lst += [default_val] * (4 - len(lst))
         return lst
 
     # Safeguard against None values for input
@@ -343,7 +334,7 @@ def create_instances(
     if not positions:
         positions = [DEFAULT_POSITION]
 
-    # Use longest input as number of instances
+    # Use the longest input as number of instances
     num_instances = max([len(l) for l in [positions, colors, rotations, scales]])
 
     # Build the matrices and extend
@@ -422,7 +413,7 @@ def add_instances(server: Server, entity: nooobs.Entity, instances: list):
             create_instances()
     """
 
-    # Ensure we're working with an renderable entity
+    # Ensure we're working with an entity that can be rendered
     try:
         rep = entity.render_rep
         
@@ -465,6 +456,7 @@ def meshlab_load(server: Server, byte_server: ByteServer, file,
         file (str, path): file to load mesh from
         material (Material): material to use in geometry
         mesh_name (str): optional name
+        generate_normals (bool): whether to calculate normals for the mesh
     """
     import pymeshlab
     
@@ -514,19 +506,19 @@ def geometry_from_mesh(server: Server, file, material: nooobs.Material,
         return meshlab_load(server, byte_server, file, material, mesh_name, generate_normals=generate_normals) 
 
     # Define Meshio helper functions 
-    def get_point_attr(mesh, attr: str):
+    def get_point_attr(mesh_obj, attr: str):
         """Helper to get attribute from mesh object"""
 
-        data = mesh.point_data.get(attr)
+        data = mesh_obj.point_data.get(attr)
         try:
             return data.tolist()
         except:
             return data
 
-    def get_triangles(mesh):
+    def get_triangles(mesh_obj):
         """Helper to get triangles from mesh object"""
 
-        for cell in mesh.cells:
+        for cell in mesh_obj.cells:
             if cell.type == "triangle":
                 return cell.data.tolist()
         return None
@@ -534,7 +526,7 @@ def geometry_from_mesh(server: Server, file, material: nooobs.Material,
     vertices = mesh.points.tolist()
     indices = get_triangles(mesh)
 
-    # I think attribute name is gonna be specific to mesh - how to map to right attribute?
+    # I think attribute name is going to be specific to mesh - how to map to right attribute?
     normals = get_point_attr(mesh, "NORMAL")
     tangents = get_point_attr(mesh, "TANGENT")
     textures = get_point_attr(mesh, "TEXTURE")
@@ -578,28 +570,27 @@ def export_mesh(server: Server, geometry: nooobs.Geometry, new_file_name: str, b
         buffer = server.get_component(view.source_buffer)
         inline, uri = buffer.inline_bytes, buffer.uri_bytes
         if inline:
-            bytes = inline
+            geo_bytes = inline
         else:
             try:
-                bytes = byte_server.get_buffer(uri)
+                geo_bytes = byte_server.get_buffer(uri)
             except:
                 raise Exception("No byte server specified for uri byte mesh")
 
-        # Reconstruct indicies from buffer
-        raw_indices = np.frombuffer(bytes, dtype=FORMAT_MAP[index.format], count=index.count, offset=index.offset)
+        # Reconstruct indices from buffer
+        raw_indices = np.frombuffer(geo_bytes, dtype=FORMAT_MAP[index.format], count=index.count, offset=index.offset)
         grouped = [list(x) for x in zip(*(iter(raw_indices),) * 3)]
         indices.extend(grouped)        
 
         # Reconstruct points and attributes from buffer
         i = 0
-        attribute_bytes  = bytes[:index.offset]
+        attribute_bytes  = geo_bytes[:index.offset]
         while i < len(attribute_bytes):
             for attribute in patch.attributes:
-                format = attribute.format
-                current_chunk = attribute_bytes[i:i + SIZES[format]]
+                current_chunk = attribute_bytes[i:i + SIZES[attribute.format]]
                 attr_name = attribute.semantic
-                attr_data = np.frombuffer(current_chunk, dtype=FORMAT_MAP[format]).tolist()
-                i += SIZES[format]
+                attr_data = np.frombuffer(current_chunk, dtype=FORMAT_MAP[attribute.format]).tolist()
+                i += SIZES[attribute.format]
                 if attr_name == "POSITION":
                     points.append(attr_data)
                 else:
@@ -702,8 +693,8 @@ def calculate_normals(vertices: list[list], indices: list[list]):
 
     # If majority are inward invert
     if num_inward > (len(vertices) / 2):
-        for normal in normals.values():
-            normal = [-x for x in normal]
+        for key, normal in normals.items():
+            normals[key] = [-x for x in normal]
 
     print(f"Finished getting normals...\nNum Inward: {num_inward}")
     print(f"Vertices {len(vertices)} vs. Normals {len(normals)}")
