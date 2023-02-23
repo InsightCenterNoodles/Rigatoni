@@ -50,7 +50,7 @@ class ByteServer(object):
 
 
     def get_buffer(self, uri: str):
-        """Helper to get bytes for a uri
+        """Helper to get bytes for a URI
         
         Mostly used in geometry creation for exporting as of right now
 
@@ -58,11 +58,11 @@ class ByteServer(object):
             uri (str): uri for bytes
         """
 
-        m = re.search(f'(?<={self.port}\/).+\Z', uri)
+        m = re.search(f'(?<={self.port}/).+\Z', uri)
         if m:
             tag = m.group(0)
-            bytes = self.buffers[tag]
-            return bytes
+            buffer_bytes = self.buffers[tag]
+            return buffer_bytes
         else:
             raise Exception("Invalid HTTP Request")
         
@@ -97,13 +97,12 @@ class ByteServer(object):
             print(f"Request: {request}")
 
             # Try to get tag from request with regex
-            m = re.search('(?<=GET \/)(.+?)(?= HTTP)', request)
+            m = re.search('(?<=GET /)(.+?)(?= HTTP)', request)
             if m:
                 tag = m.group(0)
-                bytes = self.buffers[tag]
-                # response = f'HTTP/1.0 200 OK\n\n{bytes}'
-                header = f'HTTP/1.0 200 OK\r\nContent-Type: application/octet-stream\r\nContent-Length: {len(bytes)}\n\n'
-                response = bytearray(header.encode()) + bytes
+                select_bytes = self.buffers[tag]
+                header = f'HTTP/1.0 200 OK\r\nContent-Type: application/octet-stream\r\nContent-Length: {len(select_bytes)}\n\n'
+                response = bytearray(header.encode()) + select_bytes
             else:
                 header = f'HTTP/1.0 500 FAIL'
                 response = header.encode()

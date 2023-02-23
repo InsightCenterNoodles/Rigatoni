@@ -1,6 +1,6 @@
 """Module with additional objects to help with geometry creation
 
-These are based on the noodle_objects.py module and impliment validation
+These are based on the noodle_objects.py module and implement validation
 """
 
 from typing import Optional

@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 from types import NoneType
-from typing import TYPE_CHECKING, Type, Union
+from typing import TYPE_CHECKING, Type
 
 if TYPE_CHECKING:
     from . import delegates
@@ -11,7 +11,7 @@ import websockets
 from cbor2 import dumps, CBORTag
 import json
 
-from . import noodle_objects as nooobs
+from noodle_objects import *
 
 
 def uri_encoder(encoder, value):
@@ -21,7 +21,7 @@ def uri_encoder(encoder, value):
 
 
 def default_json_encoder(value):
-    if isinstance(value, nooobs.URL):
+    if isinstance(value, URL):
         return value.url
     else:
         return str(value)
@@ -48,13 +48,9 @@ class Server(object):
         message_map (dict):
             maps action and type to message ID
     """
-    from .interface import create_method, create_signal, create_entity, create_plot, create_buffer, create_bufferview, \
-    create_material, create_image,create_texture, create_sampler, create_light, create_geometry, create_table
 
-    #from .interface import create_method
-
-    def __init__(self, starting_state: list[nooobs.StartingComponent],
-                 delegate_map: dict[Type[nooobs.Component], Type[delegates.Delegate]]):
+    def __init__(self, starting_state: list[StartingComponent],
+                 delegate_map: dict[Type[Component], Type[delegates.Delegate]]):
         """Constructor
         
         Args:
@@ -76,41 +72,41 @@ class Server(object):
         self.delete_queue = set()
 
         self.message_map = {
-            ("create", nooobs.Method): 0,
-            ("delete", nooobs.Method): 1,
-            ("create", nooobs.Signal): 2,
-            ("delete", nooobs.Signal): 3,
-            ("create", nooobs.Entity): 4,
-            ("update", nooobs.Entity): 5,
-            ("delete", nooobs.Entity): 6,
-            ("create", nooobs.Plot): 7,
-            ("update", nooobs.Plot): 8,
-            ("delete", nooobs.Plot): 9,
-            ("create", nooobs.Buffer): 10,
-            ("delete", nooobs.Buffer): 11,
-            ("create", nooobs.BufferView): 12,
-            ("delete", nooobs.BufferView): 13,
-            ("create", nooobs.Material): 14,
-            ("update", nooobs.Material): 15,
-            ("delete", nooobs.Material): 16,
-            ("create", nooobs.Image): 17,
-            ("delete", nooobs.Image): 18,
-            ("create", nooobs.Texture): 19,
-            ("delete", nooobs.Texture): 20,
-            ("create", nooobs.Sampler): 21,
-            ("delete", nooobs.Sampler): 22,
-            ("create", nooobs.Light): 23,
-            ("update", nooobs.Light): 24,
-            ("delete", nooobs.Light): 25,
-            ("create", nooobs.Geometry): 26,
-            ("delete", nooobs.Geometry): 27,
-            ("create", nooobs.Table): 28,
-            ("update", nooobs.Table): 29,
-            ("delete", nooobs.Table): 30,
+            ("create", Method): 0,
+            ("delete", Method): 1,
+            ("create", Signal): 2,
+            ("delete", Signal): 3,
+            ("create", Entity): 4,
+            ("update", Entity): 5,
+            ("delete", Entity): 6,
+            ("create", Plot): 7,
+            ("update", Plot): 8,
+            ("delete", Plot): 9,
+            ("create", Buffer): 10,
+            ("delete", Buffer): 11,
+            ("create", BufferView): 12,
+            ("delete", BufferView): 13,
+            ("create", Material): 14,
+            ("update", Material): 15,
+            ("delete", Material): 16,
+            ("create", Image): 17,
+            ("delete", Image): 18,
+            ("create", Texture): 19,
+            ("delete", Texture): 20,
+            ("create", Sampler): 21,
+            ("delete", Sampler): 22,
+            ("create", Light): 23,
+            ("update", Light): 24,
+            ("delete", Light): 25,
+            ("create", Geometry): 26,
+            ("delete", Geometry): 27,
+            ("create", Table): 28,
+            ("update", Table): 29,
+            ("delete", Table): 30,
             ("update", NoneType): 31,
             ("reset", NoneType): 32,
-            ("invoke", nooobs.Invoke): 33,
-            ("reply", nooobs.Reply): 34,
+            ("invoke", Invoke): 33,
+            ("reply", Reply): 34,
             ("initialized", NoneType): 35
         }
 
@@ -123,14 +119,14 @@ class Server(object):
             except:
                 raise Exception(f"Invalid arguments to create {comp_type}")
 
-            if comp_type == nooobs.Method:
+            if comp_type == Method:
                 if comp_method:
-                    injected = nooobs.InjectedMethod(self, comp_method)
+                    injected = InjectedMethod(self, comp_method)
                     setattr(self, comp.name, injected)
                 else:
                     raise Exception("Method not specified for starting method")
 
-    def get_ids_by_type(self, component: Type[nooobs.Component]) -> list:
+    def get_ids_by_type(self, component: Type[Component]) -> list:
         """Helper to get all ids for certain component type
         
         Args:
@@ -139,7 +135,7 @@ class Server(object):
 
         return [key for key, val in self.components.items() if isinstance(val, component)]
 
-    def get_component_id(self, kind: Type[nooobs.Component], name: str):
+    def get_component_id(self, kind: Type[Component], name: str):
         """Helper to get a component with a type and name"""
 
         for comp_id, comp in self.components.items():
@@ -147,7 +143,7 @@ class Server(object):
                 return comp_id
         raise Exception("No Component Found")
 
-    def get_component(self, comp_id: nooobs.ID):
+    def get_component(self, comp_id: ID):
         """Getter for users to access components in state"""
 
         try:
@@ -155,7 +151,7 @@ class Server(object):
         except ValueError:
             raise Exception("No Component Found")
 
-    def get_message_contents(self, action: str, noodle_object: nooobs.NoodleObject, delta: set[str]):
+    def get_message_contents(self, action: str, noodle_object: NoodleObject, delta: set[str]):
         """Helper to handle construction of message dict
         
         Args:
@@ -170,12 +166,12 @@ class Server(object):
 
             # Change type to url to facilitate proper encoding
             if "uri_bytes" in contents:
-                contents["uri_bytes"] = nooobs.URL(url=contents["uri_bytes"])
+                contents["uri_bytes"] = URL(url=contents["uri_bytes"])
 
         elif action == "update":
             if not noodle_object:  # Document case
-                contents["methods_list"] = self.get_ids_by_type(nooobs.Method)
-                contents["signals_list"] = self.get_ids_by_type(nooobs.Signal)
+                contents["methods_list"] = self.get_ids_by_type(Method)
+                contents["signals_list"] = self.get_ids_by_type(Signal)
             else:  # Normal update, include id, and any field in delta
                 delta = {} if not delta else delta
                 delta.add("id")
@@ -189,7 +185,7 @@ class Server(object):
 
         return contents
 
-    def prepare_message(self, action: str, noodle_object: nooobs.NoodleObject = None, delta: set[str] = None):
+    def prepare_message(self, action: str, noodle_object: NoodleObject = None, delta: set[str] = None):
         """Given object and action, get id and message contents as dict
 
         Args:
@@ -247,20 +243,20 @@ class Server(object):
         """
 
         # Create generic reply with invalid invoke ID and attempt invoke
-        reply_obj = nooobs.Reply(invoke_id="-1")
+        reply_obj = Reply(invoke_id="-1")
         try:
             self.invoke_method(message, reply_obj)
 
         except Exception as e:
-            if type(e) is nooobs.MethodException:
+            if type(e) is MethodException:
                 reply_obj.method_exception = e
             else:
                 print(f"\033[91mServerside Error: {e}\033[0m")
-                reply_obj.method_exception = nooobs.MethodException(code=-32603, message="Internal Error")
+                reply_obj.method_exception = MethodException(code=-32603, message="Internal Error")
 
         return self.prepare_message("reply", reply_obj)
 
-    def invoke_method(self, message: dict, reply: nooobs.Reply):
+    def invoke_method(self, message: dict, reply: Reply):
         """Invoke method and build out reply object
         
         Mostly a helper for handle_invoke to raise proper method exceptions
@@ -272,25 +268,25 @@ class Server(object):
 
         # Parse message
         try:
-            method_id = nooobs.MethodID(slot=message["method"][0], gen=message["method"][1])
+            method_id = MethodID(slot=message["method"][0], gen=message["method"][1])
             context = message.get("context")
             invoke_id = message["invoke_id"]
             args: list = message["args"]
             reply.invoke_id = invoke_id
         except Exception:
-            raise Exception(nooobs.MethodException(code=-32700, message="Parse Error"))
+            raise Exception(MethodException(code=-32700, message="Parse Error"))
 
         # Locate method
         try:
             method_name = self.components[method_id].name
             method = getattr(self, method_name)
         except Exception:
-            raise Exception(nooobs.MethodException(code=-32601, message="Method Not Found"))
+            raise Exception(MethodException(code=-32601, message="Method Not Found"))
 
         # Invoke
         reply.result = method(context, *args)
 
-    def update_references(self, comp: nooobs.Component, current: nooobs.NoodleObject, removing=False):
+    def update_references(self, comp: Component, current: NoodleObject, removing=False):
         """Update in-degree for all objects referenced by this one
 
         Recursively updates references for all components under a parent one. Here,
@@ -307,33 +303,33 @@ class Server(object):
             val = getattr(current, key)
 
             # Found a reference
-            if key != "id" and isinstance(val, nooobs.ID):
+            if key != "id" and isinstance(val, ID):
                 if removing:
                     self.references[val].remove(comp.id)
                 else:
                     self.references.setdefault(val, set()).add(comp.id)
 
             # Found another object to recurse on
-            elif isinstance(val, nooobs.NoodleObject):
+            elif isinstance(val, NoodleObject):
                 self.update_references(comp, val, removing)
 
             # Found list of objects or id's to recurse on 
             elif val and isinstance(val, list):
 
                 # Objects
-                if isinstance(val[0], nooobs.NoodleObject):
+                if isinstance(val[0], NoodleObject):
                     for obj in val:
                         self.update_references(comp, obj, removing)
 
                 # ID's
-                elif isinstance(val[0], nooobs.ID):
+                elif isinstance(val[0], ID):
                     for id in val:
                         if removing:
                             self.references[id].remove(comp.id)
                         else:
                             self.references.setdefault(id, set()).add(comp.id)
 
-    def get_id(self, comp_type: Type[nooobs.Component]) -> nooobs.IDGroup:
+    def get_id(self, comp_type: Type[Component]) -> IDGroup:
         """Get next open ID
         
         Check for open slots then take the closest available slot
@@ -345,20 +341,20 @@ class Server(object):
         if comp_type in self.ids:
             slot_info = self.ids[comp_type]
         else:
-            slot_info = nooobs.SlotTracker()
+            slot_info = SlotTracker()
             self.ids[comp_type] = slot_info
 
         if slot_info.on_deck.empty():
-            id_type = nooobs.id_map[comp_type]
+            id_type = id_map[comp_type]
             id = id_type(slot=slot_info.next_slot, gen=0)
             slot_info.next_slot += 1
             return id
         else:
             return slot_info.on_deck.get()
 
-            # Interface methods to build server methods ===============================================
+    # Interface methods to build server methods ===============================================
 
-    def create_component(self, comp_type: Type[nooobs.Component], **kwargs) -> nooobs.Component:
+    def create_component(self, comp_type: Type[Component], **kwargs):
         """Officially create new component in state
         
         This method updates state, updates references, and broadcasts msg to clients.
@@ -398,7 +394,7 @@ class Server(object):
         else:
             return new_component.copy(deep=True)
 
-    def delete_component(self, obj: Union[nooobs.Component, delegates.Delegate, nooobs.ID]):
+    def delete_component(self, obj: Union[Component, delegates.Delegate, ID]):
         """Delete object in state and update clients
         
         This method excepts a delegate, component, or component ID, and will attempt
@@ -414,7 +410,7 @@ class Server(object):
         if type(obj) in self.custom_delegates.values():
             id = obj.component.id
             del self.delegates[id]
-        elif isinstance(obj, nooobs.Component):
+        elif isinstance(obj, Component):
             id = obj.id
         else:
             id = obj
@@ -435,7 +431,7 @@ class Server(object):
                     self.delete_component(comp_id)
 
         else:
-            if isinstance(obj, nooobs.ID):
+            if isinstance(obj, ID):
                 print(f"Couldn't delete {self.components[obj]}, referenced by {self.references[id]}, added to queue")
             else:
                 print(f"Couldn't delete {obj}, referenced by {self.references[id]}, added to queue")
@@ -458,7 +454,7 @@ class Server(object):
 
         return delta
 
-    def update_component(self, obj: nooobs.Component):
+    def update_component(self, obj: Component):
         """Update clients with changes to a component
         
         This method broadcasts changes to all clients including only fields
@@ -483,7 +479,7 @@ class Server(object):
         except:
             raise Exception("This obj can not be updated")
 
-    def invoke_signal(self, signal: nooobs.ID, on_component: nooobs.Component, signal_data: list):
+    def invoke_signal(self, signal: ID, on_component: Component, signal_data: list):
         """Send signal to target component
         
         Args:
@@ -494,21 +490,129 @@ class Server(object):
         """
 
         # Get context from on_component
-        if isinstance(on_component, nooobs.Entity):
-            context = nooobs.InvokeIDType(entity=on_component.id)
-        elif isinstance(on_component, nooobs.Table):
-            context = nooobs.InvokeIDType(table=on_component.id)
-        elif isinstance(on_component, nooobs.Plot):
-            context = nooobs.InvokeIDType(plot=on_component.id)
+        if isinstance(on_component, Entity):
+            context = InvokeIDType(entity=on_component.id)
+        elif isinstance(on_component, Table):
+            context = InvokeIDType(table=on_component.id)
+        elif isinstance(on_component, Plot):
+            context = InvokeIDType(plot=on_component.id)
         else:
             raise Exception(f"Invalid on_component type: {type(on_component)}")
 
         # Create invoke object and broadcast message
-        invoke = nooobs.Invoke(id=signal, context=context, signal_data=signal_data)
+        invoke = Invoke(id=signal, context=context, signal_data=signal_data)
         message = self.prepare_message("invoke", invoke)
         self.broadcast(message)
 
+    def create_method(self, name: str,
+                      arg_doc: list[MethodArg],
+                      doc: Optional[str] = None,
+                      return_doc: Optional[str] = None) -> Method:
+        return self.create_component(Method, name=name, doc=doc, return_doc=return_doc, arg_doc=arg_doc)
 
+    def create_signal(self, name: str,
+                      doc: Optional[str] = None,
+                      arg_doc: list[MethodArg] = None) -> Signal:
+        return self.create_component(Signal, name=name, doc=doc, arg_doc=arg_doc)
+
+    def create_entity(self, name: Optional[str],
+                      parent: Optional[EntityID] = None,
+                      transform: Optional[Mat4] = None,
+                      text_rep: Optional[TextRepresentation] = None,
+                      web_rep: Optional[WebRepresentation] = None,
+                      render_rep: Optional[RenderRepresentation] = None,
+                      lights: Optional[list[LightID]] = None,
+                      tables: Optional[list[TableID]] = None,
+                      plots: Optional[list[PlotID]] = None,
+                      tags: Optional[list[str]] = None,
+                      methods_list: Optional[list[MethodID]] = None,
+                      signals_list: Optional[list[SignalID]] = None,
+                      influence: Optional[BoundingBox] = None) -> Entity:
+
+        return self.create_component(Method, name=name, parent=parent, transform=transform, text_rep=text_rep,
+                                     web_rep=web_rep, render_rep=render_rep, lights=lights, tables=tables, plots=plots,
+                                     tags=tags, methods_list=methods_list, signals_list=signals_list,
+                                     influence=influence)
+
+    def create_plot(self, name: Optional[str] = None,
+                    table: Optional[TableID] = None,
+                    simple_plot: Optional[str] = None,
+                    url_plot: Optional[str] = None,
+                    methods_list: Optional[list[MethodID]] = None,
+                    signals_list: Optional[list[SignalID]] = None) -> Plot:
+
+        return self.create_component(Signal, name=name, table=table, simple_plot=simple_plot, url_plot=url_plot,
+                                     methods_list=methods_list, signals_list=signals_list)
+
+    def create_buffer(self, name: Optional[str] = None,
+                      size: int = None,
+                      inline_bytes: bytes = None,
+                      uri_bytes: str = None) -> Buffer:
+        return self.create_component(Buffer, name=name, size=size, inline_bytes=inline_bytes, uri_bytes=uri_bytes)
+
+    def create_bufferview(self,
+                          source_buffer: BufferID,
+                          offset: int,
+                          length: int,
+                          name: Optional[str] = None,
+                          type: Literal["UNK", "GEOMETRY", "IMAGE"] = "UNK") -> BufferView:
+        return self.create_component(BufferView, name=name, source_buffer=source_buffer,
+                                     offset=offset, length=length, type=type)
+
+    def create_material(self, name: Optional[str] = None,
+                        pbr_info: Optional[PBRInfo] = PBRInfo(),
+                        normal_texture: Optional[TextureRef] = None,
+                        occlusion_texture: Optional[TextureRef] = None,
+                        occlusion_texture_factor: Optional[float] = 1.0,
+                        emissive_texture: Optional[TextureRef] = None,
+                        emissive_factor: Optional[Vec3] = (1.0, 1.0, 1.0),
+                        use_alpha: Optional[bool] = False,
+                        alpha_cutoff: Optional[float] = .5,
+                        double_sided: Optional[bool] = False) -> Material:
+        return self.create_component(Material, name=name, pbr_info=pbr_info, normal_texture=normal_texture,
+                                     occlusion_texture=occlusion_texture, occlusion_texture_factor=occlusion_texture_factor,
+                                     emissive_texture=emissive_texture, emissive_factor=emissive_factor,
+                                     use_alpha=use_alpha, alpha_cutoff=alpha_cutoff, double_sided=double_sided)
+
+    def create_image(self, name: Optional[str] = None,
+                     buffer_source: BufferID = None,
+                     uri_source: str = None) -> Image:
+        return self.create_component(Image, name=name, buffer_source=buffer_source, uri_source=uri_source)
+
+    def create_texture(self, image: ImageID,
+                       name: Optional[str] = None,
+                       sampler: Optional[SamplerID] = None) -> Texture:
+        return self.create_component(Texture, name=name, image=image, sampler=sampler)
+
+    def create_sampler(self, name: Optional[str] = None,
+                       mag_filter: Optional[Literal["NEAREST", "LINEAR"]] = "LINEAR",
+                       min_filter: Optional[
+                           Literal["NEAREST", "LINEAR", "LINEAR_MIPMAP_LINEAR"]] = "LINEAR_MIPMAP_LINEAR",
+                       wrap_s: Optional[SamplerMode] = "REPEAT",
+                       wrap_t: Optional[SamplerMode] = "REPEAT") -> Sampler:
+        return self.create_component(Sampler, name=name, mag_filter=mag_filter, min_filter=min_filter,
+                                     wrap_s=wrap_s, wrap_t=wrap_t)
+
+    def create_light(self, name: Optional[str] = None,
+                     color: Optional[RGB] = (1.0, 1.0, 1.0),
+                     intensity: Optional[float] = 1.0,
+                     point: PointLight = None,
+                     spot: SpotLight = None,
+                     directional: DirectionalLight = None) -> Light:
+        return self.create_component(Light, name=name, color=color, intensity=intensity,
+                                     point=point, spot=spot, directional=directional)
+
+    def create_geometry(self, patches: list[GeometryPatch], name: Optional[str] = None) -> Geometry:
+        return self.create_component(name=name, patches=patches)
+
+    def create_table(self, name: Optional[str] = None,
+                     meta: Optional[str] = None,
+                     methods_list: Optional[list[MethodID]] = None,
+                     signals_list: Optional[list[SignalID]] = None) -> Table:
+        return self.create_component(Table, name=name, meta=meta, methods_list=methods_list, signals_list=signals_list)
+
+
+# Helpers for ordering messages
 def top_sort_recurse(id, refs, visited, components, stack):
     """Helper for order_components to recurse"""
 
@@ -521,8 +625,8 @@ def top_sort_recurse(id, refs, visited, components, stack):
     stack.append(components[id])
 
 
-def order_components(components: dict[nooobs.ID, nooobs.Component],
-                     refs: dict[nooobs.ID, list[nooobs.ID]]):
+def order_components(components: dict[ID, Component],
+                     refs: dict[ID, list[ID]]):
     """Helper for creating topological sort of components"""
 
     visited = {key: False for key in components}

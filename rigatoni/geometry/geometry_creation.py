@@ -2,7 +2,7 @@
 from math import sqrt
 from collections import deque
 from statistics import mean
-from typing import Optional, Tuple
+from typing import Optional, Tuple, Type
 import numpy as np
 import meshio
 
@@ -136,8 +136,9 @@ def set_up_attributes(input: GeometryPatchInput, generate_normals: bool):
     return attribute_info
 
             
-def build_geometry_buffer(server: Server, name, input: GeometryPatchInput, 
-    index_format: str, attribute_info: list[AttributeInput], byte_server: ByteServer=None) -> Tuple[nooobs.Buffer, int]:
+def build_geometry_buffer(server: Server, name, input: GeometryPatchInput, index_format: str,
+                          attribute_info: list[AttributeInput],
+                          byte_server: ByteServer=None) -> Tuple[Type[nooobs.Buffer], int]:
     """Builds a buffer component
 
     Args:
@@ -171,12 +172,17 @@ def build_geometry_buffer(server: Server, name, input: GeometryPatchInput,
     if size > INLINE_LIMIT:
         print(f"Large Mesh: Using URI Bytes")
         uri = byte_server.add_buffer(buffer_bytes)
-        buffer = server.create_component(
-            nooobs.Buffer,
-            name = name,
-            size = size,
-            uri_bytes = uri
+        buffer = server.create_buffer(
+            name=name,
+            size=size,
+            uri_bytes=uri
         )
+        # buffer = server.create_component(
+        #     nooobs.Buffer,
+        #     name = name,
+        #     size = size,
+        #     uri_bytes = uri
+        # )
         return buffer, index_offset
     else:
         buffer = server.create_component(
