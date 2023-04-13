@@ -165,10 +165,6 @@ class SamplerMode(Enum):
     repeat = "REPEAT"
 
 
-class URL(NoodleObject):
-    url: str
-
-
 class SelectionRange(NoodleObject):
     key_from_inclusive: int
     key_to_exclusive: int

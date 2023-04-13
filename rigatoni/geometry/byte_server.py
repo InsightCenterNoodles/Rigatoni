@@ -26,7 +26,7 @@ class ByteServer(object):
         """
 
         name = socket.gethostname()
-        try: # supposed to work without .local, but had to add to match system preferences - sharing
+        try:  # supposed to work without .local, but had to add to match system preferences - sharing
             self.host = socket.gethostbyname(name)
         except socket.gaierror:
             self.host = socket.gethostbyname(f"{name}.local")

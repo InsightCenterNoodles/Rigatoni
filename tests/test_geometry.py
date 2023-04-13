@@ -98,7 +98,7 @@ def create_spheres(server: rigatoni.Server, context, *args):
     ]
     light = server.create_component(rigatoni.Light, name="Test Point Light", point=point_info)
     # light2 = server.create_component(rigatoni.Light, name="Sun", intensity=5, directional=rigatoni.DirectionalLight())
-    server.create_component(rigatoni.Entity, transform=mat, lights=[light.id])
+    #server.create_component(rigatoni.Entity, transform=mat, lights=[light.id])
 
     spot_info = rigatoni.SpotLight()
     mat = [
@@ -108,7 +108,7 @@ def create_spheres(server: rigatoni.Server, context, *args):
         0, 0, 3, 1
     ]
     spot = server.create_component(rigatoni.Light, name="Test Spot Light", spot=spot_info)
-    server.create_component(rigatoni.Entity, transform=mat, lights=[spot.id])
+    #server.create_component(rigatoni.Entity, transform=mat, lights=[spot.id])
 
     direction_info = rigatoni.DirectionalLight()
     mat = [
@@ -118,7 +118,7 @@ def create_spheres(server: rigatoni.Server, context, *args):
         0, 5, 0, 1
     ]
     directional = server.create_component(rigatoni.Light, name="Test Spot Light", directional=direction_info)
-    server.create_component(rigatoni.Entity, transform=mat, lights=[directional.id])
+    #server.create_component(rigatoni.Entity, transform=mat, lights=[directional.id])
 
     return 1
 
@@ -241,6 +241,20 @@ def delete_sphere(server: rigatoni.Server, context, *args):
     return 0
 
 
+def move_sphere(server: rigatoni.Server, context, *args):
+    # Change world transform, but do you change local?
+    sphere_id = server.get_component_id(rigatoni.Entity, "Test Sphere")
+    sphere = server.get_component(sphere_id)
+    sphere.transform = [
+        1, 0, 0, 0,
+        0, 1, 0, 0,
+        0, 0, 1, 0,
+        args[0], args[1], args[2], 1
+    ]
+    server.update_component(sphere)
+    pass
+
+
 # define arg documentation for injected method
 instance_args = [
     rigatoni.MethodArg(name="entity id", doc="What're you creating an instance of?", editor_hint="noo::entity_id"),
@@ -250,6 +264,12 @@ instance_args = [
     rigatoni.MethodArg(name="scale", doc="How is this instance scaled? Vec3", editor_hint="noo::array")
 ]
 
+move_args = [
+    rigatoni.MethodArg(name="x", doc="How far to move in x", editor_hint="noo::real"),
+    rigatoni.MethodArg(name="y", doc="How far to move in y", editor_hint="noo::real"),
+    rigatoni.MethodArg(name="z", doc="How far to move in z", editor_hint="noo::real")
+]
+
 # Define starting state
 starting_state = [
     rigatoni.StartingComponent(rigatoni.Method, {"name": "new_point_plot", "arg_doc": []}, make_point_plot),
@@ -257,7 +277,8 @@ starting_state = [
                                create_new_instance),
     rigatoni.StartingComponent(rigatoni.Method, {"name": "create_sphere", "arg_doc": []}, create_spheres),
     rigatoni.StartingComponent(rigatoni.Method, {"name": "create_from_mesh", "arg_doc": []}, create_from_mesh),
-    rigatoni.StartingComponent(rigatoni.Method, {"name": "delete_sphere", "arg_doc": []}, delete_sphere)
+    rigatoni.StartingComponent(rigatoni.Method, {"name": "delete_sphere", "arg_doc": []}, delete_sphere),
+    rigatoni.StartingComponent(rigatoni.Method, {"name": "move_sphere", "arg_doc": [*move_args]}, move_sphere),
 ]
 
 

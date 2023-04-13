@@ -11,7 +11,7 @@ import json
 import websockets
 from cbor2 import loads, dumps
 
-from rigatoni.core import Server, uri_encoder, default_json_encoder
+from rigatoni.core import Server, default_json_encoder
 from rigatoni.noodle_objects import Component, StartingComponent
 from rigatoni.delegates import Delegate
 
@@ -33,7 +33,7 @@ async def send(websocket, message: list):
 
     # Print message and send
     print(f"Sending Message: ID's {message[::2]}")
-    await websocket.send(dumps(message, default=uri_encoder))
+    await websocket.send(dumps(message))
 
 
 async def handle_client(websocket, server: Server):

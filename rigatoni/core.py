@@ -8,23 +8,14 @@ if TYPE_CHECKING:
     from . import delegates
 
 import websockets
-from cbor2 import dumps, CBORTag
+from cbor2 import dumps
 import json
 
-from noodle_objects import *
-
-
-def uri_encoder(encoder, value):
-    """Default encoder to use for URI Bytes"""
-
-    encoder.encode(CBORTag(32, value.url))
+from .noodle_objects import *
 
 
 def default_json_encoder(value):
-    if isinstance(value, URL):
-        return value.url
-    else:
-        return str(value)
+    return str(value)
 
 
 class Server(object):
@@ -164,10 +155,6 @@ class Server(object):
         if action in {"create", "invoke", "reply"}:
             contents = noodle_object.dict(exclude_none=True)
 
-            # Change type to url to facilitate proper encoding
-            if "uri_bytes" in contents:
-                contents["uri_bytes"] = URL(url=contents["uri_bytes"])
-
         elif action == "update":
             if not noodle_object:  # Document case
                 contents["methods_list"] = self.get_ids_by_type(Method)
@@ -210,7 +197,7 @@ class Server(object):
         json_message = json.dumps(message, default=default_json_encoder)
         with open("sample_messages.json", "a") as outfile:
             outfile.write(json_message)
-        encoded = dumps(message, default=uri_encoder)
+        encoded = dumps(message)
         websockets.broadcast(self.clients, encoded)
 
     def handle_intro(self):
@@ -449,8 +436,9 @@ class Server(object):
             state_val = getattr(state, field_name)
             if value != state_val:
                 delta.add(field_name)
-                self.update_references(state, state_val, removing=True)
-                self.update_references(edited, value)
+                if isinstance(value, NoodleObject):
+                    self.update_references(state, state_val, removing=True)
+                    self.update_references(edited, value)
 
         return delta
 
