@@ -41,7 +41,7 @@ class Server(object):
     """
 
     def __init__(self, starting_state: list[StartingComponent],
-                 delegate_map: dict[Type[Component], Type[delegates.Delegate]], shutdown_event):
+                 delegate_map: dict[Type[Component], Type[delegates.Delegate]]):
         """Constructor
         
         Args:
@@ -49,8 +49,6 @@ class Server(object):
                 list of objects containing the info to create components on initialization
             delegate_map (dict):
                 maps noodles component type to instance of delegate class
-            shutdown_event (asyncio.Event):
-                event to signal when server is shutting down
         Raises:
             Exception: Invalid Arguments or Method Not Specified when filling in starting state
         """
@@ -58,7 +56,6 @@ class Server(object):
         self.clients = set()
         self.custom_delegates = delegate_map
         self.delegates = {}
-        self.shutdown_event = shutdown_event
         self.ids = {}
         self.components = {}
         self.references = {}

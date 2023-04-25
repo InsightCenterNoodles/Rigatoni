@@ -78,6 +78,9 @@ async def handle_client(websocket, server: Server):
     server.clients.remove(websocket)
 
 
+shutdown_event = asyncio.Event()
+
+
 async def start_server(port: int, starting_state: list[StartingComponent],
                        delegates: dict[Type[Component], Type[Delegate]] = None):
     """Main method for maintaining websocket connection and handling new clients
@@ -90,8 +93,7 @@ async def start_server(port: int, starting_state: list[StartingComponent],
     if not delegates:
         delegates = {}
 
-    shutdown_event = asyncio.Event()
-    server = Server(starting_state, delegates, shutdown_event)
+    server = Server(starting_state, delegates)
     print(f"Server initialized with objects: {server.components}")
 
     # Create partial to pass server to handler
@@ -102,3 +104,8 @@ async def start_server(port: int, starting_state: list[StartingComponent],
         while not shutdown_event.is_set():
             await asyncio.sleep(.1)
         # await asyncio.Future()  # run forever
+
+
+async def shutdown_server():
+    """Shutdown server by setting shutdown event"""
+    shutdown_event.set()
