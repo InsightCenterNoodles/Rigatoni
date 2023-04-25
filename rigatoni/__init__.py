@@ -17,9 +17,9 @@ Modules:
 """
 
 
-__version__ = "0.1.4"
+__version__ = "0.1.5"
 
-from .server import start_server
+from .server import start_server, shutdown_server
 from .delegates import ServerTableDelegate, Delegate
 from .core import Server
 from . import geometry
