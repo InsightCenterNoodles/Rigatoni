@@ -245,11 +245,17 @@ def move_sphere(server: rigatoni.Server, context, *args):
     # Change world transform, but do you change local?
     sphere_id = server.get_component_id(rigatoni.Entity, "Test Sphere")
     sphere = server.get_component(sphere_id)
+    # sphere.transform = [
+    #     1, 0, 0, 0,
+    #     0, 1, 0, 0,
+    #     0, 0, 1, 0,
+    #     args[0], args[1], args[2], 1
+    # ]
     sphere.transform = [
-        1, 0, 0, 0,
-        0, 1, 0, 0,
-        0, 0, 1, 0,
-        args[0], args[1], args[2], 1
+        1, 0, 0, args[0],
+        0, 1, 0, args[1],
+        0, 0, 1, args[2],
+        0, 0, 0, 1
     ]
     server.update_component(sphere)
     pass
