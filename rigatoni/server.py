@@ -93,6 +93,7 @@ async def start_server(port: int, starting_state: list[StartingComponent],
     if not delegates:
         delegates = {}
 
+    shutdown_event = asyncio.Event()
     server = Server(starting_state, delegates)
     print(f"Server initialized with objects: {server.components}")
 
