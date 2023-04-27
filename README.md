@@ -52,7 +52,7 @@ server = Server(50000, starting_state, delegates)
 server.run()
 server.shutdown()
 ```
-or alternatively, you can use the context manager
+or alternatively, you can use the context manager to automatically start running the server in a new thread
 
 ```python
 with Server(50000, starting_state, delegates) as server:

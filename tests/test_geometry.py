@@ -295,9 +295,8 @@ logging.basicConfig(
 
 def main():
 
-    with Server(50000, starting_state) as server:
-        server.run()
-
+    server = Server(50000, starting_state)
+    server.run()
 
 if __name__ == "__main__":
     main()

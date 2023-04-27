@@ -6,6 +6,7 @@ from typing import TYPE_CHECKING, Type, TypeVar
 import asyncio
 import functools
 import logging
+import threading
 
 if TYPE_CHECKING:
     from . import delegates
@@ -71,6 +72,7 @@ class Server(object):
         self.references = {}
         self.delete_queue = set()
         self.shutdown_event = asyncio.Event()
+        self.thread = None
 
         self.message_map = {
             ("create", Method): 0,
@@ -130,25 +132,26 @@ class Server(object):
 
     def __enter__(self):
         """Enter context manager"""
-        return self.run(yielding=True)
+        self.thread = threading.Thread(target=self.run)
+        self.thread.start()
+        return self
 
     def __exit__(self, exc_type, exc_value, traceback):
         """Exit context manager"""
         self.shutdown()
+        self.thread.join()
 
-    def run(self, yielding=False):
+    def run(self):
         """Run the server"""
-        return asyncio.run(self.start_server(yielding=yielding))
+        return asyncio.run(self.start_server())
 
-    async def start_server(self, yielding=False):
+    async def start_server(self):
         """Run the server and listen for connections"""
         # Create partial to pass server to handler
         handler = functools.partial(self.handle_client)
 
         logging.info("Starting up Server...")
         async with websockets.serve(handler, "", self.port):
-            if yielding:
-                return self
             while not self.shutdown_event.is_set():
                 await asyncio.sleep(.1)
 
