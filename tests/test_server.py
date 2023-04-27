@@ -10,7 +10,6 @@ import weakref
 import pandas as pd
 
 from context import rigatoni
-from rigatoni.server import start_server
 from rigatoni.core import Server
 import rigatoni.noodle_objects as nooobs
 import rigatoni.delegates as interface
@@ -184,7 +183,9 @@ starting_state = [
 
 
 def main():
-    asyncio.run(start_server(50000, starting_state, delegates))
+
+    server = Server(50000, starting_state, delegates)
+    server.run()
 
 
 if __name__ == "__main__":

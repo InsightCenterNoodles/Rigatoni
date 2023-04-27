@@ -3,13 +3,13 @@
 Offers sample methods a server could implement using a sphere
 """
 
-import asyncio
-
+import logging
 import pandas as pd
 import matplotlib
 
 from context import rigatoni
 from rigatoni import geometry as geo
+from rigatoni import Server
 
 # 42 vertices for sphere
 vertices = [[-0.000000, -0.500000, -0.000000], [0.361804, -0.223610, 0.262863],
@@ -287,9 +287,16 @@ starting_state = [
     rigatoni.StartingComponent(rigatoni.Method, {"name": "move_sphere", "arg_doc": [*move_args]}, move_sphere),
 ]
 
+logging.basicConfig(
+    format="%(message)s",
+    level=logging.DEBUG
+)
+
 
 def main():
-    asyncio.run(rigatoni.start_server(50000, starting_state))
+
+    with Server(50000, starting_state) as server:
+        server.run()
 
 
 if __name__ == "__main__":

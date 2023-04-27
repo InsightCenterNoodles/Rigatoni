@@ -2,16 +2,23 @@
 
 from __future__ import annotations
 from types import NoneType
-from typing import TYPE_CHECKING, Type
+from typing import TYPE_CHECKING, Type, TypeVar
+import asyncio
+import functools
+import logging
 
 if TYPE_CHECKING:
     from . import delegates
 
 import websockets
-from cbor2 import dumps
+from cbor2 import loads, dumps
 import json
 
 from .noodle_objects import *
+
+
+# To allow for more flexible type annotation especially in create component
+T = TypeVar("T", bound=Component)
 
 
 def default_json_encoder(value):
@@ -40,11 +47,13 @@ class Server(object):
             maps action and type to message ID
     """
 
-    def __init__(self, starting_state: list[StartingComponent],
-                 delegate_map: dict[Type[Component], Type[delegates.Delegate]]):
+    def __init__(self, port: int, starting_state: list[StartingComponent],
+                 delegate_map: dict[Type[Component], Type[delegates.Delegate]] = None):
         """Constructor
         
         Args:
+            port (int):
+                port to run server on
             starting_state (list[StartingComponent]):
                 list of objects containing the info to create components on initialization
             delegate_map (dict):
@@ -53,13 +62,15 @@ class Server(object):
             Exception: Invalid Arguments or Method Not Specified when filling in starting state
         """
 
+        self.port = port
         self.clients = set()
-        self.custom_delegates = delegate_map
+        self.custom_delegates = delegate_map if delegate_map else {}
         self.delegates = {}
         self.ids = {}
         self.components = {}
         self.references = {}
         self.delete_queue = set()
+        self.shutdown_event = asyncio.Event()
 
         self.message_map = {
             ("create", Method): 0,
@@ -115,6 +126,96 @@ class Server(object):
                     setattr(self, comp.name, injected)
                 else:
                     raise Exception("Method not specified for starting method")
+        logging.debug(f"Server initialized with objects: {self.components}")
+
+    def __enter__(self):
+        """Enter context manager"""
+        return self.run(yielding=True)
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        """Exit context manager"""
+        self.shutdown()
+
+    def run(self, yielding=False):
+        """Run the server"""
+        return asyncio.run(self.start_server(yielding=yielding))
+
+    async def start_server(self, yielding=False):
+        """Run the server and listen for connections"""
+        # Create partial to pass server to handler
+        handler = functools.partial(self.handle_client)
+
+        logging.info("Starting up Server...")
+        async with websockets.serve(handler, "", self.port):
+            if yielding:
+                return self
+            while not self.shutdown_event.is_set():
+                await asyncio.sleep(.1)
+
+    def shutdown(self):
+        """Shutdown the server"""
+        logging.info("Shutting down server...")
+        self.shutdown_event.set()
+
+    @staticmethod
+    async def send(websocket, message: list):
+        """Send CBOR message using websocket
+
+        Args:
+            websocket (WebSocketClientProtocol):
+                recipient of this data
+            message (list):
+                message to be sent, in list format
+                [id, content, id, content...]
+        """
+        # Log message in json file
+        json_message = json.dumps(message, default=default_json_encoder)
+        with open("sample_messages.json", "a") as outfile:
+            outfile.write(json_message)
+
+        # Log message and send
+        logging.debug(f"Sending Message: ID's {message[::2]}")
+        await websocket.send(dumps(message))
+
+    async def handle_client(self, websocket):
+        """Coroutine for handling a client's connection
+
+        Receives and delegates message handling to server
+
+        args:
+            websocket (WebSocketClientProtocol):
+                client connection being handled
+            server (Server):
+                object for maintaining state of the scene
+        """
+
+        # Update state
+        self.clients.add(websocket)
+
+        # Handle intro and update client
+        raw_intro_msg = await websocket.recv()
+        intro_msg = loads(raw_intro_msg)
+        client_name = intro_msg[1]["client_name"]
+        logging.info(f"Client '{client_name}' Connecting...")
+
+        init_message = self.handle_intro()
+        await self.send(websocket, init_message)
+
+        # Listen for method invocation and keep all clients informed
+        async for message in websocket:
+            # Decode and log raw message
+            message = loads(message)
+            logging.debug(f"Message from client: {message}")
+
+            # Handle the method invocation
+            reply = self.handle_invoke(message[1])
+
+            # Send method reply to client
+            await self.send(websocket, list(reply))
+
+        # Remove client if disconnected
+        logging.debug(f"Client 'client_name' disconnected")
+        self.clients.remove(websocket)
 
     def get_ids_by_type(self, component: Type[Component]) -> list:
         """Helper to get all ids for certain component type
@@ -192,7 +293,7 @@ class Server(object):
             message [tuple]: fully constructed message in form (tag/id, contents)
         """
 
-        print(f"Broadcasting Message: ID's {message[::2]}")
+        logging.debug(f"Broadcasting Message: ID's {message[::2]}")
         json_message = json.dumps(message, default=default_json_encoder)
         with open("sample_messages.json", "a") as outfile:
             outfile.write(json_message)
@@ -237,7 +338,7 @@ class Server(object):
             if type(e) is MethodException:
                 reply_obj.method_exception = e
             else:
-                print(f"\033[91mServerside Error: {e}\033[0m")
+                logging.error(f"\033[91mServerside Error: {e}\033[0m")
                 reply_obj.method_exception = MethodException(code=-32603, message="Internal Error")
 
         return self.prepare_message("reply", reply_obj)
@@ -338,15 +439,9 @@ class Server(object):
         else:
             return slot_info.on_deck.get()
 
-    def shutdown(self):
-        """Shutdown server"""
-
-        print("Shutting down server...")
-        self.shutdown_event.set()
-
     # Interface methods to build server methods ===============================================
 
-    def create_component(self, comp_type: Type[Component], **kwargs):
+    def create_component(self, comp_type: Type[T], **kwargs) -> Union[T, delegates.Delegate]:
         """Officially create new component in state
         
         This method updates state, updates references, and broadcasts msg to clients.
@@ -414,7 +509,8 @@ class Server(object):
 
             # Clean out references from this object
             for refs in self.references.values():
-                while id in refs: refs.remove(id)
+                while id in refs:
+                    refs.remove(id)
 
             # Check if anything in the queue is now clear to be deleted
             for comp_id in list(self.delete_queue):
@@ -424,9 +520,10 @@ class Server(object):
 
         else:
             if isinstance(obj, ID):
-                print(f"Couldn't delete {self.components[obj]}, referenced by {self.references[id]}, added to queue")
+                logging.warning(f"Couldn't delete {self.components[obj]}, "
+                                f"referenced by {self.references[id]}, added to queue")
             else:
-                print(f"Couldn't delete {obj}, referenced by {self.references[id]}, added to queue")
+                logging.warning(f"Couldn't delete {obj}, referenced by {self.references[id]}, added to queue")
             self.delete_queue.add(id)
 
     def find_delta(self, state, edited):
@@ -472,7 +569,7 @@ class Server(object):
         except:
             raise Exception("This obj can not be updated")
 
-    def invoke_signal(self, signal: ID, on_component: Component, signal_data: list):
+    def invoke_signal(self, signal: SignalID, on_component: Component, signal_data: list):
         """Send signal to target component
         
         Args:
@@ -522,7 +619,7 @@ class Server(object):
                       signals_list: Optional[list[SignalID]] = None,
                       influence: Optional[BoundingBox] = None) -> Entity:
 
-        return self.create_component(Method, name=name, parent=parent, transform=transform, text_rep=text_rep,
+        return self.create_component(Entity, name=name, parent=parent, transform=transform, text_rep=text_rep,
                                      web_rep=web_rep, render_rep=render_rep, lights=lights, tables=tables, plots=plots,
                                      tags=tags, methods_list=methods_list, signals_list=signals_list,
                                      influence=influence)
@@ -534,7 +631,7 @@ class Server(object):
                     methods_list: Optional[list[MethodID]] = None,
                     signals_list: Optional[list[SignalID]] = None) -> Plot:
 
-        return self.create_component(Signal, name=name, table=table, simple_plot=simple_plot, url_plot=url_plot,
+        return self.create_component(Plot, name=name, table=table, simple_plot=simple_plot, url_plot=url_plot,
                                      methods_list=methods_list, signals_list=signals_list)
 
     def create_buffer(self, name: Optional[str] = None,
@@ -563,7 +660,8 @@ class Server(object):
                         alpha_cutoff: Optional[float] = .5,
                         double_sided: Optional[bool] = False) -> Material:
         return self.create_component(Material, name=name, pbr_info=pbr_info, normal_texture=normal_texture,
-                                     occlusion_texture=occlusion_texture, occlusion_texture_factor=occlusion_texture_factor,
+                                     occlusion_texture=occlusion_texture,
+                                     occlusion_texture_factor=occlusion_texture_factor,
                                      emissive_texture=emissive_texture, emissive_factor=emissive_factor,
                                      use_alpha=use_alpha, alpha_cutoff=alpha_cutoff, double_sided=double_sided)
 
@@ -596,7 +694,7 @@ class Server(object):
                                      point=point, spot=spot, directional=directional)
 
     def create_geometry(self, patches: list[GeometryPatch], name: Optional[str] = None) -> Geometry:
-        return self.create_component(name=name, patches=patches)
+        return self.create_component(Geometry, name=name, patches=patches)
 
     def create_table(self, name: Optional[str] = None,
                      meta: Optional[str] = None,

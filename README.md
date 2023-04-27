@@ -48,7 +48,15 @@ rigatoni.StartingComponent(Type[Component], dict[Component_Attr, Value], Callabl
 ### 3. Start running the server
 
 ```python
-asyncio.run(rigatoni.start_server(port: [int], starting_state: list[StartingComponent]))
+server = Server(50000, starting_state, delegates)
+server.run()
+server.shutdown()
+```
+or alternatively, you can use the context manager
+
+```python
+with Server(50000, starting_state, delegates) as server:
+    # do stuff
 ```
 
 ## More Info on Creating Methods
