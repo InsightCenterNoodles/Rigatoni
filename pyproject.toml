@@ -25,7 +25,8 @@ dependencies = [
 
 [project.optional-dependencies]
 geometry = [
-    "numpy"
+    "numpy",
+    "meshio"
 ]
 
 [project.urls]

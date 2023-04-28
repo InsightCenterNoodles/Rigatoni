@@ -26,8 +26,10 @@ from .noodle_objects import *
 # Ensure that dependencies are installed for optional module
 try:
     import numpy
+    import meshio
+    optionals = True
 except ImportError:
-    numpy = None
+    optionals = False
 
-if numpy is not None:
+if optionals:
     from . import geometry
