@@ -1,7 +1,6 @@
 """Module with core implementation of Server Object"""
 
 from __future__ import annotations
-from types import NoneType
 from typing import TYPE_CHECKING, Type, TypeVar
 import asyncio
 import functools
@@ -106,11 +105,11 @@ class Server(object):
             ("create", Table): 28,
             ("update", Table): 29,
             ("delete", Table): 30,
-            ("update", NoneType): 31,
-            ("reset", NoneType): 32,
+            ("update", None): 31,
+            ("reset", None): 32,
             ("invoke", Invoke): 33,
             ("reply", Reply): 34,
-            ("initialized", NoneType): 35
+            ("initialized", None): 35
         }
 
         # Set up starting state
@@ -284,7 +283,8 @@ class Server(object):
             delta (set): field names to be included in update
         """
 
-        message_id = self.message_map[(action, type(noodle_object))]
+        key = (action, type(noodle_object)) if noodle_object else (action, None)
+        message_id = self.message_map[key]
         contents = self.get_message_contents(action, noodle_object, delta)
 
         return message_id, contents
