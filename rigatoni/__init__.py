@@ -17,9 +17,18 @@ Modules:
 """
 
 
-__version__ = "0.1.7"
+__version__ = "0.1.9"
 
 from .delegates import ServerTableDelegate, Delegate
 from .core import Server
 from . import geometry
 from .noodle_objects import *
+
+# Ensure that dependencies are installed for optional module
+try:
+    import numpy
+except ImportError:
+    numpy = None
+
+if numpy is not None:
+    from . import geometry
