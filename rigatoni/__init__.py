@@ -17,11 +17,10 @@ Modules:
 """
 
 
-__version__ = "0.1.9"
+__version__ = "0.1.10"
 
 from .delegates import ServerTableDelegate, Delegate
 from .core import Server
-from . import geometry
 from .noodle_objects import *
 
 # Ensure that dependencies are installed for optional module
