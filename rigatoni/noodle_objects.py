@@ -8,7 +8,7 @@ from collections import namedtuple
 from enum import Enum
 from math import pi
 from queue import Queue
-from typing import Callable, Literal, Optional, Any, Union
+from typing import Callable, Literal, Optional, Any, Union, List, Tuple, Dict
 
 from pydantic import BaseModel, root_validator
 
@@ -115,12 +115,12 @@ class Component(NoodleObject):
 
 """ ====================== Common Definitions ====================== """
 
-Vec3 = tuple[float, float, float]
-Vec4 = tuple[float, float, float, float]
-Mat3 = tuple[float, float, float,
+Vec3 = Tuple[float, float, float]
+Vec4 = Tuple[float, float, float, float]
+Mat3 = Tuple[float, float, float,
              float, float, float,
              float, float, float]
-Mat4 = tuple[float, float, float, float,
+Mat4 = Tuple[float, float, float, float,
              float, float, float, float,
              float, float, float, float,
              float, float, float, float]
@@ -172,8 +172,8 @@ class SelectionRange(NoodleObject):
 
 class Selection(NoodleObject):
     name: str
-    rows: Optional[list[int]] = None
-    row_ranges: Optional[list[SelectionRange]] = None
+    rows: Optional[List[int]] = None
+    row_ranges: Optional[List[SelectionRange]] = None
 
 
 class MethodArg(NoodleObject):
@@ -249,8 +249,8 @@ class Attribute(NoodleObject):
     offset: Optional[int] = 0
     stride: Optional[int] = 0
     format: Format
-    minimum_value: Optional[list[float]] = None
-    maximum_value: Optional[list[float]] = None
+    minimum_value: Optional[List[float]] = None
+    maximum_value: Optional[List[float]] = None
     normalized: Optional[bool] = False
 
 
@@ -263,7 +263,7 @@ class Index(NoodleObject):
 
 
 class GeometryPatch(NoodleObject):
-    attributes: list[Attribute]
+    attributes: List[Attribute]
     vertex_count: int
     indices: Optional[Index] = None
     type: PrimitiveType
@@ -296,10 +296,10 @@ class TableColumnInfo(NoodleObject):
 
 
 class TableInitData(NoodleObject):
-    columns: list[TableColumnInfo]
-    keys: list[int]
-    data: list[list[Union[float, int, str]]]
-    selections: Optional[list[Selection]] = None
+    columns: List[TableColumnInfo]
+    keys: List[int]
+    data: List[List[Union[float, int, str]]]
+    selections: Optional[List[Selection]] = None
 
     # too much overhead? - strict mode
     @root_validator
@@ -322,14 +322,14 @@ class Method(Component):
     name: str
     doc: Optional[str] = None
     return_doc: Optional[str] = None
-    arg_doc: list[MethodArg] = []
+    arg_doc: List[MethodArg] = []
 
 
 class Signal(Component):
     id: SignalID
     name: str
     doc: Optional[str] = None
-    arg_doc: list[MethodArg] = None
+    arg_doc: List[MethodArg] = None
 
 
 class Entity(Component):
@@ -343,12 +343,12 @@ class Entity(Component):
     web_rep: Optional[WebRepresentation] = None
     render_rep: Optional[RenderRepresentation] = None
 
-    lights: Optional[list[LightID]] = None
-    tables: Optional[list[TableID]] = None
-    plots: Optional[list[PlotID]] = None
-    tags: Optional[list[str]] = None
-    methods_list: Optional[list[MethodID]] = None
-    signals_list: Optional[list[SignalID]] = None
+    lights: Optional[List[LightID]] = None
+    tables: Optional[List[TableID]] = None
+    plots: Optional[List[PlotID]] = None
+    tags: Optional[List[str]] = None
+    methods_list: Optional[List[MethodID]] = None
+    signals_list: Optional[List[SignalID]] = None
 
     influence: Optional[BoundingBox] = None
 
@@ -362,8 +362,8 @@ class Plot(Component):
     simple_plot: Optional[str] = None
     url_plot: Optional[str] = None
 
-    methods_list: Optional[list[MethodID]] = None
-    signals_list: Optional[list[SignalID]] = None
+    methods_list: Optional[List[MethodID]] = None
+    signals_list: Optional[List[SignalID]] = None
 
     @root_validator
     def one_of(cls, values):
@@ -480,7 +480,7 @@ class Light(Component):
 class Geometry(Component):
     id: GeometryID
     name: Optional[str] = None
-    patches: list[GeometryPatch]
+    patches: List[GeometryPatch]
 
 
 class Table(Component):
@@ -488,8 +488,8 @@ class Table(Component):
     name: Optional[str] = None
 
     meta: Optional[str] = None
-    methods_list: Optional[list[MethodID]] = None
-    signals_list: Optional[list[SignalID]] = None
+    methods_list: Optional[List[MethodID]] = None
+    signals_list: Optional[List[SignalID]] = None
 
 
 """ ====================== Communication Objects ====================== """
@@ -498,7 +498,7 @@ class Table(Component):
 class Invoke(NoodleObject):
     id: SignalID
     context: Optional[InvokeIDType] = None  # if empty - document
-    signal_data: list[Any]
+    signal_data: List[Any]
 
 
 # Note: this isn't technically an exception
@@ -564,7 +564,7 @@ class SlotTracker(object):
 class StartingComponent(object):
     """User input object for setting starting components on server"""
 
-    def __init__(self, kind, component_attrs: dict[str, Any], method: Optional[Callable] = None):
+    def __init__(self, kind, component_attrs: Dict[str, Any], method: Optional[Callable] = None):
         self.type = kind
         self.component_attrs = component_attrs
         self.method = method

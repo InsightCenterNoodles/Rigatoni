@@ -28,6 +28,12 @@ geometry = [
     "numpy",
     "meshio"
 ]
+testing = [
+    "pytest",
+    "penne",
+    "pandas",
+    "matplotlib"
+]
 
 [project.urls]
-Source = "https://github.com/InsightCenterNoodles/rigatoni"
+Source = "https://github.com/InsightCenterNoodles/Rigatoni"

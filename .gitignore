@@ -1,6 +1,7 @@
 # Added
 *.x3d
 .idea
+venv/
 
 # Standard from Github
 # Byte-compiled / optimized / DLL files
