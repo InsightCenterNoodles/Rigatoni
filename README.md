@@ -1,5 +1,10 @@
 # Python Server
 
+![Build Status](https://github.com/InsightCenterNoodles/Rigatoni/workflows/CI/badge.svg)
+![PyPI](https://img.shields.io/pypi/v/Rigatoni)
+![Coverage](https://github.com/InsightCenterNoodles/Rigatoni/raw/aebac0f/coverage-badge/coverage.svg)
+
+
 Python Server Library for NOODLES Protocol
 
 ## Description
