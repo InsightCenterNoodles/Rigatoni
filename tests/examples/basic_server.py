@@ -15,7 +15,7 @@ import rigatoni.delegates as interface
 
 def new_point_plot(server: Server, context: dict, xs, ys, zs, colors=None, sizes=None):
     # Create component and state and get delegate reference
-    tbl_delegate: CustomTableDelegate = server.create_component(
+    tbl_delegate = server.create_component(
         nooobs.Table,
         name="Custom Table",
         meta="Table for testing",

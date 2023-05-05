@@ -267,7 +267,7 @@ def build_instance_buffer(server: Server, name: str, matrices: list[nooobs.Mat4]
     return buffer
 
 
-def build_entity(server: Server, geometry: nooobs.Geometry, instances: list[nooobs.Mat4] = None):
+def build_entity(server: Server, geometry: nooobs.Geometry, instances: list[list] = None):
     """Build Entity from Geometry
     
     Args:

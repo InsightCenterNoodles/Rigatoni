@@ -7,8 +7,9 @@ import logging
 import pandas as pd
 import matplotlib
 
+import rigatoni
+from rigatoni.core import Server
 from rigatoni import geometry as geo
-from rigatoni import Server
 
 # 42 vertices for sphere
 vertices = [[-0.000000, -0.500000, -0.000000], [0.361804, -0.223610, 0.262863],
