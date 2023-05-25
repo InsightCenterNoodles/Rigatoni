@@ -70,6 +70,7 @@ class Server(object):
         self.components = {}
         self.references = {}
         self.delete_queue = set()
+        self.ready = threading.Event()
         self.shutdown_event = asyncio.Event()
         self.thread = None
 
@@ -133,6 +134,8 @@ class Server(object):
         """Enter context manager"""
         self.thread = threading.Thread(target=self.run)
         self.thread.start()
+        self.ready.wait()
+
         return self
 
     def __exit__(self, exc_type, exc_value, traceback):
@@ -151,6 +154,7 @@ class Server(object):
 
         logging.info("Starting up Server...")
         async with websockets.serve(handler, "", self.port):
+            self.ready.set()
             while not self.shutdown_event.is_set():
                 await asyncio.sleep(.1)
 

@@ -18,3 +18,4 @@ def test_server_init(basic_server):
     assert basic_server.components == {}
     assert basic_server.delegates == {}
     assert basic_server.shutdown_event.is_set() is False
+    assert basic_server.ready.is_set() is True

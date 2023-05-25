@@ -8,7 +8,7 @@ from collections import namedtuple
 from enum import Enum
 from math import pi
 from queue import Queue
-from typing import Callable, Literal, Optional, Any, Union, List, Tuple, Dict
+from typing import Callable, Optional, Any, Union, List, Tuple, Dict
 
 from pydantic import BaseModel, root_validator
 
@@ -150,6 +150,12 @@ class Format(Enum):
     mat4 = "MAT4"
 
 
+class IndexFormat(str, Enum):
+    u8 = "U8"
+    u16 = "U16"
+    u32 = "U32"
+
+
 class PrimitiveType(Enum):
     points = "POINTS"
     lines = "LINES"
@@ -159,10 +165,33 @@ class PrimitiveType(Enum):
     triangle_strip = "TRIANGLE_STRIP"
 
 
+class ColumnType(str, Enum):
+    text = "TEXT"
+    real = "REAL"
+    integer = "INTEGER"
+
+
+class BufferType(str, Enum):
+    unknown = "UNK"
+    geometry = "GEOMETRY"
+    image = "IMAGE"
+
+
 class SamplerMode(Enum):
     clamp_to_edge = "CLAMP_TO_EDGE"
     mirrored_repeat = "MIRRORED_REPEAT"
     repeat = "REPEAT"
+
+
+class MagFilterTypes(Enum):
+    nearest = "NEAREST"
+    linear = "LINEAR"
+
+
+class MinFilterTypes(Enum):
+    nearest = "NEAREST"
+    linear = "LINEAR"
+    linear_mipmap_linear = "LINEAR_MIPMAP_LINEAR"
 
 
 class SelectionRange(NoodleObject):
@@ -259,7 +288,7 @@ class Index(NoodleObject):
     count: int
     offset: Optional[int] = 0
     stride: Optional[int] = 0
-    format: Literal["U8", "U16", "U32"]
+    format: IndexFormat
 
 
 class GeometryPatch(NoodleObject):
@@ -292,7 +321,7 @@ class InvokeIDType(NoodleObject):
 
 class TableColumnInfo(NoodleObject):
     name: str
-    type: Literal["TEXT", "REAL", "INTEGER"]
+    type: ColumnType
 
 
 class TableInitData(NoodleObject):
@@ -394,7 +423,7 @@ class BufferView(Component):
     name: Optional[str] = None
     source_buffer: BufferID
 
-    type: Literal["UNK", "GEOMETRY", "IMAGE"]
+    type: BufferType = BufferType.unknown
     offset: int
     length: int
 
@@ -444,8 +473,8 @@ class Sampler(Component):
     id: SamplerID
     name: Optional[str] = None
 
-    mag_filter: Optional[Literal["NEAREST", "LINEAR"]] = "LINEAR"
-    min_filter: Optional[Literal["NEAREST", "LINEAR", "LINEAR_MIPMAP_LINEAR"]] = "LINEAR_MIPMAP_LINEAR"
+    mag_filter: Optional[MagFilterTypes] = MagFilterTypes.linear
+    min_filter: Optional[MinFilterTypes] = MinFilterTypes.linear_mipmap_linear
 
     wrap_s: Optional[SamplerMode] = "REPEAT"
     wrap_t: Optional[SamplerMode] = "REPEAT"
