@@ -5,15 +5,15 @@
 | Name                           |    Stmts |     Miss |  Cover |   Missing |
 |------------------------------- | -------: | -------: | -----: | --------: |
 | rigatoni/\_\_init\_\_.py       |       12 |       12 |     0% |     20-35 |
-| rigatoni/core.py               |      291 |      291 |     0% |     3-733 |
+| rigatoni/core.py               |      294 |      294 |     0% |     3-737 |
 | rigatoni/delegates.py          |       28 |       28 |     0% |      3-47 |
-| rigatoni/noodle\_objects.py    |      346 |      346 |     0% |     7-570 |
+| rigatoni/noodle\_objects.py    |      365 |      365 |     0% |     7-599 |
 | tests/\_\_init\_\_.py          |        0 |        0 |   100% |           |
-| tests/test\_core.py            |       12 |       12 |     0% |      2-20 |
+| tests/test\_core.py            |       13 |       13 |     0% |      2-21 |
 | tests/test\_delegates.py       |        0 |        0 |   100% |           |
 | tests/test\_integration.py     |        0 |        0 |   100% |           |
 | tests/test\_noodle\_objects.py |        0 |        0 |   100% |           |
-|                      **TOTAL** |  **689** |  **689** | **0%** |           |
+|                      **TOTAL** |  **712** |  **712** | **0%** |           |
 
 
 ## Setup coverage badge
