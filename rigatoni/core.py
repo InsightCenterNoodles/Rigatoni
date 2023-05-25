@@ -70,7 +70,7 @@ class Server(object):
         self.components = {}
         self.references = {}
         self.delete_queue = set()
-        self.ready = asyncio.Event()
+        self.ready = threading.Event()
         self.shutdown_event = asyncio.Event()
         self.thread = None
 
