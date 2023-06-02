@@ -41,7 +41,7 @@ jobs:
     - name: Test with pytest
       run: |
         echo -e "[run]\nrelative_files = True" > .coveragerc
-        pytest --cov penne
+        pytest --cov rigatoni
       env:
         COVERAGE_FILE: ".coverage.${{ matrix.python_version }}"
     - name: Verify Coverage File
