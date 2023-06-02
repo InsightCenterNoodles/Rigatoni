@@ -17,7 +17,7 @@ Modules:
 """
 
 
-__version__ = "0.1.14"
+__version__ = "0.1.16"
 
 from .delegates import ServerTableDelegate, Delegate
 from .core import Server

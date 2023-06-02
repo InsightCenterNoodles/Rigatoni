@@ -5,6 +5,7 @@ could overwrite the table delegate to add table functionality
 """
 
 import weakref
+import logging
 
 import pandas as pd
 
@@ -178,6 +179,12 @@ starting_state = [
     nooobs.StartingComponent(nooobs.Signal, {"name": "noo::tbl_rows_removed", "arg_doc": []}),
     nooobs.StartingComponent(nooobs.Signal, {"name": "noo::tbl_selection_updated", "arg_doc": []})
 ]
+
+
+logging.basicConfig(
+    format="%(message)s",
+    level=logging.DEBUG
+)
 
 
 def main():
