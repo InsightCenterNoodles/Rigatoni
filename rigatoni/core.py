@@ -119,7 +119,7 @@ class Server(object):
             comp_method = starting_component.method
             try:
                 comp = self.create_component(comp_type, **starting_component.component_attrs)
-            except:
+            except TypeError:
                 raise Exception(f"Invalid arguments to create {comp_type}")
 
             if comp_type == Method:
@@ -483,7 +483,7 @@ class Server(object):
         # Return component or delegate instance if applicable
         if self.custom_delegates and comp_type in self.custom_delegates:
             delegate = self.custom_delegates[comp_type](self, new_component)
-            self.delegates[id] = delegate
+            self.delegates[comp_id] = delegate
             return delegate
         else:
             return new_component.copy(deep=True)
