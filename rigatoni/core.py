@@ -246,7 +246,15 @@ class Server(object):
         try:
             return self.components[comp_id].copy(deep=True)
         except ValueError:
-            raise Exception("No Component Found")
+            raise ValueError("No Component Found")
+
+    def get_delegate(self, del_id: ID):
+        """Getter for users to access delegates in state"""
+
+        try:
+            return self.delegates[del_id].copy(deep=True)
+        except ValueError:
+            raise ValueError("No Delegate Found")
 
     def get_component_by_context(self, context: dict):
         """Helper to get a component by context"""
@@ -263,6 +271,24 @@ class Server(object):
         elif plot:
             pid = PlotID(*plot)
             return self.get_component(pid)
+        else:
+            raise ValueError(f"Invalid context: {context}")
+
+    def get_delegate_by_context(self, context: dict):
+        """Helper to get a component by context"""
+
+        entity = context.get("entity")
+        table = context.get("table")
+        plot = context.get("plot")
+        if entity:
+            eid = EntityID(*entity)
+            return self.get_delegate(eid)
+        elif table:
+            tid = TableID(*table)
+            return self.get_delegate(tid)
+        elif plot:
+            pid = PlotID(*plot)
+            return self.get_delegate(pid)
         else:
             raise ValueError(f"Invalid context: {context}")
 
