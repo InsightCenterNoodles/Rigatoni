@@ -532,10 +532,16 @@ class Invoke(NoodleObject):
 
 # Note: this isn't technically an exception
 # for now this uses a model so that it can be validated / sent as message easier
-class MethodException(NoodleObject):
-    code: int
-    message: Optional[str] = None
-    data: Optional[Any] = None
+# Fix to inherit from Exception, maybe use separate model for sending
+# class MethodException(NoodleObject):
+#     code: int
+#     message: Optional[str] = None
+#     data: Optional[Any] = None
+class MethodException(Exception):
+    def __init__(self, code: int, message: Optional[str] = None, data: Optional[Any] = None):
+        self.code = code
+        self.message = message
+        self.data = data
 
 
 class Reply(NoodleObject):

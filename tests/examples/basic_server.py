@@ -66,7 +66,7 @@ def subscribe(server: Server, context: dict):
         tbl_id = nooobs.TableID(*context["table"])
         delegate: CustomTableDelegate = server.delegates[tbl_id]
     except:
-        raise Exception(nooobs.MethodException(code=-32600, message="Invalid Request - Invalid Context for Subscribe"))
+        raise nooobs.MethodException(code=-32600, message="Invalid Request - Invalid Context for Subscribe")
 
     tbl: pd.DataFrame = delegate.dataframe
     types = ["REAL", "REAL", "REAL", "REAL", "REAL", "REAL", "REAL", "REAL", "REAL", "TEXT"]

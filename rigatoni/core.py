@@ -1,7 +1,7 @@
 """Module with core implementation of Server Object"""
 
 from __future__ import annotations
-from typing import TYPE_CHECKING, Type, TypeVar
+from typing import TYPE_CHECKING, Type, TypeVar, Literal
 import asyncio
 import functools
 import logging
@@ -248,6 +248,24 @@ class Server(object):
         except ValueError:
             raise Exception("No Component Found")
 
+    def get_component_by_context(self, context: dict):
+        """Helper to get a component by context"""
+
+        entity = context.get("entity")
+        table = context.get("table")
+        plot = context.get("plot")
+        if entity:
+            eid = EntityID(*entity)
+            return self.get_component(eid)
+        elif table:
+            tid = TableID(*table)
+            return self.get_component(tid)
+        elif plot:
+            pid = PlotID(*plot)
+            return self.get_component(pid)
+        else:
+            raise ValueError(f"Invalid context: {context}")
+
     def get_message_contents(self, action: str, noodle_object: NoodleObject, delta: set[str]):
         """Helper to handle construction of message dict
         
@@ -368,14 +386,14 @@ class Server(object):
             args: list = message["args"]
             reply.invoke_id = invoke_id
         except Exception:
-            raise Exception(MethodException(code=-32700, message="Parse Error"))
+            raise MethodException(code=-32700, message="Parse Error")
 
         # Locate method
         try:
             method_name = self.components[method_id].name
             method = getattr(self, method_name)
         except Exception:
-            raise Exception(MethodException(code=-32601, message="Method Not Found"))
+            raise MethodException(code=-32601, message="Method Not Found")
 
         # Invoke
         reply.result = method(context, *args)
