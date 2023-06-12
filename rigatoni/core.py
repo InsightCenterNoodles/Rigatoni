@@ -1,14 +1,11 @@
 """Module with core implementation of Server Object"""
 
 from __future__ import annotations
-from typing import TYPE_CHECKING, Type, TypeVar, Literal
+from typing import Type, TypeVar, Literal
 import asyncio
 import functools
 import logging
 import threading
-
-if TYPE_CHECKING:
-    from . import delegates
 
 import websockets
 from cbor2 import loads, dumps
@@ -18,7 +15,7 @@ from .noodle_objects import *
 
 
 # To allow for more flexible type annotation especially in create component
-T = TypeVar("T", bound=Component)
+T = TypeVar("T", bound=Delegate)
 
 
 def default_json_encoder(value):
@@ -37,8 +34,7 @@ class Server(object):
         ids (dict): 
             maps object type to slot tracking info (next_slot, on_deck)
         components (dict):
-            document's current state, contains all components with component ID 
-            as the key
+            document's current state, contains all components with component ID as the key
         references (dict):
             maps component ID to all the component ID's that reference it
         delete_queue (set):
@@ -48,7 +44,7 @@ class Server(object):
     """
 
     def __init__(self, port: int, starting_state: list[StartingComponent],
-                 delegate_map: dict[Type[Component], Type[delegates.Delegate]] = None):
+                 delegate_map: dict[Type[Delegate], Type[Delegate]] = None, json_output: str = None):
         """Constructor
         
         Args:
@@ -58,58 +54,67 @@ class Server(object):
                 list of objects containing the info to create components on initialization
             delegate_map (dict):
                 maps noodles component type to instance of delegate class
+            json_output (str):
+                path to json file to output message logs
         Raises:
             Exception: Invalid Arguments or Method Not Specified when filling in starting state
         """
 
         self.port = port
         self.clients = set()
-        self.custom_delegates = delegate_map if delegate_map else {}
-        self.delegates = {}
         self.ids = {}
-        self.components = {}
+        self.state = {}
+        self.client_state = {}
         self.references = {}
         self.delete_queue = set()
         self.ready = threading.Event()
         self.shutdown_event = asyncio.Event()
         self.thread = None
+        self.json_output = json_output
+
+        # Set up id's and custom delegates
+        self.custom_delegates = delegate_map if delegate_map else {}
+        self.id_map = id_map.copy()
+        for old, new in self.custom_delegates.items():
+            self.id_map[new] = self.id_map.pop(old)
+        self.id_decoder = {val: key for key, val in id_map.items()}
 
         self.message_map = {
-            ("create", Method): 0,
-            ("delete", Method): 1,
-            ("create", Signal): 2,
-            ("delete", Signal): 3,
-            ("create", Entity): 4,
-            ("update", Entity): 5,
-            ("delete", Entity): 6,
-            ("create", Plot): 7,
-            ("update", Plot): 8,
-            ("delete", Plot): 9,
-            ("create", Buffer): 10,
-            ("delete", Buffer): 11,
-            ("create", BufferView): 12,
-            ("delete", BufferView): 13,
-            ("create", Material): 14,
-            ("update", Material): 15,
-            ("delete", Material): 16,
-            ("create", Image): 17,
-            ("delete", Image): 18,
-            ("create", Texture): 19,
-            ("delete", Texture): 20,
-            ("create", Sampler): 21,
-            ("delete", Sampler): 22,
-            ("create", Light): 23,
-            ("update", Light): 24,
-            ("delete", Light): 25,
-            ("create", Geometry): 26,
-            ("delete", Geometry): 27,
-            ("create", Table): 28,
-            ("update", Table): 29,
-            ("delete", Table): 30,
+            ("create", MethodID): 0,
+            ("delete", MethodID): 1,
+            ("create", SignalID): 2,
+            ("delete", SignalID): 3,
+            ("create", EntityID): 4,
+            ("update", EntityID): 5,
+            ("delete", EntityID): 6,
+            ("create", PlotID): 7,
+            ("update", PlotID): 8,
+            ("delete", PlotID): 9,
+            ("create", BufferID): 10,
+            ("delete", BufferID): 11,
+            ("create", BufferViewID): 12,
+            ("delete", BufferViewID): 13,
+            ("create", MaterialID): 14,
+            ("update", MaterialID): 15,
+            ("delete", MaterialID): 16,
+            ("create", ImageID): 17,
+            ("delete", ImageID): 18,
+            ("create", TextureID): 19,
+            ("delete", TextureID): 20,
+            ("create", SamplerID): 21,
+            ("delete", SamplerID): 22,
+            ("create", LightID): 23,
+            ("update", LightID): 24,
+            ("delete", LightID): 25,
+            ("create", GeometryID): 26,
+            ("delete", GeometryID): 27,
+            ("create", TableID): 28,
+            ("update", TableID): 29,
+            ("delete", TableID): 30,
             ("update", None): 31,
             ("reset", None): 32,
-            ("invoke", Invoke): 33,
-            ("reply", Reply): 34,
+            ("invoke", None): 33,
+            ("reply", None): 34,
             ("initialized", None): 35
         }
 
@@ -117,18 +122,19 @@ class Server(object):
         for starting_component in starting_state:
             comp_type = starting_component.type
             comp_method = starting_component.method
+
             try:
                 comp = self.create_component(comp_type, **starting_component.component_attrs)
             except TypeError:
                 raise Exception(f"Invalid arguments to create {comp_type}")
 
-            if comp_type == Method:
-                if comp_method:
-                    injected = InjectedMethod(self, comp_method)
-                    setattr(self, comp.name, injected)
-                else:
-                    raise Exception("Method not specified for starting method")
-        logging.debug(f"Server initialized with objects: {self.components}")
+            if comp_type == Method and comp_method:
+                injected = InjectedMethod(self, comp_method)
+                setattr(self, comp.name, injected)
+            elif comp_type == Method and not comp_method:
+                raise Exception("Method not specified for starting method")
+
+        logging.debug(f"Server initialized with objects: {self.state}")
 
     def __enter__(self):
         """Enter context manager"""
@@ -163,8 +169,12 @@ class Server(object):
         logging.info("Shutting down server...")
         self.shutdown_event.set()
 
-    @staticmethod
-    async def send(websocket, message: list):
+    def log_json(self, message: list):
+        json_message = json.dumps(message, default=default_json_encoder)
+        with open(self.json_output, "a") as outfile:
+            outfile.write(json_message)
+
+    async def send(self, websocket, message: list):
         """Send CBOR message using websocket
 
         Args:
@@ -174,10 +184,10 @@ class Server(object):
                 message to be sent, in list format
                 [id, content, id, content...]
         """
-        # Log message in json file
-        json_message = json.dumps(message, default=default_json_encoder)
-        with open("sample_messages.json", "a") as outfile:
-            outfile.write(json_message)
+
+        # Log message in json file if applicable
+        if self.json_output:
+            self.log_json(message)
 
         # Log message and send
         logging.debug(f"Sending Message: ID's {message[::2]}")
@@ -195,7 +205,7 @@ class Server(object):
                 object for maintaining state of the scene
         """
 
-        # Update state
+        # Update track of clients
         self.clients.add(websocket)
 
         # Handle intro and update client
@@ -223,56 +233,36 @@ class Server(object):
         logging.debug(f"Client 'client_name' disconnected")
         self.clients.remove(websocket)
 
-    def get_ids_by_type(self, component: Type[Component]) -> list:
+    def get_ids_by_type(self, component: Type[Delegate]) -> list:
         """Helper to get all ids for certain component type
         
         Args:
             component (type): type of component to get ID's for
         """
 
-        return [key for key, val in self.components.items() if isinstance(val, component)]
+        return [key for key, val in self.state.items() if isinstance(val, component)]
 
-    def get_component_id(self, kind: Type[Component], name: str):
+    def get_delegate_id(self, name: str):
         """Helper to get a component with a type and name"""
 
-        for comp_id, comp in self.components.items():
-            if isinstance(comp, kind) and comp.name == name:
-                return comp_id
+        for delegate in self.state.values():
+            if delegate.name == name:
+                return delegate.id
         raise Exception("No Component Found")
 
-    def get_component(self, comp_id: ID):
-        """Getter for users to access components in state"""
+    def get_delegate(self, identifier: Union[ID, str, Dict[str, ID]]):
+        """Getter for users to access components in state
 
-        try:
-            return self.components[comp_id].copy(deep=True)
-        except ValueError:
-            raise ValueError("No Component Found")
-
-    def get_delegate(self, del_id: ID):
-        """Getter for users to access delegates in state"""
-
-        try:
-            return self.delegates[del_id].copy(deep=True)
-        except ValueError:
-            raise ValueError("No Delegate Found")
-
-    def get_component_by_context(self, context: dict):
-        """Helper to get a component by context"""
-
-        entity = context.get("entity")
-        table = context.get("table")
-        plot = context.get("plot")
-        if entity:
-            eid = EntityID(*entity)
-            return self.get_component(eid)
-        elif table:
-            tid = TableID(*table)
-            return self.get_component(tid)
-        elif plot:
-            pid = PlotID(*plot)
-            return self.get_component(pid)
+        Can be called with an ID, name, or context of the delegate
+        """
+        if isinstance(identifier, ID):
+            return self.state[identifier]
+        elif isinstance(identifier, str):
+            return self.state[self.get_delegate_id(identifier)]
+        elif isinstance(identifier, dict):
+            return self.get_delegate_by_context(identifier)
         else:
-            raise ValueError(f"Invalid context: {context}")
+            raise TypeError(f"Invalid type for identifier: {type(identifier)}")
 
     def get_delegate_by_context(self, context: dict):
         """Helper to get a component by context"""
@@ -281,14 +271,11 @@ class Server(object):
         table = context.get("table")
         plot = context.get("plot")
         if entity:
-            eid = EntityID(*entity)
-            return self.get_delegate(eid)
+            return self.get_delegate(EntityID(*entity))
         elif table:
-            tid = TableID(*table)
-            return self.get_delegate(tid)
+            return self.get_delegate(TableID(*table))
         elif plot:
-            pid = PlotID(*plot)
-            return self.get_delegate(pid)
+            return self.get_delegate(PlotID(*plot))
         else:
             raise ValueError(f"Invalid context: {context}")
 
@@ -297,12 +284,17 @@ class Server(object):
         
         Args:
             action (str): action taken with message
-            noodle_object (NoodleObject): Component, Reply, or Invoke object
+            noodle_object (NoodleObject): Delegate, Reply, or Invoke object
             delta (set): field names to be included in update
         """
 
         contents = {}
-        if action in {"create", "invoke", "reply"}:
+        if action == "create":
+            base_delegate = self.id_decoder[type(noodle_object.id)]
+            include = {field for field in base_delegate.__fields__ if field not in ["server", "signals"]}
+            contents = noodle_object.dict(exclude_none=True, include=include)
+
+        elif action == "invoke" or action == "reply":
             contents = noodle_object.dict(exclude_none=True)
 
         elif action == "update":
@@ -331,23 +323,25 @@ class Server(object):
             delta (set): field names to be included in update
         """
 
-        key = (action, type(noodle_object)) if noodle_object else (action, None)
+        delegate_type = None if not isinstance(noodle_object, Delegate) else type(noodle_object.id)
+        key = (action, delegate_type)
         message_id = self.message_map[key]
         contents = self.get_message_contents(action, noodle_object, delta)
 
         return message_id, contents
 
-    def broadcast(self, message: tuple):
+    def broadcast(self, message: list):
         """Broadcast message to all connected clients
         
         Args:
             message [tuple]: fully constructed message in form (tag/id, contents)
         """
 
+        # Log message in json file if applicable
+        if self.json_output:
+            self.log_json(message)
+
         logging.debug(f"Broadcasting Message: ID's {message[::2]}")
-        json_message = json.dumps(message, default=default_json_encoder)
-        with open("sample_messages.json", "a") as outfile:
-            outfile.write(json_message)
         encoded = dumps(message)
         websockets.broadcast(self.clients, encoded)
 
@@ -356,7 +350,7 @@ class Server(object):
 
         # Add create message for every object in state
         message = []
-        ordered_components = order_components(self.components, self.references)
+        ordered_components = order_components(self.state, self.references)
         for component in ordered_components:
             msg_id, content = self.prepare_message("create", component)
             message.extend([msg_id, content])
@@ -416,7 +410,7 @@ class Server(object):
 
         # Locate method
         try:
-            method_name = self.components[method_id].name
+            method_name = self.state[method_id].name
             method = getattr(self, method_name)
         except Exception:
             raise MethodException(code=-32601, message="Method Not Found")
@@ -424,7 +418,7 @@ class Server(object):
         # Invoke
         reply.result = method(context, *args)
 
-    def update_references(self, comp: Component, current: NoodleObject, removing=False):
+    def update_references(self, comp: Delegate, current: NoodleObject, removing=False):
         """Update in-degree for all objects referenced by this one
 
         Recursively updates references for all components under a parent one. Here,
@@ -432,7 +426,7 @@ class Server(object):
         the parent 
         
         Args:
-            comp (Component): parent component with new references to be tracked
+            comp (Delegate): parent component with new references to be tracked
             current (NoodleObject): current object being examined
             removing (bool): flag so function can be used to both add and remove references
         """
@@ -452,38 +446,40 @@ class Server(object):
                 self.update_references(comp, val, removing)
 
             # Found list of objects or id's to recurse on 
-            elif val and isinstance(val, list):
+            elif val is not None and isinstance(val, list):
 
                 # Objects
-                if isinstance(val[0], NoodleObject):
+                if len(val) > 0 and isinstance(val[0], NoodleObject):
                     for obj in val:
                         self.update_references(comp, obj, removing)
 
                 # ID's
-                elif isinstance(val[0], ID):
+                elif len(val) > 0 and isinstance(val[0], ID):
                     for id in val:
                         if removing:
                             self.references[id].remove(comp.id)
                         else:
                             self.references.setdefault(id, set()).add(comp.id)
 
-    def get_id(self, comp_type: Type[Component]) -> IDGroup:
+    def get_id(self, delegate_type: Type[Delegate]) -> ID:
         """Get next open ID
         
         Check for open slots then take the closest available slot
 
         Args:
-            comp_type (Component Type): type for desired ID
+            delegate_type (Type): type for desired ID
         """
 
-        if comp_type in self.ids:
-            slot_info = self.ids[comp_type]
+        # Check if type is already tracked and set it up if not
+        if delegate_type in self.ids:
+            slot_info = self.ids[delegate_type]
         else:
             slot_info = SlotTracker()
-            self.ids[comp_type] = slot_info
+            self.ids[delegate_type] = slot_info
 
+        # Create the new ID from tracked info
         if slot_info.on_deck.empty():
-            id_type = id_map[comp_type]
+            id_type = self.id_map[delegate_type]
             id = id_type(slot=slot_info.next_slot, gen=0)
             slot_info.next_slot += 1
             return id
@@ -492,11 +488,12 @@ class Server(object):
 
     # Interface methods to build server methods ===============================================
 
-    def create_component(self, comp_type: Type[T], **kwargs) -> Union[T, delegates.Delegate]:
+    def create_component(self, comp_type: Type[T], **kwargs) -> T:
         """Officially create new component in state
         
         This method updates state, updates references, and broadcasts msg to clients.
-        It also handles the acquisition of a valid ID
+        It also handles the acquisition of a valid ID. This is a general creator method, but
+        more specific versions exist for each component type
         
         Args:
             comp_type (Component Type): type of component to be created
@@ -507,32 +504,29 @@ class Server(object):
                 should not be specified as one of the keyword arguments.
         """
 
-        # Get ID and try to create component from args
+        # Get ID and try to create delegate from args
+        comp_type = self.custom_delegates.get(comp_type, comp_type)
         comp_id = self.get_id(comp_type)
         try:
-            new_component = comp_type(id=comp_id, **kwargs)
-        except:
-            raise Exception(f"Args: {kwargs}, invalid for initializing a {comp_type}")
+            new_delegate = comp_type(server=self, id=comp_id, **kwargs)
+        except Exception as e:
+            raise Exception(f"Args: {kwargs}, invalid for initializing a {comp_type}: {e}")
 
-        # Update state
-        self.components[comp_id] = new_component
+        # Update state and keep track of initial version for changes / update messages
+        self.state[comp_id] = new_delegate
+        self.client_state[comp_id] = new_delegate
 
         # Update references for each component referenced by this one
-        self.update_references(new_component, new_component)
+        self.update_references(new_delegate, new_delegate)
 
         # Create message and broadcast
-        message = self.prepare_message("create", new_component)
+        message = self.prepare_message("create", new_delegate)
         self.broadcast(message)
 
         # Return component or delegate instance if applicable
-        if self.custom_delegates and comp_type in self.custom_delegates:
-            delegate = self.custom_delegates[comp_type](self, new_component)
-            self.delegates[comp_id] = delegate
-            return delegate
-        else:
-            return new_component.copy(deep=True)
+        return new_delegate
 
-    def delete_component(self, obj: Union[Component, delegates.Delegate, ID]):
+    def delete_component(self, obj: Union[Delegate, ID]):
         """Delete object in state and update clients
         
         This method excepts a delegate, component, or component ID, and will attempt
@@ -545,18 +539,16 @@ class Server(object):
         """
 
         # Handle cases so can except different input types
-        if type(obj) in self.custom_delegates.values():
-            id = obj.component.id
-            del self.delegates[id]
-        elif isinstance(obj, Component):
+        if isinstance(obj, Delegate):
             id = obj.id
         else:
             id = obj
 
         # Delete if no references, or else queue it up for later
         if not self.references.get(id):
-            self.broadcast(self.prepare_message("delete", self.components[id]))
-            del self.components[id]
+            self.broadcast(self.prepare_message("delete", self.state[id]))
+            del self.state[id]
+            del self.client_state[id]
 
             # Clean out references from this object
             for refs in self.references.values():
@@ -571,7 +563,7 @@ class Server(object):
 
         else:
             if isinstance(obj, ID):
-                logging.warning(f"Couldn't delete {self.components[obj]}, "
+                logging.warning(f"Couldn't delete {self.state[obj]}, "
                                 f"referenced by {self.references[id]}, added to queue")
             else:
                 logging.warning(f"Couldn't delete {obj}, referenced by {self.references[id]}, added to queue")
@@ -595,37 +587,36 @@ class Server(object):
 
         return delta
 
-    def update_component(self, obj: Component):
+    def update_component(self, state_obj: Delegate):
         """Update clients with changes to a component
         
         This method broadcasts changes to all clients including only fields
         specified in the set delta
 
         Args:
-            obj (Component): component that has been updated, 
+            state_obj (Delegate): component that has been updated,
                 should be a component with an update message
         """
 
         # Update references and find delta
-        state_obj = self.components[obj.id]
-        delta = self.find_delta(state_obj, obj)
+        delta = self.find_delta(self.client_state[state_obj.id], state_obj)
 
-        # Update State
-        self.components[obj.id] = obj
+        # Update tracking state
+        self.client_state[state_obj.id] = state_obj
 
         # Form message and broadcast
         try:
-            message = self.prepare_message("update", obj, delta)
+            message = self.prepare_message("update", state_obj, delta)
             self.broadcast(message)
-        except:
-            raise Exception("This obj can not be updated")
+        except Exception as e:
+            raise Exception(f"This obj can not be updated: {e}")
 
-    def invoke_signal(self, signal: SignalID, on_component: Component, signal_data: list):
+    def invoke_signal(self, signal: SignalID, on_component: Delegate, signal_data: list):
         """Send signal to target component
         
         Args:
             signal (ID): signal to be invoked
-            on_component (Component): component to receive the signal
+            on_component (Delegate): component to receive the signal
             signal_data (dict): 
         Takes Signal ID, on_component, and the data
         """
@@ -767,7 +758,7 @@ def top_sort_recurse(id, refs, visited, components, stack):
     stack.append(components[id])
 
 
-def order_components(components: dict[ID, Component],
+def order_components(components: dict[ID, Delegate],
                      refs: dict[ID, list[ID]]):
     """Helper for creating topological sort of components"""
 

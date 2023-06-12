@@ -43,7 +43,6 @@ sequenceDiagram
 rigatoni.StartingComponent(Type[Component], dict[Component_Attr, Value])
 ```
 - You can refer to the objects listed in `noodle_objects.py` to find all the available components along with their mandatory, default, and optional attributes. Additional information on NOODLE components and their attributes can be found [here](https://github.com/InsightCenterNoodles/message_spec)
-- Note that components must be initialized with keyword arguments to allow for validation
 - When creating methods, an additional callable object should be attached. This method will be injected onto the server object, and it will be associated with its corresponding method component.
 
 ```python
@@ -68,14 +67,15 @@ with Server(50000, starting_state, delegates) as server:
 The majority of the user's time building a server application will be spent defining methods. To help the user with this process, this library provides several interface methods to reduce friction when interacting with state and the server object. Also it is important to note that each method is injected and called so that the first two arguments are a reference to the server object and the method invoke's context as a dict.
 
 ### Interface Methods
+
 ```python
-server.create_component(comp_type: Type[Component], **kwargs)
+server.create_component(comp_type: Type[Component], ** kwargs)
 server.delete_component(obj: Union[Component, Delegate, ID])
 server.update_component(obj: Component, delta: Set[str)
 server.invoke_signal(signal: ID, on_component: Component, signal_data: list[Any])
 server.get_ids_by_type(component: Type[Component])
-server.get_component_id(type: Type[Component], name: str)
-server.get_component(id: ID)
+server.get_delegate_id(type: Type[Component], name: str)
+server.get_delegate(id: ID)
 ```
 
 ### Geometry Library
