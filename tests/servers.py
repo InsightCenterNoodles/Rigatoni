@@ -1,6 +1,4 @@
 
-import weakref
-
 import pytest
 import pandas as pd
 

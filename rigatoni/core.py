@@ -71,6 +71,9 @@ class Server(object):
         self.shutdown_event = asyncio.Event()
         self.thread = None
         self.json_output = json_output
+        if json_output:
+            with open(json_output, "w") as outfile:  # Clear out old contents
+                outfile.write("JSON Log\n")
 
         # Set up id's and custom delegates
         self.custom_delegates = delegate_map if delegate_map else {}
@@ -125,14 +128,14 @@ class Server(object):
 
             try:
                 comp = self.create_component(comp_type, **starting_component.component_attrs)
-            except TypeError:
-                raise Exception(f"Invalid arguments to create {comp_type}")
+            except Exception as e:
+                raise TypeError(f"Invalid arguments to create {comp_type}: {e}")
 
             if comp_type == Method and comp_method:
                 injected = InjectedMethod(self, comp_method)
                 setattr(self, comp.name, injected)
             elif comp_type == Method and not comp_method:
-                raise Exception("Method not specified for starting method")
+                raise ValueError("Method not specified for starting method")
 
         logging.debug(f"Server initialized with objects: {self.state}")
 
@@ -171,8 +174,9 @@ class Server(object):
 
     def log_json(self, message: list):
         json_message = json.dumps(message, default=default_json_encoder)
+        formatted_message = f"{json_message}\n"
         with open(self.json_output, "a") as outfile:
-            outfile.write(json_message)
+            outfile.write(formatted_message)
 
     async def send(self, websocket, message: list):
         """Send CBOR message using websocket
@@ -248,7 +252,7 @@ class Server(object):
         for delegate in self.state.values():
             if delegate.name == name:
                 return delegate.id
-        raise Exception("No Component Found")
+        raise ValueError("No Component Found")
 
     def get_delegate(self, identifier: Union[ID, str, Dict[str, ID]]):
         """Getter for users to access components in state
@@ -279,7 +283,7 @@ class Server(object):
         else:
             raise ValueError(f"Invalid context: {context}")
 
-    def get_message_contents(self, action: str, noodle_object: NoodleObject, delta: set[str]):
+    def get_message_contents(self, action: str, noodle_object: NoodleObject, delta: set[str] = None):
         """Helper to handle construction of message dict
         
         Args:
@@ -294,8 +298,17 @@ class Server(object):
             include = {field for field in base_delegate.__fields__ if field not in ["server", "signals"]}
             contents = noodle_object.dict(exclude_none=True, include=include)
 
-        elif action == "invoke" or action == "reply":
+        elif action == "invoke":
             contents = noodle_object.dict(exclude_none=True)
+
+        elif action == "reply":
+
+            if noodle_object.method_exception:
+                e = noodle_object.method_exception
+                contents = noodle_object.dict(exclude_none=True)
+                contents["method_exception"] = {"code": e.code, "message": e.message, "data": e.data}
+            else:
+                contents = noodle_object.dict(exclude_none=True)
 
         elif action == "update":
             if not noodle_object:  # Document case

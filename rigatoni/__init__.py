@@ -17,7 +17,7 @@ Modules:
 """
 
 
-__version__ = "0.1.19"
+__version__ = "0.2.0"
 
 from .core import Server
 from .noodle_objects import *
