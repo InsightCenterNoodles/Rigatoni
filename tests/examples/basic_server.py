@@ -11,7 +11,6 @@ import pandas as pd
 
 from rigatoni.core import Server
 import rigatoni.noodle_objects as nooobs
-import rigatoni.delegates as interface
 
 
 def new_point_plot(server: Server, context: dict, xs, ys, zs, colors=None, sizes=None):
@@ -21,14 +20,14 @@ def new_point_plot(server: Server, context: dict, xs, ys, zs, colors=None, sizes
         name="Custom Table",
         meta="Table for testing",
         methods_list=[
-            server.get_component_id(nooobs.Method, "noo::tbl_subscribe"),
-            server.get_component_id(nooobs.Method, "noo::tbl_insert")
+            server.get_delegate_id(nooobs.Method, "noo::tbl_subscribe"),
+            server.get_delegate_id(nooobs.Method, "noo::tbl_insert")
         ],
         signals_list=[
-            server.get_component_id(nooobs.Signal, "noo::tbl_reset"),
-            server.get_component_id(nooobs.Signal, "noo::tbl_updated"),
-            server.get_component_id(nooobs.Signal, "noo::tbl_rows_removed"),
-            server.get_component_id(nooobs.Signal, "noo::tbl_selection_updated")
+            server.get_delegate_id(nooobs.Signal, "noo::tbl_reset"),
+            server.get_delegate_id(nooobs.Signal, "noo::tbl_updated"),
+            server.get_delegate_id(nooobs.Signal, "noo::tbl_rows_removed"),
+            server.get_delegate_id(nooobs.Signal, "noo::tbl_selection_updated")
         ]
     )
 
@@ -63,10 +62,9 @@ def new_point_plot(server: Server, context: dict, xs, ys, zs, colors=None, sizes
 def subscribe(server: Server, context: dict):
     # Try to get delegate from context
     try:
-        tbl_id = nooobs.TableID(*context["table"])
-        delegate: CustomTableDelegate = server.delegates[tbl_id]
+        delegate: CustomTableDelegate = server.cont
     except:
-        raise Exception(nooobs.MethodException(code=-32600, message="Invalid Request - Invalid Context for Subscribe"))
+        raise nooobs.MethodException(code=-32600, message="Invalid Request - Invalid Context for Subscribe")
 
     tbl: pd.DataFrame = delegate.dataframe
     types = ["REAL", "REAL", "REAL", "REAL", "REAL", "REAL", "REAL", "REAL", "REAL", "TEXT"]
@@ -103,7 +101,7 @@ def insert(server: Server, context: dict, rows: list[list]):
     return keys
 
 
-class CustomTableDelegate(interface.ServerTableDelegate):
+class CustomTableDelegate(nooobs.Table):
 
     def __init__(self, server: Server, component: weakref.ReferenceType):
         super().__init__(server, component)

@@ -127,7 +127,7 @@ def create_new_instance(server: rigatoni.Server, context, entity_id: list[int], 
                         rotation=None, scale=None):
     """Method to test instance updating"""
 
-    entity = server.get_component(rigatoni.EntityID(*entity_id))
+    entity = server.get_delegate(rigatoni.EntityID(*entity_id))
     new_instance = geo.create_instances(position, color, rotation, scale)
     geo.add_instances(server, entity, new_instance)
 
@@ -182,7 +182,7 @@ def make_point_plot(server: rigatoni.Server, context, *args):
     sphere = server.create_component(rigatoni.Geometry, name=name, patches=patches)
 
     # Read data from data.csv and normalize
-    df = pd.read_csv("/tests/mesh_data/data.csv")
+    df = pd.read_csv("tests/mesh_data/data.csv")
     df_scaled = normalize_df(df)
 
     # Positions
@@ -235,7 +235,7 @@ def create_from_mesh(server: rigatoni.Server, context, *args):
 
 
 def delete_sphere(server: rigatoni.Server, context, *args):
-    sphere = server.get_component_id(rigatoni.Entity, "Test Sphere")
+    sphere = server.get_delegate_id(rigatoni.Entity, "Test Sphere")
     server.delete_component(sphere)
 
     return 0
@@ -243,8 +243,8 @@ def delete_sphere(server: rigatoni.Server, context, *args):
 
 def move_sphere(server: rigatoni.Server, context, *args):
     # Change world transform, but do you change local?
-    sphere_id = server.get_component_id(rigatoni.Entity, "Test Sphere")
-    sphere = server.get_component(sphere_id)
+    sphere_id = server.get_delegate_id(rigatoni.Entity, "Test Sphere")
+    sphere = server.get_delegate(sphere_id)
     # sphere.transform = [
     #     1, 0, 0, 0,
     #     0, 1, 0, 0,

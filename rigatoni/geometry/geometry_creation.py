@@ -400,7 +400,7 @@ def update_entity(server: Server, entity: nooobs.Entity, geometry: nooobs.Geomet
 
     # Clean up old components with deletes
     if instances:
-        server.delete_component(server.components[old_rep.instances.view].source_buffer)
+        server.delete_component(server.state[old_rep.instances.view].source_buffer)
         server.delete_component(old_rep.instances.view)
     elif geometry:
         server.delete_component(old_rep.mesh)
@@ -423,8 +423,8 @@ def add_instances(server: Server, entity: nooobs.Entity, instances: list):
         rep = entity.render_rep
 
         # Get old instance buffer from entity's render rep
-        old_view: nooobs.BufferView = server.components[rep.instances.view]
-        old_buffer: nooobs.Buffer = server.components[old_view.source_buffer]
+        old_view: nooobs.BufferView = server.state[rep.instances.view]
+        old_buffer: nooobs.Buffer = server.state[old_view.source_buffer]
         old_instances = np.frombuffer(old_buffer.inline_bytes, dtype=np.single)
 
         # Combine new and old instances
@@ -572,8 +572,8 @@ def export_mesh(server: Server, geometry: nooobs.Geometry, new_file_name: str, b
 
         # Extract info from patch
         index = patch.indices
-        view: nooobs.BufferView = server.get_component(index.view)
-        buffer = server.get_component(view.source_buffer)
+        view: nooobs.BufferView = server.get_delegate(index.view)
+        buffer = server.get_delegate(view.source_buffer)
         inline, uri = buffer.inline_bytes, buffer.uri_bytes
         if inline:
             geo_bytes = inline

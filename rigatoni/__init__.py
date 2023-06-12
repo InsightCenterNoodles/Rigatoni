@@ -17,9 +17,8 @@ Modules:
 """
 
 
-__version__ = "0.1.16"
+__version__ = "0.1.19"
 
-from .delegates import ServerTableDelegate, Delegate
 from .core import Server
 from .noodle_objects import *
 

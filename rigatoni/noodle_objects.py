@@ -4,33 +4,37 @@ Follows the specification in the cddl document, and
 implements strict validation
 """
 
-from collections import namedtuple
 from enum import Enum
 from math import pi
 from queue import Queue
-from typing import Callable, Optional, Any, Union, List, Tuple, Dict
+from typing import Callable, Optional, Any, Union, List, Tuple, Dict, NamedTuple
 
 from pydantic import BaseModel, root_validator
 
 """ =============================== ID's ============================= """
 
-IDGroup = namedtuple("IDGroup", ["slot", "gen"])
 
+class ID(NamedTuple):
+    slot: int
+    gen: int
 
-class ID(IDGroup):
-    __slots__ = ()
+    def compact_str(self):
+        return f"|{self.slot}/{self.gen}|"
 
-    def __repr__(self):
-        return f"{self.__class__}|{self.slot}/{self.gen}|"
+    def __str__(self):
+        return f"{type(self).__name__}{self.compact_str()}"
 
     def __key(self):
         return type(self), self.slot, self.gen
 
-    def __eq__(self, __o: object) -> bool:
-        if isinstance(__o, ID):
-            return self.__key() == __o.__key()
+    def __eq__(self, other: object) -> bool:
+        if type(other) is type(self):
+            return self.__key() == other.__key()
         else:
             return False
+
+    def __ne__(self, other):
+        return not self.__eq__(other)
 
     def __hash__(self):
         return hash(self.__key())
@@ -100,17 +104,26 @@ class NoodleObject(BaseModel):
         arbitrary_types_allowed = True
         use_enum_values = True
 
-    def __repr__(self) -> str:
-        return f"{type(self)}"
 
+class Delegate(NoodleObject):
+    """Parent class for all delegates
 
-class Component(NoodleObject):
-    """Parent class for all components"""
+    Defines general methods that should be available for all delegates
 
+    Attributes:
+        server (Server): server delegate is attached to
+        id: (ID): Unique identifier for delegate
+        name (str): Name of delegate
+        signals (dict): Signals that can be called on delegate, method name to callable
+    """
+
+    server: object  # Better way to annotate this without introducing circular imports?
     id: ID = None
+    name: Optional[str] = "No-Name"
+    signals: Optional[dict] = {}
 
-    def __repr__(self):
-        return f"{type(self)} | {self.id}"
+    def __str__(self):
+        return f"{self.name} - {type(self).__name__} - {self.id.compact_str()}"
 
 
 """ ====================== Common Definitions ====================== """
@@ -343,10 +356,10 @@ class TableInitData(NoodleObject):
         return values
 
 
-""" ====================== NOODLE COMPONENTS ====================== """
+""" ====================== NOODLE COMPONENTS / DELEGATES ====================== """
 
 
-class Method(Component):
+class Method(Delegate):
     id: MethodID
     name: str
     doc: Optional[str] = None
@@ -354,14 +367,14 @@ class Method(Component):
     arg_doc: List[MethodArg] = []
 
 
-class Signal(Component):
+class Signal(Delegate):
     id: SignalID
     name: str
     doc: Optional[str] = None
     arg_doc: List[MethodArg] = None
 
 
-class Entity(Component):
+class Entity(Delegate):
     id: EntityID
     name: Optional[str] = None
 
@@ -382,7 +395,7 @@ class Entity(Component):
     influence: Optional[BoundingBox] = None
 
 
-class Plot(Component):
+class Plot(Delegate):
     id: PlotID
     name: Optional[str] = None
 
@@ -402,7 +415,7 @@ class Plot(Component):
             raise ValueError("One plot type must be specified")
 
 
-class Buffer(Component):
+class Buffer(Delegate):
     id: BufferID
     name: Optional[str] = None
     size: int = None
@@ -418,7 +431,7 @@ class Buffer(Component):
             raise ValueError("One plot type must be specified")
 
 
-class BufferView(Component):
+class BufferView(Delegate):
     id: BufferViewID
     name: Optional[str] = None
     source_buffer: BufferID
@@ -428,7 +441,7 @@ class BufferView(Component):
     length: int
 
 
-class Material(Component):
+class Material(Delegate):
     id: MaterialID
     name: Optional[str] = None
 
@@ -447,7 +460,7 @@ class Material(Component):
     double_sided: Optional[bool] = False
 
 
-class Image(Component):
+class Image(Delegate):
     id: ImageID
     name: Optional[str] = None
 
@@ -462,14 +475,14 @@ class Image(Component):
             raise ValueError("One plot type must be specified")
 
 
-class Texture(Component):
+class Texture(Delegate):
     id: TextureID
     name: Optional[str] = None
     image: ImageID  # Image ID
     sampler: Optional[SamplerID] = None
 
 
-class Sampler(Component):
+class Sampler(Delegate):
     id: SamplerID
     name: Optional[str] = None
 
@@ -480,7 +493,7 @@ class Sampler(Component):
     wrap_t: Optional[SamplerMode] = "REPEAT"
 
 
-class Light(Component):
+class Light(Delegate):
     id: LightID
     name: Optional[str] = None
 
@@ -506,19 +519,48 @@ class Light(Component):
             return values
 
 
-class Geometry(Component):
+class Geometry(Delegate):
     id: GeometryID
     name: Optional[str] = None
     patches: List[GeometryPatch]
 
 
-class Table(Component):
+class Table(Delegate):
     id: TableID
     name: Optional[str] = None
 
     meta: Optional[str] = None
     methods_list: Optional[List[MethodID]] = None
     signals_list: Optional[List[SignalID]] = None
+
+    def handle_insert(self, new_rows: list[list[int]]):
+        pass
+
+    def handle_update(self, keys: list[int], rows: list[list[int]]):
+        pass
+
+    def handle_delete(self, keys: list[int]):
+        pass
+
+    def handle_clear(self):
+        pass
+
+    def handle_set_selection(self, selection: Selection):
+        pass
+
+    # Signals ---------------------------------------------------
+    def table_reset(self, tbl_init: TableInitData):
+        """Invoke table reset signal"""
+        pass
+
+    def table_updated(self, keys: list[int], rows: list[list[int]]):
+        pass
+
+    def table_rows_removed(self, keys: list[int]):
+        pass
+
+    def table_selection_updated(self, selection: Selection):
+        pass
 
 
 """ ====================== Communication Objects ====================== """
@@ -532,10 +574,16 @@ class Invoke(NoodleObject):
 
 # Note: this isn't technically an exception
 # for now this uses a model so that it can be validated / sent as message easier
-class MethodException(NoodleObject):
-    code: int
-    message: Optional[str] = None
-    data: Optional[Any] = None
+# Fix to inherit from Exception, maybe use separate model for sending
+# class MethodException(NoodleObject):
+#     code: int
+#     message: Optional[str] = None
+#     data: Optional[Any] = None
+class MethodException(Exception):
+    def __init__(self, code: int, message: Optional[str] = None, data: Optional[Any] = None):
+        self.code = code
+        self.message = message
+        self.data = data
 
 
 class Reply(NoodleObject):
