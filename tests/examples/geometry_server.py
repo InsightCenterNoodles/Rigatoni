@@ -86,7 +86,7 @@ def create_spheres(server: rigatoni.Server, context, *args):
         colors=[(1.0, .5, .5, 1.0)],
     )
     entity = geo.build_entity(server, geometry=sphere, instances=instances)
-    geo.export_mesh(server, sphere, "../mesh_data/test_sphere.obj")
+    geo.export_mesh(server, sphere, "mesh_data/test_sphere.obj")
 
     # Add Lighting
     point_info = rigatoni.PointLight(range=-1)
@@ -219,7 +219,7 @@ def create_from_mesh(server: rigatoni.Server, context, *args):
 
     # use libraries from mesh option    
     uri_server = geo.ByteServer(port=60000)
-    mesh = geo.geometry_from_mesh(server, "/tests/mesh_data/stanford-bunny.obj", material,
+    mesh = geo.geometry_from_mesh(server, "mesh_data/stanford-bunny.obj", material,
                                   name, uri_server)
     # mesh = geo.geometry_from_mesh(server, "/Users/aracape/development/test_sphere.vtk", material)
     # mesh = geo.geometry_from_mesh(server, "/Users/aracape/development/rigatoni/tests/magvort.x3d", material, name, uri_server, generate_normals=False)
@@ -230,12 +230,12 @@ def create_from_mesh(server: rigatoni.Server, context, *args):
     entity = geo.build_entity(server, geometry=mesh, instances=instances)
 
     # Test export
-    geo.export_mesh(server, mesh, "../mesh_data/test_mesh.obj", uri_server)
+    geo.export_mesh(server, mesh, "mesh_data/test_mesh.obj", uri_server)
     return 0
 
 
 def delete_sphere(server: rigatoni.Server, context, *args):
-    sphere = server.get_delegate_id(rigatoni.Entity, "Test Sphere")
+    sphere = server.get_delegate_id("Test Sphere")
     server.delete_component(sphere)
 
     return 0
@@ -243,8 +243,7 @@ def delete_sphere(server: rigatoni.Server, context, *args):
 
 def move_sphere(server: rigatoni.Server, context, *args):
     # Change world transform, but do you change local?
-    sphere_id = server.get_delegate_id(rigatoni.Entity, "Test Sphere")
-    sphere = server.get_delegate(sphere_id)
+    sphere = server.get_delegate("Test Sphere")
     # sphere.transform = [
     #     1, 0, 0, 0,
     #     0, 1, 0, 0,
@@ -297,6 +296,7 @@ def main():
 
     server = Server(50000, starting_state)
     server.run()
+
 
 if __name__ == "__main__":
     main()

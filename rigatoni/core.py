@@ -431,32 +431,31 @@ class Server(object):
         # Invoke
         reply.result = method(context, *args)
 
-    def update_references(self, comp: Delegate, current: NoodleObject, removing=False):
+    def update_references(self, parent_delegate: Delegate, current: NoodleObject, removing=False):
         """Update in-degree for all objects referenced by this one
 
         Recursively updates references for all components under a parent one. Here,
         the current object changes through the recursion while comp keeps track of 
-        the parent 
+        the parent. Essentially finds all the objects that delegate points to
         
         Args:
-            comp (Delegate): parent component with new references to be tracked
+            parent_delegate (Delegate): parent component with new references to be tracked
             current (NoodleObject): current object being examined
             removing (bool): flag so function can be used to both add and remove references
         """
 
-        for key in current.__fields__.keys():
-            val = getattr(current, key)
+        for key, val in current:
 
             # Found a reference
             if key != "id" and isinstance(val, ID):
                 if removing:
-                    self.references[val].remove(comp.id)
+                    self.references[val].remove(parent_delegate.id)
                 else:
-                    self.references.setdefault(val, set()).add(comp.id)
+                    self.references.setdefault(val, set()).add(parent_delegate.id)
 
             # Found another object to recurse on
             elif isinstance(val, NoodleObject):
-                self.update_references(comp, val, removing)
+                self.update_references(parent_delegate, val, removing)
 
             # Found list of objects or id's to recurse on 
             elif val is not None and isinstance(val, list):
@@ -464,15 +463,15 @@ class Server(object):
                 # Objects
                 if len(val) > 0 and isinstance(val[0], NoodleObject):
                     for obj in val:
-                        self.update_references(comp, obj, removing)
+                        self.update_references(parent_delegate, obj, removing)
 
                 # ID's
                 elif len(val) > 0 and isinstance(val[0], ID):
                     for id in val:
                         if removing:
-                            self.references[id].remove(comp.id)
+                            self.references[id].remove(parent_delegate.id)
                         else:
-                            self.references.setdefault(id, set()).add(comp.id)
+                            self.references.setdefault(id, set()).add(parent_delegate.id)
 
     def get_id(self, delegate_type: Type[Delegate]) -> ID:
         """Get next open ID
@@ -552,10 +551,9 @@ class Server(object):
         """
 
         # Handle cases so can except different input types
+        id = obj
         if isinstance(obj, Delegate):
             id = obj.id
-        else:
-            id = obj
 
         # Delete if no references, or else queue it up for later
         if not self.references.get(id):

@@ -2,7 +2,7 @@
 *.x3d
 .idea
 venv/
-message_log.json
+*.json
 
 # Standard from Github
 # Byte-compiled / optimized / DLL files

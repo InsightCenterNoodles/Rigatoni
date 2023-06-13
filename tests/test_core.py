@@ -149,3 +149,13 @@ def test_handle_invoke(base_server):
     assert reply == (34, {'invoke_id': '-1', 'method_exception': {"code": -32700, "message": "Parse Error", "data": None}})
 
 
+def test_update_references(base_server):
+
+    # Basic Reference
+    table_id = base_server.get_delegate_id("test_table")
+    plot = base_server.create_plot("Update_Plot", table_id, simple_plot="...")
+    assert table_id in base_server.references and base_server.references[table_id] == {plot.id}
+
+    # Remove Reference from delete
+    base_server.delete_component(plot)
+    assert base_server.references[table_id] == set()

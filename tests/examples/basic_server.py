@@ -4,34 +4,37 @@ Roughly modeled off of PlottyN, this script shows how a user
 could overwrite the table delegate to add table functionality
 """
 
-import weakref
 import logging
 
 import pandas as pd
 
-from rigatoni.core import Server
+from rigatoni import *
 import rigatoni.noodle_objects as nooobs
 
 
 def new_point_plot(server: Server, context: dict, xs, ys, zs, colors=None, sizes=None):
     # Create component and state and get delegate reference
     tbl_delegate = server.create_component(
-        nooobs.Table,
+        Table,
         name="Custom Table",
         meta="Table for testing",
         methods_list=[
-            server.get_delegate_id(nooobs.Method, "noo::tbl_subscribe"),
-            server.get_delegate_id(nooobs.Method, "noo::tbl_insert")
+            server.get_delegate_id("noo::tbl_subscribe"),
+            server.get_delegate_id("noo::tbl_insert"),
+            server.get_delegate_id("noo::tbl_update"),
+            server.get_delegate_id("noo::tbl_remove"),
+            server.get_delegate_id("noo::tbl_clear"),
+            server.get_delegate_id("noo::tbl_update_selection"),
         ],
         signals_list=[
-            server.get_delegate_id(nooobs.Signal, "noo::tbl_reset"),
-            server.get_delegate_id(nooobs.Signal, "noo::tbl_updated"),
-            server.get_delegate_id(nooobs.Signal, "noo::tbl_rows_removed"),
-            server.get_delegate_id(nooobs.Signal, "noo::tbl_selection_updated")
+            server.get_delegate_id("noo::tbl_reset"),
+            server.get_delegate_id("noo::tbl_updated"),
+            server.get_delegate_id("noo::tbl_rows_removed"),
+            server.get_delegate_id("noo::tbl_selection_updated")
         ]
     )
 
-    # Set default colors and sizes 
+    # Set default colors and sizes
     if not colors:
         colors = [0.0, 0.0, 0.0] * len(xs)
     if not sizes:
@@ -53,7 +56,7 @@ def new_point_plot(server: Server, context: dict, xs, ys, zs, colors=None, sizes
         "": [''] * len(xs)
     }
 
-    tbl_delegate.dataframe = pd.DataFrame(data)
+    tbl_delegate.dataframe = pd.DataFrame(data)  # currently set on a copied version, could switch to update or rework updates to work implicitly
     print(tbl_delegate.dataframe)
 
     return 1
@@ -62,18 +65,18 @@ def new_point_plot(server: Server, context: dict, xs, ys, zs, colors=None, sizes
 def subscribe(server: Server, context: dict):
     # Try to get delegate from context
     try:
-        delegate: CustomTableDelegate = server.cont
-    except:
-        raise nooobs.MethodException(code=-32600, message="Invalid Request - Invalid Context for Subscribe")
+        delegate: CustomTableDelegate = server.get_delegate(context)
+    except ValueError:
+        raise MethodException(code=-32600, message="Invalid Request - Invalid Context for Subscribe")
 
     tbl: pd.DataFrame = delegate.dataframe
     types = ["REAL", "REAL", "REAL", "REAL", "REAL", "REAL", "REAL", "REAL", "REAL", "TEXT"]
 
     # Arrange col info
-    col_info = [nooobs.TableColumnInfo(name=col, type=type) for col, type in zip(tbl.columns, types)]
+    col_info = [TableColumnInfo(name=col, type=type) for col, type in zip(tbl.columns, types)]
 
     # Formulate response info for subscription
-    init_info = nooobs.TableInitData(columns=col_info, keys=tbl.index.values.tolist(), data=tbl.values.tolist())
+    init_info = TableInitData(columns=col_info, keys=tbl.index.values.tolist(), data=tbl.values.tolist())
 
     print(f"Init Info: {init_info}")
     return init_info
@@ -81,10 +84,9 @@ def subscribe(server: Server, context: dict):
 
 def insert(server: Server, context: dict, rows: list[list]):
     try:
-        tbl_id = nooobs.TableID(*context["table"])
-        delegate: CustomTableDelegate = server.delegates[tbl_id]
-    except:
-        raise nooobs.MethodException(-32600, "Invalid Request - Invalid Context for insert")
+        delegate = server.get_delegate(context)
+    except ValueError:
+        raise MethodException(-32600, "Invalid Request - Invalid Context for insert")
 
     # Allow for rows without annotations
     for row in rows:
@@ -101,11 +103,70 @@ def insert(server: Server, context: dict, rows: list[list]):
     return keys
 
 
-class CustomTableDelegate(nooobs.Table):
+def update(server: Server, context: dict, keys: list[int], rows: list[list]):
+    try:
+        delegate: CustomTableDelegate = server.get_delegate(context)
+    except ValueError:
+        raise MethodException(code=-32600, message="Invalid Request - Invalid Context for update")
 
-    def __init__(self, server: Server, component: weakref.ReferenceType):
-        super().__init__(server, component)
-        self.dataframe = pd.DataFrame()
+    # Update state in delegate
+    keys = delegate.handle_update(keys, rows)
+    print(f"Updated @ {keys}, \n{delegate.dataframe}")
+
+    # Send signal to update client
+    delegate.table_updated(keys, rows)
+
+    return keys
+
+
+def remove(server: Server, context: dict, keys: list[int]):
+    try:
+        delegate: CustomTableDelegate = server.get_delegate(context)
+    except Exception:
+        raise MethodException(-32600, "Invalid Request - Invalid Context for delete")
+
+    # Update state in delegate
+    keys = delegate.handle_delete(keys)
+    print(f"Deleted @ {keys}, \n{delegate.dataframe}")
+
+    # Send signal to update client
+    delegate.table_updated(keys, [])
+
+    return keys
+
+
+def clear(server: Server, context: dict):
+    try:
+        delegate: CustomTableDelegate = server.get_delegate(context)
+    except Exception:
+        raise MethodException(-32600, "Invalid Request - Invalid Context for clear")
+
+    # Update state in delegate
+    delegate.handle_clear()
+
+    # Send signal to update client
+    init_info = TableInitData(columns=[], keys=[], data=[])
+    delegate.table_reset(init_info)
+
+
+def update_selection(server: Server, context: dict, selection: dict):
+    try:
+        delegate: CustomTableDelegate = server.get_delegate(context)
+    except Exception:
+        raise MethodException(-32600, "Invalid Request - Invalid Context for selection")
+
+    # Update state in delegate
+    selection = Selection(**selection)
+    delegate.handle_set_selection(selection)
+
+    # Send signal to update client
+    delegate.table_selection_updated(selection)
+
+
+class CustomTableDelegate(Table):
+
+    dataframe = pd.DataFrame()
+    selections = {}
 
     def handle_insert(self, rows: list[list[int]]):
         next_index = self.dataframe.index[-1] + 1
@@ -131,36 +192,35 @@ class CustomTableDelegate(nooobs.Table):
         self.dataframe = pd.DataFrame()
         self.selections = {}
 
-    def handle_set_selection(self, selection: nooobs.Selection):
+    def handle_set_selection(self, selection: Selection):
         self.selections[selection.name] = selection
 
     # Signals ---------------------------------------------------
-    def table_reset(self, tbl_init: nooobs.TableInitData):
+    def table_reset(self, tbl_init: TableInitData):
         """Invoke table reset signal"""
 
         data = [tbl_init]
 
-        signal = self.server.get_component_id(nooobs.Signal, "noo::tbl_reset")
-        self.server.invoke_signal(signal, self.component, data)
+        signal = self.server.get_delegate_id("noo::tbl_reset")
+        self.server.invoke_signal(signal, self, data)
 
     def table_updated(self, keys: list[int], rows: list[list[int]]):
         data = [keys, rows]
 
-        signal = self.server.get_component_id(nooobs.Signal, "noo::tbl_updated")
-        self.server.invoke_signal(signal, self.component, data)
+        signal = self.server.get_delegate_id("noo::tbl_updated")
+        self.server.invoke_signal(signal, self, data)
 
     def table_rows_removed(self, keys: list[int]):
         data = [keys]
 
-        signal = self.server.get_component_id(nooobs.Signal, "noo::tbl_rows_removed")
-        self.server.invoke_signal(signal, self.component, data)
+        signal = self.server.get_delegate_id("noo::tbl_rows_removed")
+        self.server.invoke_signal(signal, self, data)
 
-    def table_selection_updated(self, selection: nooobs.Selection):
+    def table_selection_updated(self, selection: Selection):
         data = [selection]
 
-        signal = self.server.get_component_id(nooobs.Signal, "noo::tbl_selection_updated")
-        self.server.invoke_signal(signal, self.component, data)
-
+        signal = self.server.get_delegate_id("noo::tbl_selection_updated")
+        self.server.invoke_signal(signal, self, data)
 
 delegates = {
     nooobs.Table: CustomTableDelegate,

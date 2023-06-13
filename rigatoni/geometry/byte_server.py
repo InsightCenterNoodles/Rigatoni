@@ -17,8 +17,7 @@ class ByteServer(object):
         running (bool): flag indicating whether server is running
     """
 
-
-    def __init__(self, port: int=8000):
+    def __init__(self, port: int = 8000):
         """Constructor
         
         Args:
@@ -30,7 +29,7 @@ class ByteServer(object):
             self.host = socket.gethostbyname(name)
         except socket.gaierror:
             self.host = socket.gethostbyname(f"{name}.local")
-        
+
         self.port = port
         self.socket = None
         self.buffers = {}
@@ -48,7 +47,6 @@ class ByteServer(object):
         self.next_tag += 1
         return str(tag)
 
-
     def get_buffer(self, uri: str):
         """Helper to get bytes for a URI
         
@@ -65,8 +63,6 @@ class ByteServer(object):
             return buffer_bytes
         else:
             raise Exception("Invalid HTTP Request")
-        
-
 
     def run(self):
         """Main loop to run in thread
@@ -116,7 +112,6 @@ class ByteServer(object):
         # Clean up and close socket
         self.socket.close()
 
-    
     def add_buffer(self, buffer) -> str:
         """Add buffer to server and return url to reach it
         
@@ -130,7 +125,6 @@ class ByteServer(object):
         print(f"Adding Buffer: {url}")
 
         return url
-
 
     def shutdown(self):
         """Stop running thread"""
