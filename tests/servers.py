@@ -7,7 +7,6 @@ from .examples.basic_server import CustomTableDelegate, new_point_plot, subscrib
 from .examples.geometry_server import starting_state as geometry_starting_state
 
 
-
 def simple_method(server: Server, context, *args):
     return "Method on server called!"
 
@@ -67,12 +66,13 @@ def throw_error(server: Server, context: dict, args: list):
 
 bad_starting_components = [
     StartingComponent(Method, {"name": "bad_method"}, throw_error),
+    StartingComponent(Table, {"name": "test_table", "methods_list": [[0, 0]], "signals_list": [[0, 0]]})
 ]
 
 
 @pytest.fixture
-def bad_server():
-    with Server(50001, bad_starting_components, server_delegates) as server:
+def plain_server():
+    with Server(50001, bad_starting_components) as server:
         yield server
 
 

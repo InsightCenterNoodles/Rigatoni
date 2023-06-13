@@ -159,3 +159,61 @@ def test_update_references(base_server):
     # Remove Reference from delete
     base_server.delete_component(plot)
     assert base_server.references[table_id] == set()
+
+
+def test_get_id(base_server):
+
+    # Basic Get
+    assert base_server.get_id(rig.Light) == rig.LightID(0, 0)
+
+    # Test next available queue
+    old_light = base_server.create_table("ID_Table")
+    old_light_id = old_light.id
+    base_server.delete_component(old_light)
+    new_light = base_server.create_table("ID_Table")
+    assert new_light.id == old_light_id
+
+
+def test_delete_component(base_server):
+
+    # Test delete for object that is referenced - check queue
+    base_server.delete_component(base_server.get_delegate("noo::tbl_reset"))
+    assert base_server.delete_queue == {rig.SignalID(0, 0)}
+
+    # Clear out references and try cascading delete
+    base_server.delete_component(base_server.get_delegate("test_table"))
+
+    # Test error handling
+    with pytest.raises(TypeError):
+        base_server.delete_component("bad")
+
+
+def test_update_component(base_server):
+
+    # Create a plot that references a table
+    table_id = base_server.get_delegate_id("test_table")
+    plot = base_server.create_plot("Update_Plot", table_id, simple_plot="...")
+
+    # Update the name of the plot
+    plot.name = "New_Named_Plot"
+    base_server.update_component(plot)
+    assert base_server.client_state[plot.id].name == "New_Named_Plot"
+    assert base_server.state[plot.id] == plot
+
+    # Update the table it is plotting
+    assert base_server.references[table_id] == {plot.id}
+    table = base_server.create_table("New_Table")
+    plot.table = base_server.get_delegate_id("New_Table")
+    base_server.update_component(plot)  # This doesn't seem  to be updating references, need to debug in depth
+    assert base_server.client_state[plot.id].table == rig.TableID(1, 0)
+    assert base_server.references[table_id] == set()  # old reference should be removed
+    assert base_server.references[table.id] == {plot.id}  # new reference should be added
+
+    # Update list of ID's
+    entity = base_server.get_delegate("test_method_entity")
+    entity.methods_list = [rig.MethodID(0, 0), rig.MethodID(0, 1)]
+    base_server.update_component(entity)
+    assert entity.methods_list == [rig.MethodID(0, 0), rig.MethodID(0, 1)]
+    assert base_server.client_state[entity.id].methods_list == [rig.MethodID(0, 0), rig.MethodID(0, 1)]
+
+

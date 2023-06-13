@@ -44,12 +44,12 @@ def new_point_plot(server: Server, context: dict, xs, ys, zs, colors=None, sizes
     size_cols = list(zip(*sizes))
 
     data = {
-        "x": xs,
-        "y": ys,
-        "z": zs,
-        "r": color_cols[0],
-        "g": color_cols[1],
-        "b": color_cols[2],
+        "x": [float(x) for x in xs],
+        "y": [float(y) for y in ys],
+        "z": [float(z) for z in zs],
+        "r": [float(r) for r in color_cols[0]],
+        "g": [float(g) for g in color_cols[1]],
+        "b": [float(b) for b in color_cols[2]],
         "sx": size_cols[0],
         "sy": size_cols[1],
         "sz": size_cols[2],

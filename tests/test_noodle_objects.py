@@ -6,7 +6,7 @@ import penne
 
 import rigatoni.noodle_objects as nooobs
 from tests.clients import base_client, delegate_client, mock_socket
-from tests.servers import base_server
+from tests.servers import base_server, plain_server
 
 logging.basicConfig(
     format="%(message)s",
@@ -139,30 +139,19 @@ def test_light(caplog):
         nooobs.Light(id=nooobs.LightID(0, 0), color=[0, 0, 0, 1], point=nooobs.PointLight(), spot=nooobs.SpotLight())
 
 
-def test_basic_table_methods(base_client):
+def test_basic_table_methods(plain_server):
 
-    import penne.handlers as handlers
-
-    table = base_client.get_delegate("test_table")
-    cols = [{"name": "test", "type": "TEXT"}]
-    init_data = {"columns": cols, "keys": [0, 1, 2], "data": [["test"], ["test"], ["test"]]}
-    assert hasattr(table, "test_method")
-
-    # Invoke Signals to hit Table methods
-    id = base_client.get_delegate_id("noo::tbl_reset")
-    handlers.handle(base_client, 33, {"id": id, "context": {"table": table.id}, "signal_data": [init_data]})
-    table._on_table_init(init_data, on_done=print)
-    table._reset_table(init_data)
-    table._remove_rows(keys=[0, 1, 2])
-    table._update_rows(keys=[0, 1, 2], rows=[["test"], ["test"], ["test"]])
-    table._update_selection({"name": "Test Selection"})
-    table.on_update({"blank": "message"})
-    table.on_remove({"blank": "message"})
-
-    with pytest.raises(Exception):
-        table.subscribe()  # Doesn't have the injected method so will call None-type as method
-
-    assert table.methods_list == [penne.MethodID(slot=0, gen=0)]
+    # Most of these are just blank passes so just running through here
+    table = plain_server.get_delegate("test_table")
+    table.handle_insert([[]])
+    table.handle_update([], [[]])
+    table.handle_delete([])
+    table.handle_clear()
+    table.handle_set_selection(nooobs.Selection(name="Selection"))
+    table.table_reset(nooobs.TableInitData(columns=[], keys=[], data=[[]]))
+    table.table_updated([], [[]])
+    table.table_rows_removed([])
+    table.table_selection_updated(nooobs.Selection(name="Selection"))
 
 
 def test_get_context(base_server):
