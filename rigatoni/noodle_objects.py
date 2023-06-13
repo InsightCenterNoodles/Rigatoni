@@ -340,7 +340,7 @@ class TableColumnInfo(NoodleObject):
 class TableInitData(NoodleObject):
     columns: List[TableColumnInfo]
     keys: List[int]
-    data: List[List[Union[float, int, str]]]
+    data: List[List[Any]]  # Originally tried union, but currently order is used to coerce by pydantic
     selections: Optional[List[Selection]] = None
 
     # too much overhead? - strict mode
@@ -645,3 +645,16 @@ class StartingComponent(object):
         self.type = kind
         self.component_attrs = component_attrs
         self.method = method
+
+
+def get_context(delegate):
+    """Helper to get context from delegate"""
+
+    if isinstance(delegate, Entity):
+        return {"entity": delegate.id}
+    elif isinstance(delegate, Table):
+        return {"table": delegate.id}
+    elif isinstance(delegate, Plot):
+        return {"plot": delegate.id}
+    else:
+        return None

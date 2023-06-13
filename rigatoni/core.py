@@ -71,6 +71,9 @@ class Server(object):
         self.shutdown_event = asyncio.Event()
         self.thread = None
         self.json_output = json_output
+        if json_output:
+            with open(json_output, "w") as outfile:  # Clear out old contents
+                outfile.write("JSON Log\n")
 
         # Set up id's and custom delegates
         self.custom_delegates = delegate_map if delegate_map else {}
@@ -125,14 +128,14 @@ class Server(object):
 
             try:
                 comp = self.create_component(comp_type, **starting_component.component_attrs)
-            except TypeError:
-                raise Exception(f"Invalid arguments to create {comp_type}")
+            except Exception as e:
+                raise TypeError(f"Invalid arguments to create {comp_type}: {e}")
 
             if comp_type == Method and comp_method:
                 injected = InjectedMethod(self, comp_method)
                 setattr(self, comp.name, injected)
             elif comp_type == Method and not comp_method:
-                raise Exception("Method not specified for starting method")
+                raise ValueError("Method not specified for starting method")
 
         logging.debug(f"Server initialized with objects: {self.state}")
 
@@ -171,8 +174,9 @@ class Server(object):
 
     def log_json(self, message: list):
         json_message = json.dumps(message, default=default_json_encoder)
+        formatted_message = f"{json_message}\n"
         with open(self.json_output, "a") as outfile:
-            outfile.write(json_message)
+            outfile.write(formatted_message)
 
     async def send(self, websocket, message: list):
         """Send CBOR message using websocket
@@ -248,7 +252,7 @@ class Server(object):
         for delegate in self.state.values():
             if delegate.name == name:
                 return delegate.id
-        raise Exception("No Component Found")
+        raise ValueError("No Component Found")
 
     def get_delegate(self, identifier: Union[ID, str, Dict[str, ID]]):
         """Getter for users to access components in state
@@ -279,7 +283,7 @@ class Server(object):
         else:
             raise ValueError(f"Invalid context: {context}")
 
-    def get_message_contents(self, action: str, noodle_object: NoodleObject, delta: set[str]):
+    def get_message_contents(self, action: str, noodle_object: NoodleObject, delta: set[str] = None):
         """Helper to handle construction of message dict
         
         Args:
@@ -294,15 +298,24 @@ class Server(object):
             include = {field for field in base_delegate.__fields__ if field not in ["server", "signals"]}
             contents = noodle_object.dict(exclude_none=True, include=include)
 
-        elif action == "invoke" or action == "reply":
+        elif action == "invoke":
             contents = noodle_object.dict(exclude_none=True)
+
+        elif action == "reply":
+
+            if noodle_object.method_exception:
+                e = noodle_object.method_exception
+                contents = noodle_object.dict(exclude_none=True)
+                contents["method_exception"] = {"code": e.code, "message": e.message, "data": e.data}
+            else:
+                contents = noodle_object.dict(exclude_none=True)
 
         elif action == "update":
             if not noodle_object:  # Document case
                 contents["methods_list"] = self.get_ids_by_type(Method)
                 contents["signals_list"] = self.get_ids_by_type(Signal)
             else:  # Normal update, include id, and any field in delta
-                delta = {} if not delta else delta
+                delta = set() if not delta else delta
                 delta.add("id")
                 contents = noodle_object.dict(exclude_none=True, include=delta)
 
@@ -418,32 +431,31 @@ class Server(object):
         # Invoke
         reply.result = method(context, *args)
 
-    def update_references(self, comp: Delegate, current: NoodleObject, removing=False):
+    def update_references(self, parent_delegate: Delegate, current: NoodleObject, removing=False):
         """Update in-degree for all objects referenced by this one
 
         Recursively updates references for all components under a parent one. Here,
         the current object changes through the recursion while comp keeps track of 
-        the parent 
+        the parent. Essentially finds all the objects that delegate points to
         
         Args:
-            comp (Delegate): parent component with new references to be tracked
+            parent_delegate (Delegate): parent component with new references to be tracked
             current (NoodleObject): current object being examined
             removing (bool): flag so function can be used to both add and remove references
         """
 
-        for key in current.__fields__.keys():
-            val = getattr(current, key)
+        for key, val in current:
 
             # Found a reference
             if key != "id" and isinstance(val, ID):
                 if removing:
-                    self.references[val].remove(comp.id)
+                    self.references[val].remove(parent_delegate.id)
                 else:
-                    self.references.setdefault(val, set()).add(comp.id)
+                    self.references.setdefault(val, set()).add(parent_delegate.id)
 
             # Found another object to recurse on
             elif isinstance(val, NoodleObject):
-                self.update_references(comp, val, removing)
+                self.update_references(parent_delegate, val, removing)
 
             # Found list of objects or id's to recurse on 
             elif val is not None and isinstance(val, list):
@@ -451,15 +463,15 @@ class Server(object):
                 # Objects
                 if len(val) > 0 and isinstance(val[0], NoodleObject):
                     for obj in val:
-                        self.update_references(comp, obj, removing)
+                        self.update_references(parent_delegate, obj, removing)
 
                 # ID's
                 elif len(val) > 0 and isinstance(val[0], ID):
                     for id in val:
                         if removing:
-                            self.references[id].remove(comp.id)
+                            self.references[id].remove(parent_delegate.id)
                         else:
-                            self.references.setdefault(id, set()).add(comp.id)
+                            self.references.setdefault(id, set()).add(parent_delegate.id)
 
     def get_id(self, delegate_type: Type[Delegate]) -> ID:
         """Get next open ID
@@ -514,7 +526,7 @@ class Server(object):
 
         # Update state and keep track of initial version for changes / update messages
         self.state[comp_id] = new_delegate
-        self.client_state[comp_id] = new_delegate
+        self.client_state[comp_id] = new_delegate.copy()
 
         # Update references for each component referenced by this one
         self.update_references(new_delegate, new_delegate)
@@ -526,7 +538,7 @@ class Server(object):
         # Return component or delegate instance if applicable
         return new_delegate
 
-    def delete_component(self, obj: Union[Delegate, ID]):
+    def delete_component(self, delegate: Union[Delegate, ID]):
         """Delete object in state and update clients
         
         This method excepts a delegate, component, or component ID, and will attempt
@@ -535,25 +547,32 @@ class Server(object):
         it can be deleted later once that reference is no longer being used.
 
         Args:
-            obj (Component, Delegate, or ID): component / delegate to be deleted
+            delegate (Component, Delegate, or ID): component / delegate to be deleted
         """
 
-        # Handle cases so can except different input types
-        if isinstance(obj, Delegate):
-            id = obj.id
+        # Handle cases so can except different input types - cast to ID
+        if isinstance(delegate, Delegate):
+            delegate = delegate
+            del_id = delegate.id
+        elif isinstance(delegate, ID):
+            delegate = self.state[delegate]
+            del_id = delegate.id
         else:
-            id = obj
+            raise TypeError(f"Invalid type for delegate when deleting: {type(delegate)}")
 
         # Delete if no references, or else queue it up for later
-        if not self.references.get(id):
-            self.broadcast(self.prepare_message("delete", self.state[id]))
-            del self.state[id]
-            del self.client_state[id]
+        if not self.references.get(del_id):
+            self.broadcast(self.prepare_message("delete", delegate))
+            del self.state[del_id]
+            del self.client_state[del_id]
+
+            # Free up the ID
+            self.ids[type(delegate)].on_deck.put(del_id)
 
             # Clean out references from this object
             for refs in self.references.values():
-                while id in refs:
-                    refs.remove(id)
+                while del_id in refs:
+                    refs.remove(del_id)
 
             # Check if anything in the queue is now clear to be deleted
             for comp_id in list(self.delete_queue):
@@ -562,12 +581,8 @@ class Server(object):
                     self.delete_component(comp_id)
 
         else:
-            if isinstance(obj, ID):
-                logging.warning(f"Couldn't delete {self.state[obj]}, "
-                                f"referenced by {self.references[id]}, added to queue")
-            else:
-                logging.warning(f"Couldn't delete {obj}, referenced by {self.references[id]}, added to queue")
-            self.delete_queue.add(id)
+            logging.warning(f"Couldn't delete {delegate}, referenced by {self.references[del_id]}, added to queue")
+            self.delete_queue.add(del_id)
 
     def find_delta(self, state, edited):
         """Helper to find differences between two objects
@@ -581,32 +596,33 @@ class Server(object):
             state_val = getattr(state, field_name)
             if value != state_val:
                 delta.add(field_name)
-                if isinstance(value, NoodleObject):
-                    self.update_references(state, state_val, removing=True)
-                    self.update_references(edited, value)
-
         return delta
 
-    def update_component(self, state_obj: Delegate):
+    def update_component(self, current: Delegate):
         """Update clients with changes to a component
         
         This method broadcasts changes to all clients including only fields
         specified in the set delta
 
         Args:
-            state_obj (Delegate): component that has been updated,
+            current (Delegate): component that has been updated,
                 should be a component with an update message
         """
 
-        # Update references and find delta
-        delta = self.find_delta(self.client_state[state_obj.id], state_obj)
+        # Find difference between two states
+        outdated = self.client_state[current.id]
+        delta = self.find_delta(outdated, current)
+
+        # Update references
+        self.update_references(outdated, outdated, removing=True)
+        self.update_references(current, current)
 
         # Update tracking state
-        self.client_state[state_obj.id] = state_obj
+        self.client_state[current.id] = current.copy()
 
         # Form message and broadcast
         try:
-            message = self.prepare_message("update", state_obj, delta)
+            message = self.prepare_message("update", current, delta)
             self.broadcast(message)
         except Exception as e:
             raise Exception(f"This obj can not be updated: {e}")

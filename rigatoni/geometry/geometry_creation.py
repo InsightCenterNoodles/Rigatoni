@@ -507,7 +507,7 @@ def geometry_from_mesh(server: Server, file, material: nooobs.Material,
     # Create meshio mesh object to extract data from file, if unsupported file type use meshlab
     try:
         mesh = meshio.read(file)
-    except:
+    except Exception as e:
         return meshlab_load(server, byte_server, file, material, mesh_name, generate_normals=generate_normals)
 
         # Define Meshio helper functions

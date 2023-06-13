@@ -2,6 +2,7 @@
 *.x3d
 .idea
 venv/
+*.json
 
 # Standard from Github
 # Byte-compiled / optimized / DLL files

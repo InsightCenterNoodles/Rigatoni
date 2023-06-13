@@ -225,19 +225,19 @@ class TableDelegate(Table):
 
 
 @pytest.fixture
-def base_client(rig_base_server):
+def base_client(base_server):
     with Client("ws://localhost:50000", strict=True) as client:
         yield client
 
 
 @pytest.fixture
-def lenient_client(rig_base_server):
+def lenient_client(base_server):
     with Client("ws://localhost:50000") as client:
         yield client
 
 
 @pytest.fixture
-def delegate_client(rig_base_server):
+def delegate_client(base_server):
     with Client("ws://localhost:50000", custom_delegate_hash={Table: TableDelegate}, strict=True) as client:
         yield client
 
