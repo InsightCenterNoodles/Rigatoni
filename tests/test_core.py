@@ -83,7 +83,7 @@ def test_json_logging():
                                    '[0, {"id": [0, 0], "name": "test_method"}]\n'
             # Go back and fix strings to reflect broadcast and client connect message
             loop = asyncio.get_event_loop()
-            loop.run_until_complete(server.send(server.clients.pop(), [2, "test"]))
+            loop.run_until_complete(server._send(server.clients.pop(), [2, "test"]))
             with open(server.json_output, "r") as f:
                 assert f.read() == 'JSON Log\n'\
                                    '[4, {"id": [0, 0], "name": "test_entity"}]\n'\
@@ -128,24 +128,24 @@ def test_get_delegate_by_context(base_server):
 def test_get_message_contents(base_server):
 
     obj = base_server.get_delegate("test_method")
-    assert base_server.get_message_contents("create", obj) == {"id": rig.MethodID(0, 0), "name": "test_method", "arg_doc": []}
-    assert base_server.get_message_contents("delete", obj) == {"id": rig.MethodID(0, 0)}
+    assert base_server._get_message_contents("create", obj) == {"id": rig.MethodID(0, 0), "name": "test_method", "arg_doc": []}
+    assert base_server._get_message_contents("delete", obj) == {"id": rig.MethodID(0, 0)}
     obj.name = "new_name"
-    assert base_server.get_message_contents("update", obj, delta={"name"}) == {"id": rig.MethodID(0, 0), "name": "new_name"}
+    assert base_server._get_message_contents("update", obj, delta={"name"}) == {"id": rig.MethodID(0, 0), "name": "new_name"}
     with pytest.raises(Exception):
-        base_server.get_message_contents("delete", 0)
-    assert base_server.get_message_contents("bad", obj) == {}
+        base_server._get_message_contents("delete", 0)
+    assert base_server._get_message_contents("bad", obj) == {}
 
 
 def test_handle_invoke(base_server):
 
-    reply = base_server.handle_invoke({"method": [0, 0], "invoke_id": "0", "args": []})
+    reply = base_server._handle_invoke({"method": [0, 0], "invoke_id": "0", "args": []})
     assert reply == (34, {'invoke_id': '0', 'result': 'Method on server called!'})
 
-    reply = base_server.handle_invoke({"method": [0, 1], "invoke_id": "0", "args": []})
+    reply = base_server._handle_invoke({"method": [0, 1], "invoke_id": "0", "args": []})
     assert reply == (34, {'invoke_id': '0', 'method_exception': {"code": -32601, "message": "Method Not Found", "data": None}})
 
-    reply = base_server.handle_invoke({"method": [0, 0], "invoke": "0", "args": [1]})
+    reply = base_server._handle_invoke({"method": [0, 0], "invoke": "0", "args": [1]})
     assert reply == (34, {'invoke_id': '-1', 'method_exception': {"code": -32700, "message": "Parse Error", "data": None}})
 
 
@@ -164,7 +164,7 @@ def test_update_references(base_server):
 def test_get_id(base_server):
 
     # Basic Get
-    assert base_server.get_id(rig.Light) == rig.LightID(0, 0)
+    assert base_server._get_id(rig.Light) == rig.LightID(0, 0)
 
     # Test next available queue
     old_light = base_server.create_table("ID_Table")

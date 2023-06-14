@@ -1,6 +1,6 @@
 
 
-Here is a basic example to get a plain server running with largely default components. The server will be initialized 
+Here's a basic example to get a plain server running with largely default components. The server will be initialized 
 with one method to begin with, and the server will use the custom table delegate for each table in the scene. 
 For more detailed examples, check out this [repo](https://github.com/InsightCenterNoodles/Rigatoni/tree/v0.2.1/tests/examples).
 

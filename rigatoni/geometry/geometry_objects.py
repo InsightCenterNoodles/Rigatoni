@@ -7,6 +7,7 @@ from typing import Optional
 
 from .. import noodle_objects as nooobs
 
+
 class AttributeInput(nooobs.NoodleObject):
     """Input for setting attributes of a buffer 
     

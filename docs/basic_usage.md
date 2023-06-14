@@ -17,6 +17,14 @@ server, and it will be associated with its corresponding method component.
 rigatoni.StartingComponent(Type[Component], dict[Component_Attr, Value], Callable)
 ```
 
+## Defining Methods
+
+To help with creating methods that manipulate the server's state, Rigatoni provides several methods that can be used
+manage objects in the scene. More information on these methods can be found in the server section of the API reference
+tab. Also, it is important to note that since each method is injected onto the server, they are called with a couple of 
+arguments by default. The first two arguments to each method should always be the server object itself and 
+a context. This provides easy access to essential information that can be used in the method.
+
 ## Delegates
 
 The server comes with a default delegate class for each component that is maintained in the server's state. These
