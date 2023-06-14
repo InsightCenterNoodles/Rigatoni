@@ -274,6 +274,9 @@ def build_entity(server: Server, geometry: nooobs.Geometry, instances: list[list
         server (Server): server to build entity component on
         geometry (Geometry): geometry to link entity to
         instances (Mat4): optional instance matrix, can use create_instances to generate
+
+    Returns:
+        Entity: newly created entity delegate
     """
 
     # Set name to match geometry
@@ -308,15 +311,18 @@ def create_instances(
         scales: list[list] = None) -> list[list]:
     """Create new instances for an entity
     
-    All lists are optional and will be filled with defaults
-    By default one instance is created at least
-    Lists are padded out to 4 values
+    All lists are optional and will be filled with defaults.
+    By default, one instance is created at least.
+    Lists are padded out to 4 values.
 
     Args:
         positions (list[Vec3]): positions for each instance
         colors (list[Vec4]): Colors for each instance
         rotations (list[Vec4]): Rotations for each instance
         scales (list[Vec3]): Scales for each instance
+
+    Returns:
+        list[list]: 2d array representing instance data
     """
 
     def padded(lst: list, default_val: float = 1.0):
@@ -502,6 +508,17 @@ def geometry_from_mesh(server: Server, file, material: nooobs.Material,
     """Construct geometry from mesh file
     
     Can specify byte server if it is a big mesh and needs uri bytes
+
+    Args:
+        server (Server): server to load geometry onto
+        file (str, path): file to load mesh from
+        material (Material): material to use in geometry
+        mesh_name (str): optional name
+        byte_server (ByteServer): server to support URI bytes if needed
+        generate_normals (bool): whether to calculate normals for the mesh
+
+    Returns:
+        Geometry: newly created geometry delegate
     """
 
     # Create meshio mesh object to extract data from file, if unsupported file type use meshlab
@@ -510,8 +527,7 @@ def geometry_from_mesh(server: Server, file, material: nooobs.Material,
     except Exception as e:
         return meshlab_load(server, byte_server, file, material, mesh_name, generate_normals=generate_normals)
 
-        # Define Meshio helper functions
-
+    # Define Meshio helper functions
     def get_point_attr(mesh_obj, attr: str):
         """Helper to get attribute from mesh object"""
 

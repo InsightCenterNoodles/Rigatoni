@@ -4,24 +4,29 @@ import threading
 
 
 class ByteServer(object):
-    """Server to Host URI Bytes
+    """Server to Host URI Bytes.
+
+    This is helpful for large meshes and images that would
+    otherwise be too large to send using CBOR and the websocket connection. The server maps
+    a tag to a buffer, and the client can request the buffer using the url that includes the
+    tag.
     
     Attributes:
         host (str): IP address for server
         port (int): port server is listening on
         socket (socket): socket connection 
         buffers (dict): mapping tag to buffer
-        next_tag (int): next available tag for a buffer
+        _next_tag (int): next available tag for a buffer
         url (str): base url to reach server without tag
         thread (Thread): background thread server is running in
         running (bool): flag indicating whether server is running
     """
 
     def __init__(self, port: int = 8000):
-        """Constructor
+        """Constructor to create the server
         
         Args:
-            port (int): port to listen on
+            port (int): port to listen and host on
         """
 
         name = socket.gethostname()
@@ -33,18 +38,18 @@ class ByteServer(object):
         self.port = port
         self.socket = None
         self.buffers = {}
-        self.next_tag = 0
+        self._next_tag = 0
         self.url = f"http://{self.host}:{port}"
 
         self.thread = threading.Thread(target=self.run, args=())
         self.running = True
         self.thread.start()
 
-    def get_tag(self):
-        """Helper to get next tag"""
+    def _get_tag(self):
+        """Helper to get next tag for a buffer"""
 
-        tag = self.next_tag
-        self.next_tag += 1
+        tag = self._next_tag
+        self._next_tag += 1
         return str(tag)
 
     def get_buffer(self, uri: str):
@@ -67,8 +72,7 @@ class ByteServer(object):
     def run(self):
         """Main loop to run in thread
         
-        Runs the server and listens for byte requests
-        Uses HTTP protocol 
+        Runs the server and listens for byte requests using HTTP protocol
         """
 
         # Create socket
@@ -104,8 +108,6 @@ class ByteServer(object):
                 response = header.encode()
 
             # Send HTTP response
-            # client_connection.sendall(response.encode())
-            # print(f'Response:\n{response}')
             client_connection.sendall(response)
             client_connection.close()
 
@@ -119,7 +121,7 @@ class ByteServer(object):
             buffer (bytes): bytes to add as buffer
         """
 
-        tag = self.get_tag()
+        tag = self._get_tag()
         self.buffers[tag] = buffer
         url = f"{self.url}/{tag}"
         print(f"Adding Buffer: {url}")

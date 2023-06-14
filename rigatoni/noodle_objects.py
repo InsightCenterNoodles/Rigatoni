@@ -7,7 +7,7 @@ implements strict validation
 from enum import Enum
 from math import pi
 from queue import Queue
-from typing import Callable, Optional, Any, Union, List, Tuple, Dict, NamedTuple
+from typing import Callable, Optional, Any, List, Tuple, Dict, NamedTuple
 
 from pydantic import BaseModel, root_validator
 
@@ -108,7 +108,7 @@ class NoodleObject(BaseModel):
 class Delegate(NoodleObject):
     """Parent class for all delegates
 
-    Defines general methods that should be available for all delegates
+    Defines general methods that should be available for all delegates.
 
     Attributes:
         server (Server): server delegate is attached to
@@ -317,7 +317,7 @@ class InvokeIDType(NoodleObject):
     table: Optional[TableID] = None
     plot: Optional[PlotID] = None
 
-    @root_validator
+    @root_validator(allow_reuse=True)
     def one_of_three(cls, values):
         already_found = False
         for field in values:
@@ -344,7 +344,7 @@ class TableInitData(NoodleObject):
     selections: Optional[List[Selection]] = None
 
     # too much overhead? - strict mode
-    @root_validator
+    @root_validator(allow_reuse=True)
     def types_match(cls, values):
         for row in values['data']:
             for col, i in zip(values['columns'], range(len(row))):
@@ -360,6 +360,16 @@ class TableInitData(NoodleObject):
 
 
 class Method(Delegate):
+    """A method that clients can request the server to call.
+
+    Attributes:
+        id: ID for the method
+        name: Name of the method
+        doc: Documentation for the method
+        return_doc: Documentation for the return value
+        arg_doc: Documentation for the arguments
+    """
+
     id: MethodID
     name: str
     doc: Optional[str] = None
@@ -368,6 +378,15 @@ class Method(Delegate):
 
 
 class Signal(Delegate):
+    """A signal that the server can send to update clients.
+
+    Attributes:
+        id: ID for the signal
+        name: Name of the signal
+        doc: Documentation for the signal
+        arg_doc: Documentation for the arguments
+    """
+
     id: SignalID
     name: str
     doc: Optional[str] = None
@@ -375,6 +394,25 @@ class Signal(Delegate):
 
 
 class Entity(Delegate):
+    """Container for other entities, possibly renderable, has associated methods and signals
+
+    Args:
+        id (EntityID): ID for the entity
+        name (str): Name of the entity
+        parent (EntityID): Parent entity
+        transform (Mat4): Local transform for the entity
+        text_rep (TextRepresentation): Text representation for the entity
+        web_rep (WebRepresentation): Web representation for the entity
+        render_rep (RenderRepresentation): Render representation for the entity
+        lights (List[LightID]): List of lights attached to the entity
+        tables (List[TableID]): List of tables attached to the entity
+        plots (List[PlotID]): List of plots attached to the entity
+        tags (List[str]): List of tags for the entity
+        methods_list (List[MethodID]): List of methods attached to the entity
+        signals_list (List[SignalID]): List of signals attached to the entity
+        influence (Optional[BoundingBox]): Bounding box for the entity
+    """
+
     id: EntityID
     name: Optional[str] = None
 
@@ -396,6 +434,18 @@ class Entity(Delegate):
 
 
 class Plot(Delegate):
+    """An abstract plot object.
+
+    Attributes:
+        id: ID for the plot
+        name: Name of the plot
+        table: Table to plot
+        simple_plot: Simple plot to render
+        url_plot: URL for plot to render
+        methods_list: List of methods attached to the plot
+        signals_list: List of signals attached to the plot
+    """
+
     id: PlotID
     name: Optional[str] = None
 
@@ -407,7 +457,7 @@ class Plot(Delegate):
     methods_list: Optional[List[MethodID]] = None
     signals_list: Optional[List[SignalID]] = None
 
-    @root_validator
+    @root_validator(allow_reuse=True)
     def one_of(cls, values):
         if bool(values['simple_plot']) != bool(values['url_plot']):
             return values
@@ -416,6 +466,15 @@ class Plot(Delegate):
 
 
 class Buffer(Delegate):
+    """A buffer of bytes containing data for an image or a mesh.
+
+    Attributes:
+        id: ID for the buffer
+        name: Name of the buffer
+        size: Size of the buffer in bytes
+        inline_bytes: Bytes of the buffer
+        uri_bytes: URI for the bytes
+    """
     id: BufferID
     name: Optional[str] = None
     size: int = None
@@ -423,7 +482,7 @@ class Buffer(Delegate):
     inline_bytes: bytes = None
     uri_bytes: str = None
 
-    @root_validator
+    @root_validator(allow_reuse=True)
     def one_of(cls, values):
         if bool(values['inline_bytes']) != bool(values['uri_bytes']):
             return values
@@ -432,6 +491,16 @@ class Buffer(Delegate):
 
 
 class BufferView(Delegate):
+    """A view into a buffer, specifying a subset of the buffer and how to interpret it.
+
+    Attributes:
+        id: ID for the buffer view
+        name: Name of the buffer view
+        source_buffer: Buffer that the view is referring to
+        type: Type of the buffer view
+        offset: Offset into the buffer in bytes
+        length: Length of the buffer view in bytes
+    """
     id: BufferViewID
     name: Optional[str] = None
     source_buffer: BufferID
@@ -442,6 +511,21 @@ class BufferView(Delegate):
 
 
 class Material(Delegate):
+    """A material that can be applied to a mesh.
+
+    Attributes:
+        id: ID for the material
+        name: Name of the material
+        pbr_info: Information for physically based rendering
+        normal_texture: Texture for normals
+        occlusion_texture: Texture for occlusion
+        occlusion_texture_factor: Factor for occlusion
+        emissive_texture: Texture for emissive
+        emissive_factor: Factor for emissive
+        use_alpha: Whether to use alpha
+        alpha_cutoff: Alpha cutoff
+        double_sided: Whether the material is double-sided
+    """
     id: MaterialID
     name: Optional[str] = None
 
@@ -461,13 +545,21 @@ class Material(Delegate):
 
 
 class Image(Delegate):
+    """An image, can be used for a texture
+
+    Attributes:
+        id: ID for the image
+        name: Name of the image
+        buffer_source: Buffer that the image is stored in
+        uri_source: URI for the bytes if they are hosted externally
+    """
     id: ImageID
     name: Optional[str] = None
 
     buffer_source: BufferID = None
     uri_source: str = None
 
-    @root_validator
+    @root_validator(allow_reuse=True)
     def one_of(cls, values):
         if bool(values['buffer_source']) != bool(values['uri_source']):
             return values
@@ -476,6 +568,14 @@ class Image(Delegate):
 
 
 class Texture(Delegate):
+    """A texture, can be used for a material
+
+    Attributes:
+        id: ID for the texture
+        name: Name of the texture
+        image: Image to use for the texture
+        sampler: Sampler to use for the texture
+    """
     id: TextureID
     name: Optional[str] = None
     image: ImageID  # Image ID
@@ -483,6 +583,16 @@ class Texture(Delegate):
 
 
 class Sampler(Delegate):
+    """A sampler to use for a texture
+
+    Attributes:
+        id: ID for the sampler
+        name: Name of the sampler
+        mag_filter: Magnification filter
+        min_filter: Minification filter
+        wrap_s: Wrap mode for S
+        wrap_t: Wrap mode for T
+    """
     id: SamplerID
     name: Optional[str] = None
 
@@ -494,6 +604,17 @@ class Sampler(Delegate):
 
 
 class Light(Delegate):
+    """Represents a light in the scene
+
+    Attributes:
+        id: ID for the light
+        name: Name of the light
+        color: Color of the light
+        intensity: Intensity of the light
+        point: Point light information
+        spot: Spotlight information
+        directional: Directional light information
+    """
     id: LightID
     name: Optional[str] = None
 
@@ -504,7 +625,7 @@ class Light(Delegate):
     spot: SpotLight = None
     directional: DirectionalLight = None
 
-    @root_validator
+    @root_validator(allow_reuse=True)
     def one_of(cls, values):
         already_found = False
         for field in ['point', 'spot', 'directional']:
@@ -520,12 +641,28 @@ class Light(Delegate):
 
 
 class Geometry(Delegate):
+    """Represents geometry in the scene and can be used for meshes
+
+    Attributes:
+        id: ID for the geometry
+        name: Name of the geometry
+        patches: Patches that make up the geometry
+    """
     id: GeometryID
     name: Optional[str] = None
     patches: List[GeometryPatch]
 
 
 class Table(Delegate):
+    """Object to store tabular data.
+
+    Attributes:
+        id: ID for the table
+        name: Name of the table
+        meta: Metadata for the table
+        methods_list: List of methods for the table
+        signals_list: List of signals for the table
+    """
     id: TableID
     name: Optional[str] = None
 
@@ -533,19 +670,24 @@ class Table(Delegate):
     methods_list: Optional[List[MethodID]] = None
     signals_list: Optional[List[SignalID]] = None
 
-    def handle_insert(self, new_rows: list[list[int]]):
+    def handle_insert(self, new_rows: List[List[int]]):
+        """Method to handle inserting into the table"""
         pass
 
-    def handle_update(self, keys: list[int], rows: list[list[int]]):
+    def handle_update(self, keys: List[int], rows: List[List[int]]):
+        """Method to handle updating the table"""
         pass
 
-    def handle_delete(self, keys: list[int]):
+    def handle_delete(self, keys: List[int]):
+        """Method to handle deleting from the table"""
         pass
 
     def handle_clear(self):
+        """Method to handle clearing the table"""
         pass
 
     def handle_set_selection(self, selection: Selection):
+        """Method to handle setting a selection"""
         pass
 
     # Signals ---------------------------------------------------
@@ -553,13 +695,16 @@ class Table(Delegate):
         """Invoke table reset signal"""
         pass
 
-    def table_updated(self, keys: list[int], rows: list[list[int]]):
+    def table_updated(self, keys: List[int], rows: List[List[int]]):
+        """Invoke table updated signal"""
         pass
 
-    def table_rows_removed(self, keys: list[int]):
+    def table_rows_removed(self, keys: List[int]):
+        """Invoke table rows removed signal"""
         pass
 
     def table_selection_updated(self, selection: Selection):
+        """Invoke table selection updated signal"""
         pass
 
 

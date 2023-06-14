@@ -208,7 +208,7 @@ class TableDelegate(Table):
         """Update plotting process when dataframe is updated"""
 
         df = self.dataframe
-        self.sender.send(get_plot_data(df))
+        self.sender._send(get_plot_data(df))
 
     def plot(self, on_done: Callable = None):
         """Creates plot in a new window
