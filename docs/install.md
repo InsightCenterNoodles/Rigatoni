@@ -10,7 +10,7 @@ Rigatoni has a few dependencies:
 * [`cbor2`](https://cbor2.readthedocs.io/en/latest/): Concise Binary Object Representation for messages.
 * [`pydantic`](https://docs.pydantic.dev/dev-v2/): Data validation and coercion for parsing messages.
 
-If you've got Python 3.7+ and `pip` installed, you're good to go.
+If you've got Python 3.9+ and `pip` installed, you're good to go.
 
 ## Optional dependencies
 
