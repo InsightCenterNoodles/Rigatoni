@@ -25,7 +25,7 @@ def default_json_encoder(value):
 class Server(object):
     """NOODLES Server
     
-    Attributes;
+    Attributes:
         clients (set): client connections
         custom_delegates (dict): 
             maps noodle object to its delegate class, empty by default
