@@ -27,7 +27,9 @@ class Server(object):
 
     Handles communication and multiple client connections. The server provides several
     methods for interacting with and creating delegates. These are especially useful for
-    defining custom methods that the server will expose to clients.
+    defining custom methods that the server will expose to clients. Can be instatiated normally,
+    or it can be used as a context manager to automatically start and stop the server while running
+    in a new thread.
     
     Attributes:
         port (int):

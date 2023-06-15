@@ -6,19 +6,22 @@
 
 ---
 
-## Helpful Methods
 
-::: rigatoni.geometry.build_geometry_patch
-::: rigatoni.geometry.build_entity
-::: rigatoni.geometry.create_instances
-::: rigatoni.geometry.update_entity
-::: rigatoni.geometry.add_instances
-::: rigatoni.geometry.geometry_from_mesh
-::: rigatoni.geometry.export_mesh
+::: rigatoni.geometry.methods
+    options:
+        members:
+        - build_geometry_patch
+        - build_entity
+        - create_instances
+        - update_entity
+        - add_instances
+        - geometry_from_mesh
+        - export_mesh
 
 ---
 
-## Helpful Objects
 
-::: rigatoni.geometry.geometry_objects
-
+::: rigatoni.geometry.objects
+    options:
+        members:
+        - GeometryPatchInput

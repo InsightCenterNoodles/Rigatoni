@@ -1,4 +1,7 @@
-# Rigatoni
+
+
+<h1><img src="docs/assets/favicon.png" alt="Logo" width="40" height="40" align="left">Rigatoni</h1>
+
 
 ![Build Status](https://github.com/InsightCenterNoodles/Rigatoni/workflows/CI/badge.svg)
 ![PyPI](https://img.shields.io/pypi/v/Rigatoni)

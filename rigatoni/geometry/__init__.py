@@ -5,7 +5,7 @@ Users can use these built in methods as opposed to constructing buffers, buffer 
 entities, and geometries manually.
 """
 
-from .geometry_creation import build_geometry_patch, build_entity, create_instances, update_entity, add_instances, \
+from .methods import build_geometry_patch, build_entity, create_instances, update_entity, add_instances, \
     geometry_from_mesh, export_mesh
-from .geometry_objects import AttributeInput, GeometryPatchInput
+from .objects import AttributeInput, GeometryPatchInput
 from .byte_server import ByteServer
