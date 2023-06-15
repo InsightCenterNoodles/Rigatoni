@@ -1,6 +1,7 @@
 # What is NOODLES?
 
-NOODLES is a messaging protocol for shared interactive visualizations. The protocol sets standards
+NOODLES is a messaging protocol for shared interactive visualizations. It is being developed by a team at the 
+Insight Center at the National Renewable Energy Lab. The protocol sets standards
 for developing client and server libraries which serve as the bridge between various applications. 
 
 The Server Library presents a visualization to one or more connected clients through a synchronized 
