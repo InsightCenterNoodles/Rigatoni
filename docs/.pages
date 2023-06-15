@@ -1,0 +1,6 @@
+nav:
+    - index.md
+    - install.md
+    - basic_usage.md
+    - quick_start.md
+    - api_reference

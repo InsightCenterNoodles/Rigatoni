@@ -23,7 +23,9 @@ To help with creating methods that manipulate the server's state, Rigatoni provi
 manage objects in the scene. More information on these methods can be found in the server section of the API reference
 tab. Also, it is important to note that since each method is injected onto the server, they are called with a couple of 
 arguments by default. The first two arguments to each method should always be the server object itself and 
-a context. This provides easy access to essential information that can be used in the method.
+a context. This provides easy access to essential information that can be used in the method. Exceptions raised
+in these methods should be [MethodException](api_reference/components.md##MethodException) objects. These exceptions 
+will be caught by the server and sent to clients in a method reply message.
 
 ## Delegates
 

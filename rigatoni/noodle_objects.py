@@ -15,6 +15,18 @@ from pydantic import BaseModel, root_validator
 
 
 class ID(NamedTuple):
+    """Base class for all ID's
+
+    Each ID is composed of a slot and a generation, resulting in a tuple like id ex. (0, 0). Both are positive
+    integers that are filled in increasing order. Slots are taken first, but once the slot is freed, it can be used
+    with a new generation. For example, a method is created -> (0, 0), then another is created -> (1, 0), then method
+    (0, 0) is deleted. Now, the next method created will be (0, 1).
+
+    Attributes:
+        slot (int): Slot of the ID
+        gen (int): Generation of the ID
+    """
+
     slot: int
     gen: int
 
@@ -41,54 +53,67 @@ class ID(NamedTuple):
 
 
 class MethodID(ID):
+    """ID specifically for methods"""
     pass
 
 
 class SignalID(ID):
+    """ID specifically for signals"""
     pass
 
 
 class EntityID(ID):
+    """ID specifically for entities"""
     pass
 
 
 class PlotID(ID):
+    """ID specifically for plots"""
     pass
 
 
 class BufferID(ID):
+    """ID specifically for buffers"""
     pass
 
 
 class BufferViewID(ID):
+    """ID specifically for buffer views"""
     pass
 
 
 class MaterialID(ID):
+    """ID specifically for materials"""
     pass
 
 
 class ImageID(ID):
+    """ID specifically for images"""
     pass
 
 
 class TextureID(ID):
+    """ID specifically for textures"""
     pass
 
 
 class SamplerID(ID):
+    """ID specifically for samplers"""
     pass
 
 
 class LightID(ID):
+    """ID specifically for lights"""
     pass
 
 
 class GeometryID(ID):
+    """ID specifically for geometries"""
     pass
 
 
 class TableID(ID):
+    """ID specifically for tables"""
     pass
 
 
@@ -113,8 +138,8 @@ class Delegate(NoodleObject):
     Attributes:
         server (Server): server delegate is attached to
         id: (ID): Unique identifier for delegate
-        name (str): Name of delegate
-        signals (dict): Signals that can be called on delegate, method name to callable
+        name (Optional[str]): Name of delegate
+        signals (Optional[dict]): Signals that can be called on delegate, method name to callable
     """
 
     server: object  # Better way to annotate this without introducing circular imports?
@@ -143,6 +168,11 @@ RGBA = Vec4
 
 
 class AttributeSemantic(Enum):
+    """String indicating type of attribute, used in Attribute inside of geometry patch
+
+    Takes value of either POSITION, NORMAL, TANGENT, TEXTURE, or COLOR
+    """
+
     position = "POSITION"
     normal = "NORMAL"
     tangent = "TANGENT"
@@ -151,6 +181,12 @@ class AttributeSemantic(Enum):
 
 
 class Format(Enum):
+    """String indicating format of byte data for an attribute
+
+    Used in Attribute inside of geometry patch. Takes value of either U8, U16, U32, U8VEC4, U16VEC2,
+    VEC2, VEC3, VEC4, MAT3, or MAT4
+    """
+
     u8 = "U8"
     u16 = "U16"
     u32 = "U32"
@@ -164,12 +200,20 @@ class Format(Enum):
 
 
 class IndexFormat(str, Enum):
+    """String indicating format of byte data for an index
+
+    Used in Index inside of geometry patch. Takes value of either U8, U16, or U32
+    """
     u8 = "U8"
     u16 = "U16"
     u32 = "U32"
 
 
 class PrimitiveType(Enum):
+    """String indicating type of primitive used in a geometry patch
+
+    Takes value of either POINTS, LINES, LINE_LOOP, LINE_STRIP, TRIANGLES, or TRIANGLE_STRIP
+    """
     points = "POINTS"
     lines = "LINES"
     line_loop = "LINE_LOOP"
@@ -179,57 +223,111 @@ class PrimitiveType(Enum):
 
 
 class ColumnType(str, Enum):
+    """String indicating type of data stored in a column in a table
+
+    Used in TableColumnInfo inside TableInitData. Takes value of either TEXT, REAL, or INTEGER
+    """
     text = "TEXT"
     real = "REAL"
     integer = "INTEGER"
 
 
 class BufferType(str, Enum):
+    """String indicating type of data stored in a buffer
+
+    Used in BufferView. Takes value of either UNK, GEOMETRY, or IMAGE
+    """
     unknown = "UNK"
     geometry = "GEOMETRY"
     image = "IMAGE"
 
 
 class SamplerMode(Enum):
+    """String options for sampler mode
+
+    Used in Sampler. Takes value of either CLAMP_TO_EDGE, MIRRORED_REPEAT, or REPEAT
+    """
     clamp_to_edge = "CLAMP_TO_EDGE"
     mirrored_repeat = "MIRRORED_REPEAT"
     repeat = "REPEAT"
 
 
 class MagFilterTypes(Enum):
+    """Options for magnification filter type
+
+    Used in Sampler. Takes value of either NEAREST or LINEAR
+    """
     nearest = "NEAREST"
     linear = "LINEAR"
 
 
 class MinFilterTypes(Enum):
+    """Options for minification filter type
+
+    Used in Sampler. Takes value of either NEAREST, LINEAR, or LINEAR_MIPMAP_LINEAR
+    """
     nearest = "NEAREST"
     linear = "LINEAR"
     linear_mipmap_linear = "LINEAR_MIPMAP_LINEAR"
 
 
 class SelectionRange(NoodleObject):
+    """Range of rows to select in a table
+
+    Attributes:
+        key_from_inclusive (int): First row to select
+        key_to_exclusive (int): Where to end selection, exclusive
+    """
     key_from_inclusive: int
     key_to_exclusive: int
 
 
 class Selection(NoodleObject):
+    """Selection of rows in a table
+
+    Attributes:
+        name (str): Name of selection
+        rows (List[int]): List of rows to select
+        row_ranges (List[SelectionRange]): List of ranges of rows to select
+    """
     name: str
     rows: Optional[List[int]] = None
     row_ranges: Optional[List[SelectionRange]] = None
 
 
 class MethodArg(NoodleObject):
+    """Argument for a method
+
+    Attributes:
+        name (str): Name of argument
+        doc (str): Documentation for argument
+        editor_hint (str): Hint for editor, refer to message spec for hint options
+    """
     name: str
     doc: Optional[str] = None
     editor_hint: Optional[str] = None
 
 
 class BoundingBox(NoodleObject):
+    """Axis-aligned bounding box
+
+    Attributes:
+        min (Vec3): Minimum point of bounding box
+        max (Vec3): Maximum point of bounding box
+    """
     min: Vec3
     max: Vec3
 
 
 class TextRepresentation(NoodleObject):
+    """Text representation for an entity
+
+    Attributes:
+        txt (str): Text to display
+        font (str): Font to use
+        height (Optional[float]): Height of text
+        width (Optional[float]): Width of text
+    """
     txt: str
     font: Optional[str] = "Arial"
     height: Optional[float] = .25
@@ -237,23 +335,50 @@ class TextRepresentation(NoodleObject):
 
 
 class WebRepresentation(NoodleObject):
+    """Web page with a given URL rendered as a plane
+
+    Attributes:
+        source (str): URL for entity
+        height (Optional[float]): Height of plane
+        width (Optional[float]): Width of plane
+    """
     source: str
     height: Optional[float] = .5
     width: Optional[float] = .5
 
 
 class InstanceSource(NoodleObject):
+    """Source of instances for a geometry patch
+
+    Attributes:
+        view (BufferViewID): View of mat4
+        stride (int): Stride for buffer
+        bb (BoundingBox): Bounding box of instances
+    """
     view: BufferViewID  # view of mat4
     stride: int
     bb: Optional[BoundingBox] = None
 
 
 class RenderRepresentation(NoodleObject):
+    """Render representation for an entity
+
+    Attributes:
+        mesh (GeometryID): Mesh to render
+        instances (Optional[InstanceSource]): Source of instances for mesh
+    """
     mesh: GeometryID
     instances: Optional[InstanceSource] = None
 
 
 class TextureRef(NoodleObject):
+    """Reference to a texture
+
+    Attributes:
+        texture (TextureID): Texture to reference
+        transform (Optional[Mat3]): Transform to apply to texture
+        texture_coord_slot (Optional[int]): Texture coordinate slot to use
+    """
     texture: TextureID
     transform: Optional[Mat3] = [1.0, 0.0, 0.0,
                                  0.0, 1.0, 0.0,
@@ -262,7 +387,16 @@ class TextureRef(NoodleObject):
 
 
 class PBRInfo(NoodleObject):
-    base_color: RGBA = [1.0, 1.0, 1.0, 1.0]
+    """Physically based rendering information for a material
+
+    Attributes:
+        base_color (Optional[RGBA]): Base color of material
+        base_color_texture (Optional[TextureRef]): Texture to use for base color
+        metallic (Optional[float]): Metallic value of material
+        roughness (Optional[float]): Roughness value of material
+        metal_rough_texture (Optional[TextureRef]): Texture to use for metallic and roughness
+    """
+    base_color: Optional[RGBA] = [1.0, 1.0, 1.0, 1.0]
     base_color_texture: Optional[TextureRef] = None  # assume SRGB, no premult alpha
 
     metallic: Optional[float] = 1.0
@@ -271,20 +405,53 @@ class PBRInfo(NoodleObject):
 
 
 class PointLight(NoodleObject):
+    """Point light information for a light delegate
+
+    Attributes:
+        range (float): Range of light, -1 defaults to infinite
+    """
     range: float = -1.0
 
 
 class SpotLight(NoodleObject):
+    """Spotlight information for a light delegate
+
+    Attributes:
+        range (float): Range of light, -1 defaults to infinite
+        inner_cone_angle_rad (float): Inner cone angle of light
+        outer_cone_angle_rad (float): Outer cone angle of light
+    """
     range: float = -1.0
     inner_cone_angle_rad: float = 0.0
     outer_cone_angle_rad: float = pi / 4
 
 
 class DirectionalLight(NoodleObject):
+    """Directional light information for a light delegate
+
+    Attributes:
+        range (float): Range of light, -1 defaults to infinite
+    """
     range: float = -1.0
 
 
 class Attribute(NoodleObject):
+    """Attribute for a geometry patch
+
+    Each attribute is a view into a buffer that corresponds to a specific element of the mesh
+    (e.g. position, normal, etc.). Attributes allow information for the vertices to be extracted from buffers
+
+    Attributes:
+        view (BufferViewID): View of the buffer storing the data
+        semantic (AttributeSemantic): String describing the type of attribute
+        channel (Optional[int]): Channel of attribute, if applicable
+        offset (Optional[int]): Offset into buffer
+        stride (Optional[int]): Distance, in bytes, between data for two vertices in the buffer
+        format (Format): How many bytes per element, how to decode the bytes
+        minimum_value (Optional[List[float]]): Minimum value for attribute data
+        maximum_value (Optional[List[float]]): Maximum value for attribute data
+        normalized (Optional[bool]): Whether to normalize the attribute data
+    """
     view: BufferViewID
     semantic: AttributeSemantic
     channel: Optional[int] = None
@@ -297,6 +464,18 @@ class Attribute(NoodleObject):
 
 
 class Index(NoodleObject):
+    """Index for a geometry patch
+
+    The index is a view into a buffer that corresponds to the indices of the mesh. The index allows the mesh to
+    connect vertices and render triangles, lines, or points.
+
+    Attributes:
+        view (BufferViewID): View of the buffer storing the data
+        count (int): Number of indices
+        offset (Optional[int]): Offset into buffer
+        stride (Optional[int]): Distance, in bytes, between data for two elements in the buffer
+        format (IndexFormat): How many bytes per element, how to decode the bytes
+    """
     view: BufferViewID
     count: int
     offset: Optional[int] = 0
@@ -305,14 +484,33 @@ class Index(NoodleObject):
 
 
 class GeometryPatch(NoodleObject):
+    """Geometry patch for a mesh
+
+    Principle object used in geometry delegates. A geometry patch combines vertex data from attributes and index data
+    from indices.
+
+    Attributes:
+        attributes (List[Attribute]): List of attributes storing vertex data for the mesh
+        vertex_count (int): Number of vertices in the mesh
+        indices (Optional[Index]): Indices for the mesh
+        type (PrimitiveType): Type of primitive to render
+        material (MaterialID): Material to use for rendering
+    """
     attributes: List[Attribute]
     vertex_count: int
     indices: Optional[Index] = None
     type: PrimitiveType
-    material: MaterialID  # Material ID
+    material: MaterialID
 
 
 class InvokeIDType(NoodleObject):
+    """Context for invoking a signal
+
+    Attributes:
+        entity (Optional[EntityID]): Entity to invoke signal on
+        table (Optional[TableID]): Table to invoke signal on
+        plot (Optional[PlotID]): Plot to invoke signal on
+    """
     entity: Optional[EntityID] = None
     table: Optional[TableID] = None
     plot: Optional[PlotID] = None
@@ -333,11 +531,25 @@ class InvokeIDType(NoodleObject):
 
 
 class TableColumnInfo(NoodleObject):
+    """Information about a column in a table
+
+    Attributes:
+        name (str): Name of column
+        type (ColumnType): Type data in the column
+    """
     name: str
     type: ColumnType
 
 
 class TableInitData(NoodleObject):
+    """Init data to create a table
+
+    Attributes:
+        columns (List[TableColumnInfo]): List of column information
+        keys (List[int]): List of column indices that are keys
+        data (List[List[Any]]): List of rows of data
+        selections (Optional[List[Selection]]): List of selections to apply to table
+    """
     columns: List[TableColumnInfo]
     keys: List[int]
     data: List[List[Any]]  # Originally tried union, but currently order is used to coerce by pydantic
@@ -717,14 +929,25 @@ class Invoke(NoodleObject):
     signal_data: List[Any]
 
 
-# Note: this isn't technically an exception
-# for now this uses a model so that it can be validated / sent as message easier
-# Fix to inherit from Exception, maybe use separate model for sending
-# class MethodException(NoodleObject):
-#     code: int
-#     message: Optional[str] = None
-#     data: Optional[Any] = None
 class MethodException(Exception):
+    """Custom exception specifically for methods defined on the server
+
+    User defined methods injected on the server should raise this exception, and it will be sent
+    to clients in a method reply message. Exception codes are defined in the table below.
+
+    | Code   | Message            | Description                                                                                           |
+    | ------ | ------------------ | ----------------------------------------------------------------------------------------------------- |
+    | -32700 | Parse Error        | Given invocation object is malformed and failed to be validated                                       |
+    | -32600 | Invalid Request    | Given invocation object does not fulfill required semantics                                           |
+    | -32601 | Method Not Found   | Given invocation object tries to call a method that does not exist                                    |
+    | -32602 | Invalid Parameters | Given invocation tries to call a method with invalid parameters                                       |
+    | -32603 | Internal Error     | The invocation fulfills all requirements, but an internal error prevents the server from executing it |
+
+    Attributes:
+        code (int): Code for the exception
+        message (Optional[message]): Message for the exception
+        data (Optional[data]): Data for the exception
+    """
     def __init__(self, code: int, message: Optional[str] = None, data: Optional[Any] = None):
         self.code = code
         self.message = message
@@ -784,7 +1007,13 @@ class SlotTracker(object):
 
 
 class StartingComponent(object):
-    """User input object for setting starting components on server"""
+    """User input object for setting starting components on server
+
+    Attributes:
+        type (Type[Delegate]): Type of component
+        component_attrs (dict): Attributes for component
+        method (Callable): Optional method to call on component
+    """
 
     def __init__(self, kind, component_attrs: Dict[str, Any], method: Optional[Callable] = None):
         self.type = kind

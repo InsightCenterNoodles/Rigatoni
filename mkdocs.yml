@@ -19,7 +19,7 @@ plugins:
             docstring_options:
               ignore_init_summary: true
             merge_init_into_class: true
-  # - coverage
+  - awesome-pages
 
 theme:
   name: material
@@ -49,4 +49,4 @@ markdown_extensions:
         - name: mermaid
           class: mermaid
           format: !!python/name:pymdownx.superfences.fence_code_format
-
+  - tables

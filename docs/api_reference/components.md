@@ -15,4 +15,6 @@
 ::: rigatoni.Geometry
 ::: rigatoni.Table
 
+::: rigatoni.StartingComponent
 
+::: rigatoni.MethodException 
