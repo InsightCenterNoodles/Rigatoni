@@ -699,9 +699,9 @@ class Server(object):
             message = self._prepare_message("update", current, delta)
             self.broadcast(message)
         except Exception as e:
-            raise Exception(f"This obj can not be updated: {e}")
+            raise ValueError(f"This obj can not be updated: {e}")
 
-    def invoke_signal(self, signal: SignalID, on_component: Delegate, signal_data: list):
+    def invoke_signal(self, signal: Union[SignalID, Signal], on_component: Delegate, signal_data: list = None):
         """Send signal to target component
         
         Args:
@@ -709,9 +709,20 @@ class Server(object):
             on_component (Delegate): component to receive the signal
             signal_data (dict): data to be sent with the signal
 
+        Returns:
+            message: message to be broadcast
+
         Raises:
             ValueError: if the user specifies an invalid on_component type
         """
+
+        # Cast signal to ID if needed
+        if isinstance(signal, Signal):
+            signal = signal.id
+
+        # Fill in default signal data if not specified
+        if signal_data is None:
+            signal_data = []
 
         # Get context from on_component
         if isinstance(on_component, Entity):
@@ -727,6 +738,7 @@ class Server(object):
         invoke = Invoke(id=signal, context=context, signal_data=signal_data)
         message = self._prepare_message("invoke", invoke)
         self.broadcast(message)
+        return message
 
     def create_method(self, name: str,
                       arg_doc: list[MethodArg],
