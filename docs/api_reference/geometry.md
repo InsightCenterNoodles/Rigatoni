@@ -1,7 +1,4 @@
 
-
-## Byte Server
-
 ::: rigatoni.geometry.ByteServer
 
 ---

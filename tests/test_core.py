@@ -216,4 +216,34 @@ def test_update_component(base_server):
     assert entity.methods_list == [rig.MethodID(0, 0), rig.MethodID(0, 1)]
     assert base_server.client_state[entity.id].methods_list == [rig.MethodID(0, 0), rig.MethodID(0, 1)]
 
+    # Test error handling for components that can't update
+    with pytest.raises(ValueError):
+        method = base_server.get_delegate("test_method")
+        base_server.update_component(method)
 
+
+def test_invoke_signal(base_server):
+
+    signal = base_server.get_delegate("test_signal")
+    on_entity = base_server.get_delegate("test_entity")
+    on_plot = base_server.get_delegate("test_plot")
+
+    invoke_message = base_server.invoke_signal(signal.id, on_entity)
+    assert invoke_message == (33, {'id': rig.SignalID(4, 0), 'context': {'entity': rig.EntityID(0, 0)}, 'signal_data': []})
+
+    invoke_message = base_server.invoke_signal(signal, on_plot)
+    assert invoke_message == (33, {'id': rig.SignalID(4, 0), 'context': {'plot': rig.PlotID(0, 0)}, 'signal_data': []})
+
+    with pytest.raises(ValueError):
+        base_server.invoke_signal(signal, signal)
+
+
+def test_create_delegate_methods(base_server):
+
+    method = base_server.create_method("new_method", [])
+    assert isinstance(method, rig.Method)
+
+    signal = base_server.create_signal("new_signal")
+    assert isinstance(signal, rig.Signal)
+
+    # Need to keep filling out

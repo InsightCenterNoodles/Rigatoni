@@ -105,6 +105,6 @@ jobs:
           path: .cache
           restore-keys: |
             mkdocs-material-
-      - run: pip install mkdocs-material mkdocstrings[python]
+      - run: pip install mkdocs-material mkdocstrings[python] mkdocs-awesome-pages-plugin
       - run: mkdocs gh-deploy --force
 
