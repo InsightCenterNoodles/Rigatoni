@@ -2,16 +2,16 @@
 
 [Full report](https://htmlpreview.github.io/?https://github.com/InsightCenterNoodles/Rigatoni/blob/python-coverage-comment-action-data/htmlcov/index.html)
 
-| Name                                    |    Stmts |     Miss |   Cover |   Missing |
-|---------------------------------------- | -------: | -------: | ------: | --------: |
-| rigatoni/\_\_init\_\_.py                |       11 |        2 |     82% |     30-31 |
-| rigatoni/core.py                        |      324 |       16 |     95% |699-700, 716, 719-722, 744, 759, 794, 856, 886, 907, 922, 942, 964, 977 |
-| rigatoni/geometry/\_\_init\_\_.py       |        3 |        0 |    100% |           |
-| rigatoni/geometry/byte\_server.py       |       68 |       56 |     18% |32-46, 51-53, 64-70, 79-115, 124-129, 134-135, 141-143, 147 |
-| rigatoni/geometry/geometry\_creation.py |      295 |      109 |     63% |59-62, 99-104, 107-112, 115-125, 176-179, 298, 333, 340, 346, 374-414, 428-440, 448-455, 472-503, 525-571, 597-600, 661-662, 700, 714, 718-719 |
-| rigatoni/geometry/geometry\_objects.py  |       17 |        0 |    100% |           |
-| rigatoni/noodle\_objects.py             |      396 |        0 |    100% |           |
-|                               **TOTAL** | **1114** |  **183** | **84%** |           |
+| Name                              |    Stmts |     Miss |   Cover |   Missing |
+|---------------------------------- | -------: | -------: | ------: | --------: |
+| rigatoni/\_\_init\_\_.py          |       11 |        2 |     82% |     30-31 |
+| rigatoni/core.py                  |      324 |       16 |     95% |701-702, 718, 721-724, 746, 761, 796, 858, 888, 909, 924, 944, 966, 979 |
+| rigatoni/geometry/\_\_init\_\_.py |        3 |        0 |    100% |           |
+| rigatoni/geometry/byte\_server.py |       68 |       56 |     18% |32-46, 51-53, 64-70, 79-115, 124-129, 134-135, 141-143, 147 |
+| rigatoni/geometry/methods.py      |      295 |      109 |     63% |59-62, 99-104, 107-112, 115-125, 176-179, 298, 333, 340, 346, 374-414, 428-440, 448-455, 472-503, 525-571, 597-600, 661-662, 700, 714, 718-719 |
+| rigatoni/geometry/objects.py      |       17 |        0 |    100% |           |
+| rigatoni/noodle\_objects.py       |      396 |        0 |    100% |           |
+|                         **TOTAL** | **1114** |  **183** | **84%** |           |
 
 
 ## Setup coverage badge
