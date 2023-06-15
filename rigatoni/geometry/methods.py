@@ -1,4 +1,4 @@
-"""Module for assisting with the creation of geometry objects"""
+"""Helpful methods for assisting with the creation of geometry objects"""
 from math import sqrt
 from collections import deque
 from statistics import mean
@@ -9,7 +9,7 @@ import meshio
 from .. import noodle_objects as nooobs
 from ..core import Server
 
-from .geometry_objects import AttributeInput, GeometryPatchInput
+from .objects import AttributeInput, GeometryPatchInput
 from .byte_server import ByteServer
 
 INLINE_LIMIT = 10000

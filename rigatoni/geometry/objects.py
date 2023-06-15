@@ -22,7 +22,19 @@ class AttributeInput(nooobs.NoodleObject):
 
 
 class GeometryPatchInput(nooobs.NoodleObject):
-    """User input object for creating a geometry patch"""
+    """User input object for creating a geometry patch
+
+    Attributes:
+        vertices: List of vertices
+        indices: Lists of indices corresponding to vertices
+        index_type: Type of indices, one of "POINTS", "LINES", "LINE_LOOP",
+            "LINE_STRIP", "TRIANGLES", and "TRIANGLE_STRIP"
+        material: Material ID for the patch
+        normals: List of normals corresponding to vertices
+        tangents: List of tangents corresponding to vertices
+        textures: List of texture coordinates corresponding to vertices
+        colors: List of colors corresponding to vertices
+    """
 
     vertices: list
     indices: list

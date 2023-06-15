@@ -9,8 +9,8 @@ add custom delegates to add additionally functionality to any of the standard co
 Modules:
     core.py
     geometry/
-        geometry_creation.py
-        geometry_objects.py
+        methods.py
+        objects.py
     delegates.py
     noodle_objects.py
     server.py
