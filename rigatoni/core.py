@@ -608,13 +608,15 @@ class Server(object):
         # Return component or delegate instance if applicable
         return new_delegate
 
-    def delete_component(self, delegate: Union[Delegate, ID]):
+    def delete_component(self, delegate: Union[Delegate, ID], recursive: bool = False):
         """Delete object in state and update clients
         
         This method excepts a delegate, or component ID, and will attempt
         to delete the component as long as it is not referenced by any other component.
         If this component is still being used by another, it will be added to a queue so that
-        it can be deleted later once that reference is no longer being used.
+        it can be deleted later once that reference is no longer being used. If recursive flag
+        is set, then all components referenced by this one will also be deleted.
+
 
         Args:
             delegate (Component, Delegate, or ID): component / delegate to be deleted
@@ -657,7 +659,8 @@ class Server(object):
             logging.warning(f"Couldn't delete {delegate}, referenced by {self.references[del_id]}, added to queue")
             self.delete_queue.add(del_id)
 
-    def _find_delta(self, state, edited):
+    @staticmethod
+    def _find_delta(state, edited):
         """Helper to find differences between two objects
         
         Also checks to find recursive cases and cases where references

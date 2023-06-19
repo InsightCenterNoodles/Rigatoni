@@ -17,8 +17,8 @@ class AttributeInput(nooobs.NoodleObject):
     semantic: nooobs.AttributeSemantic
     format: nooobs.Format
     normalized: bool
-    offset: Optional[int]
-    stride: Optional[int]
+    offset: Optional[int] = None
+    stride: Optional[int] = None
 
 
 class GeometryPatchInput(nooobs.NoodleObject):

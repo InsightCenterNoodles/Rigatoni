@@ -1,6 +1,7 @@
 import socket
 import re
 import threading
+import logging
 
 
 class ByteServer(object):
@@ -41,7 +42,7 @@ class ByteServer(object):
         self._next_tag = 0
         self.url = f"http://{self.host}:{port}"
 
-        self.thread = threading.Thread(target=self.run, args=())
+        self.thread = threading.Thread(target=self._run, args=())
         self.running = True
         self.thread.start()
 
@@ -67,9 +68,9 @@ class ByteServer(object):
             buffer_bytes = self.buffers[tag]
             return buffer_bytes
         else:
-            raise Exception("Invalid HTTP Request")
+            raise ValueError("Invalid HTTP Request")
 
-    def run(self):
+    def _run(self):
         """Main loop to run in thread
         
         Runs the server and listens for byte requests using HTTP protocol
@@ -80,37 +81,41 @@ class ByteServer(object):
         server_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         server_socket.bind((self.host, self.port))
 
-        print(f"IP Address: {server_socket.getsockname()}")
+        logging.info(f"IP Address for Byte Server: {server_socket.getsockname()}")
 
         self.socket = server_socket
 
+        server_socket.settimeout(.5)  # timeout to check if still running
         server_socket.listen(1)
-        print(f'Listening on port {self.port} ...')
+        logging.info(f'Byte server listening on port {self.port}...')
 
         while self.running:
-            # Wait for client connections
-            print("Waiting for connection...")
-            client_connection, client_address = server_socket.accept()
+            try:
+                # Wait for client connections - this is blocking
+                client_connection, client_address = server_socket.accept()
 
-            # Get the client request
-            request = client_connection.recv(1024).decode()
-            print(f"Request: {request}")
+                # Get the client request
+                request = client_connection.recv(1024).decode()
+                logging.info(f"Request: {request}")
 
-            # Try to get tag from request with regex
-            m = re.search('(?<=GET /)(.+?)(?= HTTP)', request)
-            if m:
-                tag = m.group(0)
-                select_bytes = self.buffers[tag]
-                header = f'HTTP/1.0 200 OK\r\nContent-Type: application/octet-stream\r\nContent-Length: {len(select_bytes)}\n\n'
-                response = bytearray(header.encode()) + select_bytes
-            else:
-                header = f'HTTP/1.0 500 FAIL'
-                response = header.encode()
+                # Try to get tag from request with regex
+                m = re.search('(?<=GET /)(.+?)(?= HTTP)', request)
+                try:
+                    tag = m.group(0)
+                    select_bytes = self.buffers[tag]
+                    header = f'HTTP/1.0 200 OK\r\nContent-Type: application/octet-stream\r\n' \
+                             f'Content-Length: {len(select_bytes)}\n\n'
+                    response = bytearray(header.encode()) + select_bytes
+                except Exception:
+                    header = f'HTTP/1.0 500 FAIL'
+                    response = header.encode()
 
-            # Send HTTP response
-            client_connection.sendall(response)
-            client_connection.close()
+                # Send HTTP response
+                client_connection.sendall(response)
+                client_connection.close()
 
+            except socket.timeout:
+                pass
         # Clean up and close socket
         self.socket.close()
 
@@ -124,7 +129,7 @@ class ByteServer(object):
         tag = self._get_tag()
         self.buffers[tag] = buffer
         url = f"{self.url}/{tag}"
-        print(f"Adding Buffer: {url}")
+        logging.info(f"Adding buffer to byte server: {url}")
 
         return url
 
@@ -133,15 +138,3 @@ class ByteServer(object):
 
         self.running = False
         self.thread.join()
-
-
-def main():
-    """Main method for testing"""
-
-    server = ByteServer(port=60000)
-    server.add_buffer('HTTP/1.0 200 OK\n\nTEST TEST TEST'.encode())
-    server.add_buffer(b'TESTING BYTES')
-
-
-if __name__ == "__main__":
-    main()
