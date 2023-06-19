@@ -220,10 +220,10 @@ def create_from_mesh(server: rigatoni.Server, context, *args):
     # use libraries from mesh option    
     uri_server = geo.ByteServer(port=60000)
     mesh = geo.geometry_from_mesh(server, "mesh_data/stanford-bunny.obj", material,
-                                  name, uri_server)
-    # mesh = geo.geometry_from_mesh(server, "/Users/aracape/development/test_sphere.vtk", material)
-    # mesh = geo.geometry_from_mesh(server, "/Users/aracape/development/rigatoni/tests/magvort.x3d", material, name, uri_server, generate_normals=False)
-    # mesh = geo.geometry_from_mesh(server, "/Users/aracape/development/rigatoni/tests/boot.obj", material, name, uri_server)
+                                  name, uri_server, generate_normals=False)
+    # mesh = geo.geometry_from_mesh(server, "mesh_data/test_sphere.vtk", material)
+    # mesh = geo.geometry_from_mesh(server, "mesh_data/magvort.x3d", material, name, uri_server, generate_normals=False)
+    # mesh = geo.geometry_from_mesh(server, "mesh_databoot.obj", material, name, uri_server)
 
     # Create instances of sphere to represent csv data in an entity
     instances = geo.create_instances()
@@ -231,6 +231,7 @@ def create_from_mesh(server: rigatoni.Server, context, *args):
 
     # Test export
     geo.export_mesh(server, mesh, "mesh_data/test_mesh.obj", uri_server)
+    # uri_server.shutdown()
     return 0
 
 

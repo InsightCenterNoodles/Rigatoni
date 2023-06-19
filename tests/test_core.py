@@ -246,4 +246,26 @@ def test_create_delegate_methods(base_server):
     signal = base_server.create_signal("new_signal")
     assert isinstance(signal, rig.Signal)
 
-    # Need to keep filling out
+    entity = base_server.create_entity("new_entity")
+    assert isinstance(entity, rig.Entity)
+
+    bufferview = base_server.create_bufferview(rig.BufferID(0, 0), 0, 0)
+    assert isinstance(bufferview, rig.BufferView)
+
+    material = base_server.create_material("new_material")
+    assert isinstance(material, rig.Material)
+
+    image = base_server.create_image(buffer_source=rig.BufferID(0, 0), name="new_image")
+    assert isinstance(image, rig.Image)
+
+    texture = base_server.create_texture(rig.ImageID(0, 0), "new_texture")
+    assert isinstance(texture, rig.Texture)
+
+    sampler = base_server.create_sampler("new_sampler")
+    assert isinstance(sampler, rig.Sampler)
+
+    light = base_server.create_light("new_light", point=rig.PointLight())
+    assert isinstance(light, rig.Light)
+
+    geometry = base_server.create_geometry([], "new_geometry")
+    assert isinstance(geometry, rig.Geometry)
