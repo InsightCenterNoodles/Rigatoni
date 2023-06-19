@@ -44,7 +44,9 @@ class ByteServer(object):
 
         self.thread = threading.Thread(target=self._run, args=())
         self.running = True
+        self.ready = threading.Event()
         self.thread.start()
+        self.ready.wait()
 
     def _get_tag(self):
         """Helper to get next tag for a buffer"""
@@ -88,7 +90,7 @@ class ByteServer(object):
         server_socket.settimeout(.5)  # timeout to check if still running
         server_socket.listen(1)
         logging.info(f'Byte server listening on port {self.port}...')
-
+        self.ready.set()
         while self.running:
             try:
                 # Wait for client connections - this is blocking

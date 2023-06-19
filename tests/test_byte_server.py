@@ -28,8 +28,7 @@ def test_server_basics():
     with pytest.raises(urllib.error.HTTPError):
         bad_uri = uri + "bad"
         with urllib.request.urlopen(bad_uri) as response:
-            response = response.read()
-            assert response_bytes == b"test"
+            pass
 
     server.shutdown()
 
