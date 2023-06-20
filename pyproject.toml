@@ -35,5 +35,10 @@ testing = [
     "matplotlib"
 ]
 
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+log_cli = true
+
 [project.urls]
 Source = "https://github.com/InsightCenterNoodles/Rigatoni"
+Documentation = "https://insightcenternoodles.github.io/Rigatoni/"

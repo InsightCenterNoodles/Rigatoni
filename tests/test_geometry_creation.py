@@ -61,29 +61,30 @@ def test_geometry_server(geometry_server):
 # in _mesh.py line 164 throws exception : ValueError('setting an array element with a sequence.
 # The requested array has an inhomogeneous shape after 1 dimensions. The detected shape was (17974,) + inhomogeneous part.')"
 # Commented out export mesh for now in geometry_server.py
-# def test_large_mesh(geometry_server):
-#
-#     # Callbacks
-#     def create_from_mesh(*args):
-#         client.invoke_method("create_from_mesh", on_done=shutdown)
-#
-#     def shutdown(*args):
-#         client.is_active = False
-#         plt.close('all')
-#         print("Made it to the end!")
-#
-#     # Main execution loop
-#     with penne.Client("ws://localhost:50002", on_connected=create_from_mesh, strict=True) as client:
-#         while client.is_active:
-#             try:
-#                 callback_info = client.callback_queue.get(block=False)
-#             except queue.Empty:
-#                 continue
-#             print(f"Callback: {callback_info}")
-#             callback, args = callback_info
-#             callback(args) if args else callback()
-#
-#     print(f"Finished Testing")
+def test_large_mesh(geometry_server):
+
+    # Callbacks
+    def create_from_mesh(*args):
+        client.invoke_method("create_from_mesh", on_done=shutdown)
+
+    def shutdown(*args):
+        client.is_active = False
+        plt.close('all')
+        geometry_server.byte_server.shutdown()
+        print("Made it to the end!")
+
+    # Main execution loop
+    with penne.Client("ws://localhost:50002", on_connected=create_from_mesh, strict=True) as client:
+        while client.is_active:
+            try:
+                callback_info = client.callback_queue.get(block=False)
+            except queue.Empty:
+                continue
+            print(f"Callback: {callback_info}")
+            callback, args = callback_info
+            callback(args) if args else callback()
+
+    print(f"Finished Testing")
 
 
 def test_get_format():
@@ -224,5 +225,65 @@ def test_update_entity(base_server):
 
 
 def test_add_instances(base_server):
-    pass
 
+    # Add to entity with no instances
+    instances = geo.create_instances()
+    entity = base_server.get_delegate("test_entity")
+    geometry = base_server.create_geometry(patches=[], name="test_geometry")
+    entity = geo.update_entity(base_server, entity, geometry)
+    assert entity.render_rep.instances is None
+    assert entity.render_rep.mesh == geometry.id
+
+    geo.add_instances(base_server, entity, instances)
+    assert entity.render_rep.instances is not None
+    assert entity.render_rep.mesh == geometry.id
+    old_size = base_server.get_delegate(entity.render_rep.instances.view).length
+    assert old_size == geo.SIZES["MAT4"]
+
+    # Add to entity with existing instances
+    new_instances = geo.create_instances(colors=[[1, 0, 0, 1], [0, 1, 0, 1]])
+    geo.add_instances(base_server, entity, new_instances)
+    assert entity.render_rep.instances is not None
+    assert entity.render_rep.mesh == geometry.id
+    new_size = base_server.get_delegate(entity.render_rep.instances.view).length
+    assert new_size == old_size + geo.SIZES["MAT4"] * 2
+
+    # Check exception handling
+    with pytest.raises(ValueError):
+        entity = base_server.get_delegate("test_method_entity")
+        geo.add_instances(base_server, entity, instances)
+
+
+def test_geometry_from_mesh(base_server):
+
+    # Load a basic mesh with meshio option
+    mat = base_server.get_delegate("test_material")
+    mesh = geo.geometry_from_mesh(base_server, "tests/mesh_data/test_sphere.obj", mat, mesh_name="new_mesh")
+    assert mesh.name == "new_mesh"
+    assert mesh.patches[0].material == mat.id
+    assert mesh.id in base_server.state
+    assert mesh.id in base_server.client_state
+
+
+def test_geometry_from_mesh_large(base_server):
+
+    # Load a mesh with meshlab option
+    mat = base_server.get_delegate("test_material")
+    mesh = geo.geometry_from_mesh(base_server, "tests/mesh_data/box.gltf", mat, mesh_name="gltf_mesh", generate_normals=False)
+    assert mesh.name == "gltf_mesh"
+    assert mesh.patches[0].material == mat.id
+    assert mesh.id in base_server.state
+    assert mesh.id in base_server.client_state
+
+
+def test_export_mesh(base_server):
+
+    # check exception for byte server
+    material = base_server.get_delegate("test_material")
+    uri_server = rig.ByteServer()
+    mesh = geo.geometry_from_mesh(base_server, "tests/mesh_data/stanford-bunny.obj", material,
+                                  "name", uri_server, generate_normals=False)
+    with pytest.raises(ValueError):
+        geo.export_mesh(base_server, mesh, "test_file")
+
+    uri_server.shutdown()

@@ -86,7 +86,7 @@ def create_spheres(server: rigatoni.Server, context, *args):
         colors=[(1.0, .5, .5, 1.0)],
     )
     entity = geo.build_entity(server, geometry=sphere, instances=instances)
-    geo.export_mesh(server, sphere, "mesh_data/test_sphere.obj")
+    geo.export_mesh(server, sphere, "tests/mesh_data/test_sphere.obj")
 
     # Add Lighting
     point_info = rigatoni.PointLight(range=-1)
@@ -219,7 +219,8 @@ def create_from_mesh(server: rigatoni.Server, context, *args):
 
     # use libraries from mesh option    
     uri_server = geo.ByteServer(port=60000)
-    mesh = geo.geometry_from_mesh(server, "mesh_data/stanford-bunny.obj", material,
+    server.byte_server = uri_server
+    mesh = geo.geometry_from_mesh(server, "tests/mesh_data/stanford-bunny.obj", material,
                                   name, uri_server, generate_normals=False)
     # mesh = geo.geometry_from_mesh(server, "mesh_data/test_sphere.vtk", material)
     # mesh = geo.geometry_from_mesh(server, "mesh_data/magvort.x3d", material, name, uri_server, generate_normals=False)
@@ -230,8 +231,7 @@ def create_from_mesh(server: rigatoni.Server, context, *args):
     entity = geo.build_entity(server, geometry=mesh, instances=instances)
 
     # Test export
-    geo.export_mesh(server, mesh, "mesh_data/test_mesh.obj", uri_server)
-    # uri_server.shutdown()
+    geo.export_mesh(server, mesh, "tests/mesh_data/test_mesh.obj", uri_server)
     return 0
 
 

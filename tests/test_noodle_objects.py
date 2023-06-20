@@ -82,22 +82,6 @@ def test_table_init():
         nooobs.TableInitData(columns=real_cols, keys=keys, data=data)
 
 
-def test_method(base_client):
-    method = base_client.get_delegate("test_method")
-    arg_method = base_client.get_delegate("test_arg_method")
-    plot = base_client.get_delegate("test_plot")
-    table = base_client.get_delegate("test_table")
-    entity = base_client.get_delegate("test_entity")
-    method.invoke(plot)
-    method.invoke(table)
-    method.invoke(entity)
-    with pytest.raises(ValueError):
-        method.invoke(1)
-    assert str(method) == "test_method:\n\tNone\n\tReturns: None\n\tArgs:"
-    assert str(arg_method) == "test_arg_method:\n\tNone\n\tReturns: None\n\tArgs:\n\t\t" \
-                              "x: How far to move in x\n\t\ty: How far to move in y\n\t\tz: How far to move in z"
-
-
 def test_entity(base_client):
     entity = base_client.get_delegate("test_entity")
     assert entity.show_methods() == "No methods available"

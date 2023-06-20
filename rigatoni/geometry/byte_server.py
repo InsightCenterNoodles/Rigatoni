@@ -11,6 +11,11 @@ class ByteServer(object):
     otherwise be too large to send using CBOR and the websocket connection. The server maps
     a tag to a buffer, and the client can request the buffer using the url that includes the
     tag.
+
+    !!! note
+
+        The server is start up automatically in a new thread when the class is instantiated, and
+        `shutdown` must be called to clean up this thread.
     
     Attributes:
         host (str): IP address for server

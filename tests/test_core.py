@@ -15,7 +15,7 @@ def test_server_init(base_server):
 
     assert isinstance(base_server, Server)
     assert base_server.port == 50000
-    assert len(base_server.state) == 20
+    assert len(base_server.state) == 22
     assert base_server.shutdown_event.is_set() is False
     assert base_server.ready.is_set() is True
 
@@ -81,9 +81,9 @@ def test_json_logging():
                                    '[4, {"id": [1, 0], "name": "test_two", "tags": ["test_tag"]}, 4, {"id": [0, 0], ' \
                                    '"name": "test_entity"}, 31, {"methods_list": [], "signals_list": []}, 35, {}]\n' \
                                    '[0, {"id": [0, 0], "name": "test_method"}]\n'
-            # Go back and fix strings to reflect broadcast and client connect message
+
             loop = asyncio.get_event_loop()
-            loop.run_until_complete(server._send(server.clients.pop(), [2, "test"]))
+            loop.run_until_complete(server._send(next(iter(server.clients)), [4, {"id": [4, 0]}]))
             with open(server.json_output, "r") as f:
                 assert f.read() == 'JSON Log\n'\
                                    '[4, {"id": [0, 0], "name": "test_entity"}]\n'\
@@ -91,7 +91,7 @@ def test_json_logging():
                                    '[4, {"id": [1, 0], "name": "test_two", "tags": ["test_tag"]}, 4, {"id": [0, 0], ' \
                                    '"name": "test_entity"}, 31, {"methods_list": [], "signals_list": []}, 35, {}]\n' \
                                    '[0, {"id": [0, 0], "name": "test_method"}]\n'\
-                                   '[2, "test"]\n'
+                                   '[4, {"id": [4, 0]}]\n'
 
 
 def test_get_delegate_id(base_server):
@@ -147,6 +147,14 @@ def test_handle_invoke(base_server):
 
     reply = base_server._handle_invoke({"method": [0, 0], "invoke": "0", "args": [1]})
     assert reply == (34, {'invoke_id': '-1', 'method_exception': {"code": -32700, "message": "Parse Error", "data": None}})
+
+    # Check exception - method raises method exception
+    reply = base_server._handle_invoke({"method": [10, 0], "invoke_id": "0", "args": [1]})
+    assert reply == (34, {'invoke_id': '0', 'method_exception': {"code": -32603, "message": "Internal Error", "data": None}})
+
+    # Check internal error - uncaught exception from method
+    reply = base_server._handle_invoke({"method": [11, 0], "invoke_id": "0", "args": []})
+    assert reply == (34, {'invoke_id': '0', 'method_exception': {"code": -32603, "message": "Internal Error", "data": None}})
 
 
 def test_update_references(base_server):

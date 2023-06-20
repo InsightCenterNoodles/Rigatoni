@@ -7,7 +7,7 @@ You can use starting component objects to help define the starting state
 rigatoni.StartingComponent(Type[Component], dict[Component_Attr, Value])
 ```
 
-- You can refer to the objects listed [here](http://rigatoni.github.io/api_reference/components/) to find all the available delegates along with their 
+- You can refer to the objects listed [here](https://insightcenternoodles.github.io/Rigatoni/api_reference/components/) to find all the available delegates along with their 
 mandatory, default, and optional attributes. Additional information on NOODLE components and their attributes can 
 be found [here](https://github.com/InsightCenterNoodles/message_spec)
 - When creating methods, an additional callable object should be attached. This method will be injected onto the 
