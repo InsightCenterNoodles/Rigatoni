@@ -5,13 +5,13 @@
 | Name                              |    Stmts |     Miss |   Cover |   Missing |
 |---------------------------------- | -------: | -------: | ------: | --------: |
 | rigatoni/\_\_init\_\_.py          |       12 |        2 |     83% |     31-32 |
-| rigatoni/core.py                  |      330 |        0 |    100% |           |
+| rigatoni/core.py                  |      331 |        0 |    100% |           |
 | rigatoni/geometry/\_\_init\_\_.py |        3 |        0 |    100% |           |
-| rigatoni/geometry/byte\_server.py |       70 |        2 |     97% |     36-37 |
-| rigatoni/geometry/methods.py      |      308 |       72 |     77% |214-217, 483-495, 503-510, 527-558, 580-626, 652-655, 716-717, 755, 769, 773-774 |
+| rigatoni/geometry/byte\_server.py |       70 |        2 |     97% |     41-42 |
+| rigatoni/geometry/methods.py      |      266 |        1 |     99% |       825 |
 | rigatoni/geometry/objects.py      |       17 |        0 |    100% |           |
 | rigatoni/noodle\_objects.py       |      396 |        0 |    100% |           |
-|                         **TOTAL** | **1136** |   **76** | **93%** |           |
+|                         **TOTAL** | **1095** |    **5** | **99%** |           |
 
 
 ## Setup coverage badge
