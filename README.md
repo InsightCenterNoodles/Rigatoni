@@ -5,8 +5,7 @@
 
 ![Build Status](https://github.com/InsightCenterNoodles/Rigatoni/workflows/CI/badge.svg)
 ![PyPI](https://img.shields.io/pypi/v/Rigatoni)
-[![Coverage badge](https://raw.githubusercontent.com/InsightCenterNoodles/Rigatoni/python-coverage-comment-action-data/badge.svg)](https://htmlpreview.github.io/?https://github.com/InsightCenterNoodles/Rigatoni/blob/python-coverage-comment-action-data/htmlcov/index.html)
-
+[![Coverage badge](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/InsightCenterNoodles/Rigatoni/python-coverage-comment-action-data/endpoint.json&color=brightgreen)](https://htmlpreview.github.io/?https://github.com/InsightCenterNoodles/Rigatoni/blob/python-coverage-comment-action-data/htmlcov/index.html)
 
 Python Server Library for NOODLES Protocol
 
@@ -18,7 +17,7 @@ also add custom delegates to add additional functionality to any of the standard
 
 ## Documentation
 
-For more information and documentation, check out [the documentation](https://insightcenternoodles.github.io/Rigatoni/).
+For more information, check out [the documentation](https://insightcenternoodles.github.io/Rigatoni/).
 
 ## Installation
 

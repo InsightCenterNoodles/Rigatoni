@@ -32,7 +32,9 @@ testing = [
     "pytest",
     "penne",
     "pandas",
-    "matplotlib"
+    "matplotlib",
+    "meshio",
+    "pymeshlab"
 ]
 
 [tool.pytest.ini_options]
