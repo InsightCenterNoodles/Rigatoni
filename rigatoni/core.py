@@ -52,6 +52,8 @@ class Server(object):
             event to signal when server is shutting down
         thread (threading.Thread):
             thread server is running on if using context manager
+        byte_server (ByteServer):
+            slot to store reference to server that serves uri bytes
         json_output (str):
             path to json file to output message logs
         custom_delegates (dict):
@@ -92,6 +94,7 @@ class Server(object):
         self.ready = threading.Event()
         self.shutdown_event = asyncio.Event()
         self.thread = None
+        self.byte_server = None
         self.json_output = json_output
         if json_output:
             with open(json_output, "w") as outfile:  # Clear out old contents
@@ -319,8 +322,11 @@ class Server(object):
     def get_delegate_by_context(self, context: dict):
         """Get a component using a context object
 
-        This is especially useful in methods that are invoked in a certain context. Note contexts
-        are only used when working with entities, tables, and plots.
+        This is especially useful in methods that are invoked in a certain context.
+
+        !!! note
+
+            Contexts are only used when working with entities, tables, and plots.
 
         Args:
             context (dict): context of the form {str: ID}
@@ -457,7 +463,7 @@ class Server(object):
             if type(e) is MethodException:
                 reply_obj.method_exception = e
             else:
-                logging.error(f"\033[91mServerside Error: {e}\033[0m")
+                logging.error(f"\033[91mServerside Error from Method: {e}\033[0m")
                 reply_obj.method_exception = MethodException(code=-32603, message="Internal Error")
 
         return self._prepare_message("reply", reply_obj)
@@ -568,16 +574,18 @@ class Server(object):
         It also handles the acquisition of a valid ID. This is a general creator method, but
         more specific versions exist for each component type. Keyword arguments should be
         used for specifying the attributes of the component. Any deviation from the spec will
-        raise a validation exception. Note that since this method
-        handles the ID, it should not be specified as one of the keyword arguments.
+        raise a validation exception.
+
+        !!! note
+
+            Since this method handles the ID, it should not be specified as one of the keyword arguments.
         
         Args:
             comp_type (Component Type): type of component to be created
             **kwargs: the user should specify the attributes of the component using 
                 keyword arguments. Refer to the noodle objects to see which attributes
                 are required and optional. Any deviation from the spec will raise a 
-                validation exception. Note that since this method handles the ID, it 
-                should not be specified as one of the keyword arguments.
+                validation exception.
 
         Returns:
             Delegate: delegate for the newly created component

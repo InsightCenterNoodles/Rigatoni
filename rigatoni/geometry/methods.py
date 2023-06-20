@@ -116,6 +116,7 @@ def _set_up_attributes(patch_input: GeometryPatchInput, generate_normals: bool):
     # Generate normals if not indicated in input
     if not patch_input.normals and generate_normals:
         patch_input.normals = calculate_normals(patch_input.vertices, patch_input.indices)
+        # check = calculate_normals_thorough(patch_input.vertices, patch_input.indices)
 
     # Add attribute info based on the input lists
     attribute_info = []
@@ -205,7 +206,8 @@ def _build_geometry_buffer(server: Server, name, patch_input: GeometryPatchInput
 
     # Add index bytes to byte array
     index_offset = len(buffer_bytes)
-    index_bytes = np.array(patch_input.indices, dtype=FORMAT_MAP[index_format]).tobytes(order='C')
+    #index_bytes = np.array(patch_input.indices, dtype=FORMAT_MAP[index_format]).tobytes(order='C')
+    index_bytes = np.array(patch_input.indices).astype(FORMAT_MAP[index_format]).tobytes(order='C')
     buffer_bytes.extend(index_bytes)
 
     # Create buffer component using uri bytes if needed
@@ -470,7 +472,7 @@ def update_entity(server: Server, entity: nooobs.Entity, geometry: nooobs.Geomet
 
 
 def add_instances(server: Server, entity: nooobs.Entity, instances: list):
-    """Add instances to an existing entity
+    """Adds instances or merges them into existing instances for an entity
     
     Args:
         server (Server): server with entity to update
@@ -480,19 +482,21 @@ def add_instances(server: Server, entity: nooobs.Entity, instances: list):
     """
 
     # Ensure we're working with an entity that can be rendered
-    try:
-        rep = entity.render_rep
+    if not entity.render_rep:
+        raise ValueError(f"Entity {entity} has no render representation - could not add instances")
 
-        # Get old instance buffer from entity's render rep
+    # Get old instance buffer from entity's render rep
+    rep = entity.render_rep
+    if rep.instances:  # Need to combine / merge with old instances
         old_view: nooobs.BufferView = server.state[rep.instances.view]
         old_buffer: nooobs.Buffer = server.state[old_view.source_buffer]
         old_instances = np.frombuffer(old_buffer.inline_bytes, dtype=np.single)
 
         # Combine new and old instances
-        combined = np.append(old_instances, instances)
-        update_entity(server, entity, instances=combined.tolist())
-    except:
-        raise Exception("Entity isn't renderable")
+        combined = np.append(old_instances, instances).tolist()
+        instances = combined
+
+    update_entity(server, entity, instances=instances)
 
 
 # ---------------------------------- Mesh Importing ----------------------------------#
@@ -562,7 +566,16 @@ def geometry_from_mesh(server: Server, file, material: nooobs.Material,
                        mesh_name: Optional[str] = None, byte_server: ByteServer = None, generate_normals: bool = True):
     """Construct geometry from mesh file
     
-    Can specify byte server if it is a big mesh and needs uri bytes
+    Can specify byte server if it is a big mesh and needs uri bytes. By default, uses meshio to avoid
+    importing pymeshlab if possible. If meshio fails, pymeshlab is used to load the mesh. Meshio supports
+    .inp, .msh, .avs, .cgns, .xml, .e, .exo, .f3grid, .h5m, .mdpa, .mesh, .meshb, .med, .bdf, .fem, .nas,
+    .vol, .vol.gz, .post, .post.gz, .dato, .dato.gz, .ply, .stl, .svg, .su2, .ugrid, .vtk, .vtu, .wkt, .xdmf,
+    and .xmf. If you are looking to use another format, you will have to install pymeshlab.
+
+    !!! note
+
+        This method will calculate normals by default if none are provided. This can be a relatively intense
+        step that will slow down an application. To turn this off, set generate_normals to False.
 
     Args:
         server (Server): server to load geometry onto
@@ -589,7 +602,7 @@ def geometry_from_mesh(server: Server, file, material: nooobs.Material,
         data = mesh_obj.point_data.get(attr)
         try:
             return data.tolist()
-        except:
+        except Exception:
             return data
 
     def get_triangles(mesh_obj):
@@ -598,7 +611,6 @@ def geometry_from_mesh(server: Server, file, material: nooobs.Material,
         for cell in mesh_obj.cells:
             if cell.type == "triangle":
                 return cell.data.tolist()
-        return None
 
     vertices = mesh.points.tolist()
     indices = get_triangles(mesh)
@@ -652,7 +664,7 @@ def export_mesh(server: Server, geometry: nooobs.Geometry, new_file_name: str, b
             try:
                 geo_bytes = byte_server.get_buffer(uri)
             except Exception as e:
-                raise Exception("No byte server specified for uri byte mesh: {e}")
+                raise ValueError(f"No byte server specified for uri byte mesh: {e}")
 
         # Reconstruct indices from buffer
         raw_indices = np.frombuffer(geo_bytes, dtype=FORMAT_MAP[index.format], count=index.count, offset=index.offset)
@@ -681,98 +693,135 @@ def export_mesh(server: Server, geometry: nooobs.Geometry, new_file_name: str, b
     mesh.write(new_file_name)
 
 
-def dot_product(v1, v2):
-    """Helper to take dot product"""
-    product = 0
-    for c1, c2 in zip(v1, v2):
-        product += (round(c1, 5) * round(c2, 5))
-    return product
+# def dot_product(v1, v2):
+#     """Helper to take dot product used in thorough normal calculation"""
+#     product = 0
+#     for c1, c2 in zip(v1, v2):
+#         product += (round(c1, 5) * round(c2, 5))
+#     return product
 
 
-def calculate_normals(vertices: list[list], indices: list[list]):
-    """TODO"""
+# # Old slow version, uses BFS to orient the normals in the same direction
+# def calculate_normals_thorough(vertices: list[list], indices: list[list]):
+#     """Calculate normals for a mesh"""
+#     # Idea: go through all the triangles, and calculate normal for each one and attach average to each vertex
+#     logging.info(f"Generating normals for {len(vertices)} vertices")
+#     normals = {}
+#     adjacents = {}
+#     for triangle in indices:
+#
+#         # Calculate the normal
+#         v1, v2, v3 = triangle
+#         p1, p2, p3 = vertices[v1], vertices[v2], vertices[v3]
+#         vector1 = np.array([p2[0] - p1[0], p2[1] - p1[1], p2[2] - p1[2]])  # p1 -> p2
+#         vector2 = np.array([p3[0] - p1[0], p3[1] - p1[1], p3[2] - p1[2]])  # p1 -> p3
+#         normal = np.cross(vector1, vector2)
+#
+#         # Attach normal to each vertex
+#         for vertex in triangle:
+#
+#             existing_normals = normals.get(vertex)
+#
+#             # Add in new normals with matching orientation,
+#             # Assumes normals will be in same direction for adjacent triangles (no sharp points)
+#             if existing_normals:
+#                 if dot_product(existing_normals[0], normal) < 0:
+#                     existing_normals.append([-x for x in normal])
+#                     logging.info(f"Mismatching triangle normals @ {vertex}")
+#                 else:
+#                     existing_normals.append(normal)
+#             else:
+#                 normals[vertex] = [normal]
+#
+#             # Mark other vertices in triangle as adjacent
+#             other_vert = [x for x in triangle if x != vertex]
+#             adjacents.setdefault(vertex, set()).update(other_vert)
+#
+#     logging.info(f"Vertices {len(vertices)} vs. Normals {len(normals)}")
+#
+#     # Find averages
+#     for vertex, normal_list in normals.items():
+#
+#         # Calculate average
+#         average_normal = []
+#         for component in zip(*normal_list):
+#             average_normal.append(mean(component))
+#
+#         # Normalize and set normal to keep track of final average
+#         length = sqrt((average_normal[0] ** 2) + (average_normal[1] ** 2) + (average_normal[2] ** 2))
+#         normals[vertex] = [x / length for x in average_normal]
+#
+#     # Orient normals to match
+#     logging.info(f"Vertices {len(vertices)} vs. Normals {len(normals)}")
+#
+#     center = [mean(x) for x in zip(*vertices)]
+#     visited = set()
+#     starting_index = indices[0][0]
+#     discovered = deque()  # (index, neighbor)
+#     discovered.append((starting_index, starting_index))
+#     while discovered:
+#
+#         # print(f"Orienting normal {len(visited)}/{len(discovered)}")
+#         current_index, neighbor = discovered.popleft()
+#         dot = dot_product(normals[current_index], normals[neighbor])
+#         if dot < 0:  # Flip vector
+#             normals[current_index] = [-x for x in normals[current_index]]
+#
+#         for adjacent in adjacents[current_index]:
+#             if adjacent not in visited and (adjacent, current_index) not in discovered:
+#                 discovered.append((adjacent, current_index))
+#
+#         visited.add(current_index)
+#
+#     logging.info(f"Vertices {len(vertices)} vs. Normals {len(normals)}")
+#     # Find number pointing towards center
+#     num_inward = 0
+#     for index, normal in normals.items():
+#         center_vector = [x - y for x, y in zip(vertices[index], center)]
+#         if np.dot(normal, center_vector) < 0:
+#             num_inward += 1
+#
+#     # If majority are inward invert
+#     if num_inward > (len(vertices) / 2):
+#         for key, normal in normals.items():
+#             normals[key] = [-x for x in normal]
+#
+#     logging.info(f"Finished getting normals...\nNum Inward: {num_inward}")
+#     logging.info(f"Vertices {len(vertices)} vs. Normals {len(normals)}")
+#     return [normals.get(i, [0, 0, 0]) for i in range(len(vertices))]
 
-    # Idea: go through all the triangles, and calculate normal for each one and attach average to each vertex
-    logging.info(f"Generating normals for {len(vertices)} vertices")
-    normals = {}
-    adjacents = {}
-    for triangle in indices:
 
-        # Calculate the normal
-        v1, v2, v3 = triangle
-        p1, p2, p3 = vertices[v1], vertices[v2], vertices[v3]
-        vector1 = np.array([p2[0] - p1[0], p2[1] - p1[1], p2[2] - p1[2]])  # p1 -> p2
-        vector2 = np.array([p3[0] - p1[0], p3[1] - p1[1], p3[2] - p1[2]])  # p1 -> p3
-        normal = np.cross(vector1, vector2)
+def calculate_normals(vertices, indices):
+    """Calculate normals for a mesh"""
 
-        # Attach normal to each vertex
-        for vertex in triangle:
+    # Cast vertices and indices to numpy arrays
+    vertices = np.array(vertices)
+    indices = np.array(indices)
 
-            existing_normals = normals.get(vertex)
+    # Initialize an empty array for vertex normals
+    vertex_normals = np.zeros_like(vertices)
 
-            # Add in new normals with matching orientation
-            if existing_normals:
-                if dot_product(existing_normals[0], normal) < 0:
-                    existing_normals.append([-x for x in normal])
-                    logging.info(f"Mismatching triangle normals @ {vertex}")
-                else:
-                    existing_normals.append(normal)
-            else:
-                normals[vertex] = [normal]
+    # Iterate over each face
+    for face_indices in indices:
+        # Get the vertices of the face
+        face_vertices = vertices[face_indices]
 
-            # Mark other vertices in triangle as adjacent
-            other_vert = [x for x in triangle if x != vertex]
-            adjacents.setdefault(vertex, set()).update(other_vert)
+        # Calculate the face normal using cross product
+        edge1 = face_vertices[1] - face_vertices[0]
+        edge2 = face_vertices[2] - face_vertices[0]
+        face_normal = np.cross(edge1, edge2)
 
-    logging.info(f"Vertices {len(vertices)} vs. Normals {len(normals)}")
+        # Add the face normal to each vertex normal adjacent to the face
+        vertex_normals[face_indices] += face_normal
 
-    # Find averages
-    for vertex, normal_list in normals.items():
+    # Normalize the vertex normals
+    magnitudes = np.linalg.norm(vertex_normals, axis=1)
+    vertex_normals /= magnitudes[:, np.newaxis]
 
-        # Calculate average
-        average_normal = []
-        for component in zip(*normal_list):
-            average_normal.append(mean(component))
-
-        # Normalize and set normal to keep track of final average 
-        length = sqrt((average_normal[0] ** 2) + (average_normal[1] ** 2) + (average_normal[2] ** 2))
-        normals[vertex] = [x / length for x in average_normal]
-
-    # Orient normals to match
-    logging.info(f"Vertices {len(vertices)} vs. Normals {len(normals)}")
-
-    center = [mean(x) for x in zip(*vertices)]
-    visited = set()
-    starting_index = indices[0][0]
-    discovered = deque()  # (index, neighbor)
-    discovered.append((starting_index, starting_index))
-    while discovered:
-
-        # print(f"Orienting normal {len(visited)}/{len(discovered)}")
-        current_index, neighbor = discovered.popleft()
-        dot = dot_product(normals[current_index], normals[neighbor])
-        if dot < 0:  # Flip vector
-            normals[current_index] = [-x for x in normals[current_index]]
-
-        for adjacent in adjacents[current_index]:
-            if adjacent not in visited and (adjacent, current_index) not in discovered:
-                discovered.append((adjacent, current_index))
-
-        visited.add(current_index)
-
-    logging.info(f"Vertices {len(vertices)} vs. Normals {len(normals)}")
-    # Find number pointing towards center
-    num_inward = 0
-    for index, normal in normals.items():
-        center_vector = [x - y for x, y in zip(vertices[index], center)]
-        if np.dot(normal, center_vector) < 0:
-            num_inward += 1
-
-    # If majority are inward invert
+    # Check how many are facing center and flip if majority is inward
+    dot_prods = np.sum(vertex_normals * vertices, axis=1)
+    num_inward = np.sum(dot_prods < 0)
     if num_inward > (len(vertices) / 2):
-        for key, normal in normals.items():
-            normals[key] = [-x for x in normal]
+        vertex_normals = -vertex_normals
 
-    logging.info(f"Finished getting normals...\nNum Inward: {num_inward}")
-    logging.info(f"Vertices {len(vertices)} vs. Normals {len(normals)}")
-    return [normals.get(i, [0, 0, 0]) for i in range(len(vertices))]
+    return vertex_normals.tolist()

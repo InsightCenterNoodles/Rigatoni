@@ -16,6 +16,14 @@ def move_method(server: Server, context, x, y, z):
     return "Moved!"
 
 
+def throw_exception(server: Server, context: dict, args: list):
+    raise MethodException(-32603, "Internal Error")
+
+
+def internal_error(server: Server, context, *args):
+    raise Exception("Expected Exception from testing")
+
+
 server_delegates = {
     Table: CustomTableDelegate
 }
@@ -39,6 +47,8 @@ starting_components = [
     StartingComponent(Method, {"name": "noo::tbl_clear", "arg_doc": []}, clear),
     StartingComponent(Method, {"name": "noo::tbl_update_selection", "arg_doc": []}, update_selection),
     StartingComponent(Method, {"name": "Test Method 4", "arg_doc": []}, print),
+    StartingComponent(Method, {"name": "Bad Method", "arg_doc": []}, throw_exception),
+    StartingComponent(Method, {"name": "Internal Error", "arg_doc": []}, internal_error),
 
     StartingComponent(Signal, {"name": "noo::tbl_reset", "arg_doc": []}),
     StartingComponent(Signal, {"name": "noo::tbl_updated", "arg_doc": []}),
@@ -60,19 +70,12 @@ def base_server():
         yield server
 
 
-def throw_error(server: Server, context: dict, args: list):
-    raise MethodException(-32603, "Internal Error")
-
-
-bad_starting_components = [
-    StartingComponent(Method, {"name": "bad_method"}, throw_error),
-    StartingComponent(Table, {"name": "test_table", "methods_list": [[0, 0]], "signals_list": [[0, 0]]})
-]
+plain_start = [StartingComponent(Table, {"name": "test_table", "methods_list": [[0, 0]], "signals_list": [[0, 0]]})]
 
 
 @pytest.fixture
 def plain_server():
-    with Server(50001, bad_starting_components) as server:
+    with Server(50001, starting_state=plain_start) as server:
         yield server
 
 
