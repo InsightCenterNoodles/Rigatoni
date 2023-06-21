@@ -195,6 +195,15 @@ def test_delete_component(base_server):
     with pytest.raises(TypeError):
         base_server.delete_component("bad")
 
+    # Test recursive delete
+    method = base_server.create_method("Referenced_Method", [])
+    entity = base_server.create_entity("Referencing_Entity", methods_list=[method.id])
+    assert entity.id in base_server.state
+    assert method.id in base_server.state and method.id in base_server.references
+    base_server.delete_component(entity, recursive=True)
+    assert entity.id not in base_server.state
+    assert method.id not in base_server.state and base_server.references[method.id] == set()
+
 
 def test_update_component(base_server):
 

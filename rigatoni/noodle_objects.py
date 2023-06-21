@@ -608,21 +608,21 @@ class Signal(Delegate):
 class Entity(Delegate):
     """Container for other entities, possibly renderable, has associated methods and signals
 
-    Args:
-        id (EntityID): ID for the entity
-        name (str): Name of the entity
-        parent (EntityID): Parent entity
-        transform (Mat4): Local transform for the entity
-        text_rep (TextRepresentation): Text representation for the entity
-        web_rep (WebRepresentation): Web representation for the entity
-        render_rep (RenderRepresentation): Render representation for the entity
-        lights (List[LightID]): List of lights attached to the entity
-        tables (List[TableID]): List of tables attached to the entity
-        plots (List[PlotID]): List of plots attached to the entity
-        tags (List[str]): List of tags for the entity
-        methods_list (List[MethodID]): List of methods attached to the entity
-        signals_list (List[SignalID]): List of signals attached to the entity
-        influence (Optional[BoundingBox]): Bounding box for the entity
+    Attributes:
+        id: ID for the entity
+        name: Name of the entity
+        parent: Parent entity
+        transform: Local transform for the entity
+        text_rep: Text representation for the entity
+        web_rep: Web representation for the entity
+        render_rep: Render representation for the entity
+        lights: List of lights attached to the entity
+        tables: List of tables attached to the entity
+        plots: List of plots attached to the entity
+        tags: List of tags for the entity
+        methods_list: List of methods attached to the entity
+        signals_list: List of signals attached to the entity
+        influence: Bounding box for the entity
     """
 
     id: EntityID

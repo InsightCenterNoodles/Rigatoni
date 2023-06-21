@@ -616,6 +616,22 @@ class Server(object):
         # Return component or delegate instance if applicable
         return new_delegate
 
+    def _get_referenced(self, delegate: Delegate) -> list:
+        """Get all components referenced by this one
+
+        Args:
+            delegate (Delegate): component to get references for
+
+        Returns:
+            list: list of all components referenced by this one
+        """
+
+        referenced = []
+        for id, referred_by in self.references.items():
+            if delegate.id in referred_by:
+                referenced.append(self.state[id])
+        return referenced
+
     def delete_component(self, delegate: Union[Delegate, ID], recursive: bool = False):
         """Delete object in state and update clients
         
@@ -623,8 +639,8 @@ class Server(object):
         to delete the component as long as it is not referenced by any other component.
         If this component is still being used by another, it will be added to a queue so that
         it can be deleted later once that reference is no longer being used. If recursive flag
-        is set, then all components referenced by this one will also be deleted.
-
+        is set, then all components referenced by this one will also be deleted or at least
+        queued to be deleted.
 
         Args:
             delegate (Component, Delegate, or ID): component / delegate to be deleted
@@ -642,6 +658,12 @@ class Server(object):
             del_id = delegate.id
         else:
             raise TypeError(f"Invalid type for delegate when deleting: {type(delegate)}")
+
+        # Delete all referenced components if recursive flag is set
+        if recursive:
+            referenced = self._get_referenced(delegate)
+            for ref in referenced:
+                self.delete_component(ref, recursive=recursive)
 
         # Delete if no references, or else queue it up for later
         if not self.references.get(del_id):
