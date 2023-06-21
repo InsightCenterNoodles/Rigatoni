@@ -65,7 +65,7 @@
             <a id="nextFileLink" class="nav" href="index.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.2.7">coverage.py v7.2.7</a>,
-            created at 2023-06-20 20:02 +0000
+            created at 2023-06-21 13:46 +0000
         </p>
         <aside class="hidden">
             <button type="button" class="button_next_chunk" data-shortcut="j"/>
@@ -690,21 +690,21 @@
     <p class="run"><span class="n"><a id="t608" href="#t608">608</a></span><span class="t"><span class="key">class</span> <span class="nam">Entity</span><span class="op">(</span><span class="nam">Delegate</span><span class="op">)</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t609" href="#t609">609</a></span><span class="t">    <span class="str">"""Container for other entities, possibly renderable, has associated methods and signals</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t610" href="#t610">610</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t611" href="#t611">611</a></span><span class="t"><span class="str">    Args:</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t612" href="#t612">612</a></span><span class="t"><span class="str">        id (EntityID): ID for the entity</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t613" href="#t613">613</a></span><span class="t"><span class="str">        name (str): Name of the entity</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t614" href="#t614">614</a></span><span class="t"><span class="str">        parent (EntityID): Parent entity</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t615" href="#t615">615</a></span><span class="t"><span class="str">        transform (Mat4): Local transform for the entity</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t616" href="#t616">616</a></span><span class="t"><span class="str">        text_rep (TextRepresentation): Text representation for the entity</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t617" href="#t617">617</a></span><span class="t"><span class="str">        web_rep (WebRepresentation): Web representation for the entity</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t618" href="#t618">618</a></span><span class="t"><span class="str">        render_rep (RenderRepresentation): Render representation for the entity</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t619" href="#t619">619</a></span><span class="t"><span class="str">        lights (List[LightID]): List of lights attached to the entity</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t620" href="#t620">620</a></span><span class="t"><span class="str">        tables (List[TableID]): List of tables attached to the entity</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t621" href="#t621">621</a></span><span class="t"><span class="str">        plots (List[PlotID]): List of plots attached to the entity</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t622" href="#t622">622</a></span><span class="t"><span class="str">        tags (List[str]): List of tags for the entity</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t623" href="#t623">623</a></span><span class="t"><span class="str">        methods_list (List[MethodID]): List of methods attached to the entity</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t624" href="#t624">624</a></span><span class="t"><span class="str">        signals_list (List[SignalID]): List of signals attached to the entity</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t625" href="#t625">625</a></span><span class="t"><span class="str">        influence (Optional[BoundingBox]): Bounding box for the entity</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t611" href="#t611">611</a></span><span class="t"><span class="str">    Attributes:</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t612" href="#t612">612</a></span><span class="t"><span class="str">        id: ID for the entity</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t613" href="#t613">613</a></span><span class="t"><span class="str">        name: Name of the entity</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t614" href="#t614">614</a></span><span class="t"><span class="str">        parent: Parent entity</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t615" href="#t615">615</a></span><span class="t"><span class="str">        transform: Local transform for the entity</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t616" href="#t616">616</a></span><span class="t"><span class="str">        text_rep: Text representation for the entity</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t617" href="#t617">617</a></span><span class="t"><span class="str">        web_rep: Web representation for the entity</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t618" href="#t618">618</a></span><span class="t"><span class="str">        render_rep: Render representation for the entity</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t619" href="#t619">619</a></span><span class="t"><span class="str">        lights: List of lights attached to the entity</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t620" href="#t620">620</a></span><span class="t"><span class="str">        tables: List of tables attached to the entity</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t621" href="#t621">621</a></span><span class="t"><span class="str">        plots: List of plots attached to the entity</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t622" href="#t622">622</a></span><span class="t"><span class="str">        tags: List of tags for the entity</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t623" href="#t623">623</a></span><span class="t"><span class="str">        methods_list: List of methods attached to the entity</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t624" href="#t624">624</a></span><span class="t"><span class="str">        signals_list: List of signals attached to the entity</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t625" href="#t625">625</a></span><span class="t"><span class="str">        influence: Bounding box for the entity</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t626" href="#t626">626</a></span><span class="t"><span class="str">    """</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t627" href="#t627">627</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t628" href="#t628">628</a></span><span class="t">    <span class="nam">id</span><span class="op">:</span> <span class="nam">EntityID</span>&nbsp;</span><span class="r"></span></p>
@@ -1123,7 +1123,7 @@
             <a id="nextFileLink" class="nav" href="index.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.2.7">coverage.py v7.2.7</a>,
-            created at 2023-06-20 20:02 +0000
+            created at 2023-06-21 13:46 +0000
         </p>
     </div>
 </footer>
