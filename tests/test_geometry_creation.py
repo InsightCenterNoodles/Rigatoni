@@ -152,7 +152,11 @@ def test_build_geometry_patch(base_server):
 
 
 def test_calculate_normals():
-    pass
+
+    calculated = geo.calculate_normals(vertices, indices, ordered=True)
+    assert calculated == normals
+    check = geo.calculate_normals(vertices, indices, ordered=False)
+    assert check == normals
 
 
 def test_build_entity(base_server):
@@ -274,6 +278,10 @@ def test_geometry_from_mesh_large(base_server):
     assert mesh.patches[0].material == mat.id
     assert mesh.id in base_server.state
     assert mesh.id in base_server.client_state
+
+    # Exception for calcualting tangents for large mesh
+    with pytest.raises(ValueError):
+        geo.geometry_from_mesh(base_server, "tests/mesh_data/stanford-bunny.obj", mat, mesh_name="gltf_mesh", generate_normals=True)
 
 
 def test_export_mesh(base_server):

@@ -1,4 +1,8 @@
 
+1. Define starting state
+2. Set up delegates
+3. Run the server
+
 ## Starting State
 
 You can use starting component objects to help define the starting state
@@ -17,7 +21,7 @@ server, and it will be associated with its corresponding method component.
 rigatoni.StartingComponent(Type[Component], dict[Component_Attr, Value], Callable)
 ```
 
-## Defining Methods
+### Defining Methods
 
 To help with creating methods that manipulate the server's state, Rigatoni provides several methods that can be used
 manage objects in the scene. More information on these methods can be found in the server section of the API reference

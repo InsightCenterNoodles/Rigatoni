@@ -2,9 +2,9 @@
 
 ![Build Status](https://github.com/InsightCenterNoodles/Rigatoni/workflows/CI/badge.svg)
 ![PyPI](https://img.shields.io/pypi/v/Rigatoni)
-[![Coverage badge](https://raw.githubusercontent.com/InsightCenterNoodles/Rigatoni/python-coverage-comment-action-data/badge.svg)](https://htmlpreview.github.io/?https://github.com/InsightCenterNoodles/Rigatoni/blob/python-coverage-comment-action-data/htmlcov/index.html)
+[![Coverage badge](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/InsightCenterNoodles/Rigatoni/python-coverage-comment-action-data/endpoint.json&color=brightgreen)](https://htmlpreview.github.io/?https://github.com/InsightCenterNoodles/Rigatoni/blob/python-coverage-comment-action-data/htmlcov/index.html)
 
-Rigatoni is the first library to implement the NOODLES messaging protocol in Python. The NOOODLES protocol
+Rigatoni is the first server library to implement the NOODLES messaging protocol in Python. The NOOODLES protocol
 allows multiple client applications to interact collaboratively with data in real-time. The protocol is especially 
 geared towards applications that can render 3D meshes and other data.
 This server library provides objects and methods for maintaining a noodles session in state.
@@ -19,7 +19,8 @@ application to host data and custom methods, users will be able to interact with
 implements the NOODLES protocol. Rigatoni offers a simple interface for creating methods and components, and it provides
 additional support for working with meshes and complex geometry. If you are looking to use NOODLES with a different
 language, there is currently support for C++, Rust, Julia, and Javascript 
-[here](https://github.com/InsightCenterNoodles/).
+[here](https://github.com/InsightCenterNoodles/), and if you are looking to build a client application in 
+Python, check out [Rigatoni](https://insightcenternoodles.github.io/Penne/).
 
 ## How does the server work?
 

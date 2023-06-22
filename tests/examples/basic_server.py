@@ -222,6 +222,7 @@ class CustomTableDelegate(Table):
         signal = self.server.get_delegate_id("noo::tbl_selection_updated")
         self.server.invoke_signal(signal, self, data)
 
+
 delegates = {
     nooobs.Table: CustomTableDelegate,
 }

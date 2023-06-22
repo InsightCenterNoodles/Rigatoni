@@ -301,7 +301,7 @@ class Server(object):
         Can be called with an ID, name, or context of the delegate
 
         Args:
-            identifier (Union[ID, str, Dict[str, ID]]): identifier for component
+            identifier (ID | str| Dict[str, ID]]): identifier for component
 
         Returns:
             delegate: delegate with specified identifier
@@ -480,11 +480,12 @@ class Server(object):
 
         # Parse message
         try:
+            invoke_id = message["invoke_id"]
+            reply.invoke_id = invoke_id  # Process invoke id first so it can be sent in reply with exception
             method_id = MethodID(slot=message["method"][0], gen=message["method"][1])
             context = message.get("context")
-            invoke_id = message["invoke_id"]
             args: list = message["args"]
-            reply.invoke_id = invoke_id
+
         except Exception:
             raise MethodException(code=-32700, message="Parse Error")
 
@@ -643,7 +644,7 @@ class Server(object):
         queued to be deleted.
 
         Args:
-            delegate (Component, Delegate, or ID): component / delegate to be deleted
+            delegate (Component | Delegate | ID): component / delegate to be deleted
 
         Raises:
             TypeError: if the user specifies an invalid input type
@@ -738,7 +739,7 @@ class Server(object):
         """Send signal to target component
         
         Args:
-            signal (ID): signal to be invoked
+            signal (SignalID | Signal): signal to be invoked
             on_component (Delegate): component to receive the signal
             signal_data (dict): data to be sent with the signal
 
