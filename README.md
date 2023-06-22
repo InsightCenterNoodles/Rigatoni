@@ -1,7 +1,5 @@
 
-
-<h1><img src="docs/assets/favicon.png" alt="Logo" width="40" height="40" align="left">Rigatoni</h1>
-
+# Rigatoni
 
 ![Build Status](https://github.com/InsightCenterNoodles/Rigatoni/workflows/CI/badge.svg)
 ![PyPI](https://img.shields.io/pypi/v/Rigatoni)
@@ -62,4 +60,4 @@ with rig.Server(50000, starting_state) as server:
 ```
 
 ## Hungry for more NOODLES?
-For more information and other related repositories check out [this repository](https://github.com/InsightCenterNoodles)
+For more information and other related repositories check out [this collection](https://github.com/InsightCenterNoodles)
