@@ -8,10 +8,10 @@
 | rigatoni/core.py                  |      341 |        0 |    100% |           |
 | rigatoni/geometry/\_\_init\_\_.py |        3 |        0 |    100% |           |
 | rigatoni/geometry/byte\_server.py |       70 |        2 |     97% |     41-42 |
-| rigatoni/geometry/methods.py      |      266 |        1 |     99% |       825 |
+| rigatoni/geometry/methods.py      |      329 |        9 |     97% |768-772, 808, 822, 826-827, 885 |
 | rigatoni/geometry/objects.py      |       17 |        0 |    100% |           |
 | rigatoni/noodle\_objects.py       |      396 |        0 |    100% |           |
-|                         **TOTAL** | **1105** |    **5** | **99%** |           |
+|                         **TOTAL** | **1168** |   **13** | **99%** |           |
 
 
 ## Setup coverage badge
