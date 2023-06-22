@@ -36,13 +36,12 @@ class GeometryPatchInput(nooobs.NoodleObject):
         colors: List of colors corresponding to vertices
     """
 
-    vertices: list
-    indices: list
+    vertices: list[list[float]]
+    indices: list[list[int]]
     index_type: str 
     material: nooobs.MaterialID
-    normals: Optional[list] 
-    tangents: Optional[list]
-    textures: Optional[list] 
-    colors: Optional[list]
-
+    normals: Optional[list[list[float]]] = None
+    tangents: Optional[list[list[float]]] = None
+    textures: Optional[list[list[float]]] = None
+    colors: Optional[list[list[float]]] = None
 
