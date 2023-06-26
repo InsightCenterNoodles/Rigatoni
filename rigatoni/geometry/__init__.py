@@ -8,4 +8,3 @@ entities, and geometries manually.
 from .methods import build_geometry_patch, build_entity, create_instances, update_entity, add_instances, \
     geometry_from_mesh, export_mesh
 from .objects import AttributeInput, GeometryPatchInput
-from .byte_server import ByteServer

@@ -21,7 +21,7 @@ __version__ = "0.2.3"
 
 from .core import Server
 from .noodle_objects import *
-from .geometry.byte_server import ByteServer
+from .byte_server import ByteServer
 
 # Ensure that dependencies are installed for optional module
 try:
