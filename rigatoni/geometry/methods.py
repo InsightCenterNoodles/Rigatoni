@@ -12,7 +12,7 @@ from .. import noodle_objects as nooobs
 from ..core import Server
 
 from .objects import AttributeInput, GeometryPatchInput
-from .byte_server import ByteServer
+from rigatoni.byte_server import ByteServer
 
 INLINE_LIMIT = 10000
 

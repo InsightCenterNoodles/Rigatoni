@@ -1,5 +1,5 @@
 
-::: rigatoni.geometry.ByteServer
+::: rigatoni.ByteServer
 
 ---
 
