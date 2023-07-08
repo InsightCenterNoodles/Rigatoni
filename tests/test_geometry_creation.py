@@ -36,7 +36,7 @@ def test_geometry_server(geometry_server):
         client.invoke_method("create_sphere", on_done=delete_sphere)
 
     def delete_sphere(*args):
-        client.invoke_method("delete_sphere", on_done=shutdown)
+        client.invoke_method("delete", context={"entity": [0, 0]}, on_done=shutdown)
 
     def shutdown(*args):
         client.is_active = False

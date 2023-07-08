@@ -362,20 +362,20 @@ class Server(object):
         contents = {}
         if action == "create":
             base_delegate = self.id_decoder[type(noodle_object.id)]
-            include = {field for field in base_delegate.__fields__ if field not in ["server", "signals"]}
-            contents = noodle_object.dict(exclude_none=True, include=include)
+            include = {field for field in base_delegate.model_fields if field not in ["server", "signals"]}
+            contents = noodle_object.model_dump(exclude_none=True, include=include)
 
         elif action == "invoke":
-            contents = noodle_object.dict(exclude_none=True)
+            contents = noodle_object.model_dump(exclude_none=True)
 
         elif action == "reply":
 
             if noodle_object.method_exception:
                 e = noodle_object.method_exception
-                contents = noodle_object.dict(exclude_none=True)
+                contents = noodle_object.model_dump(exclude_none=True)
                 contents["method_exception"] = {"code": e.code, "message": e.message, "data": e.data}
             else:
-                contents = noodle_object.dict(exclude_none=True)
+                contents = noodle_object.model_dump(exclude_none=True)
 
         elif action == "update":
             if not noodle_object:  # Document case
@@ -384,7 +384,7 @@ class Server(object):
             else:  # Normal update, include id, and any field in delta
                 delta = set() if not delta else delta
                 delta.add("id")
-                contents = noodle_object.dict(exclude_none=True, include=delta)
+                contents = noodle_object.model_dump(exclude_none=True, include=delta)
 
         elif action == "delete":
             try:
@@ -605,7 +605,7 @@ class Server(object):
 
         # Update state and keep track of initial version for changes / update messages
         self.state[comp_id] = new_delegate
-        self.client_state[comp_id] = new_delegate.copy()
+        self.client_state[comp_id] = new_delegate.model_copy()
 
         # Update references for each component referenced by this one
         self._update_references(new_delegate, new_delegate)
@@ -687,7 +687,7 @@ class Server(object):
                     self.delete_component(comp_id)
 
         else:
-            logging.warning(f"Couldn't delete {delegate}, referenced by {self.references[del_id]}, added to queue")
+            logging.info(f"Couldn't delete {delegate}, referenced by {self.references[del_id]}, added to queue")
             self.delete_queue.add(del_id)
 
     @staticmethod
@@ -726,7 +726,7 @@ class Server(object):
         self._update_references(current, current)
 
         # Update tracking state
-        self.client_state[current.id] = current.copy()
+        self.client_state[current.id] = current.model_copy()
 
         # Form message and broadcast
         try:

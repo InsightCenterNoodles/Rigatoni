@@ -9,7 +9,7 @@ from math import pi
 from queue import Queue
 from typing import Callable, Optional, Any, List, Tuple, Dict, NamedTuple
 
-from pydantic import BaseModel, root_validator
+from pydantic import ConfigDict, BaseModel, model_validator
 
 """ =============================== ID's ============================= """
 
@@ -122,12 +122,7 @@ class TableID(ID):
 
 class NoodleObject(BaseModel):
     """Parent Class for all noodle objects"""
-
-    class Config:
-        """Configuration for Validation"""
-
-        arbitrary_types_allowed = True
-        use_enum_values = True
+    model_config = ConfigDict(arbitrary_types_allowed=True, use_enum_values=True)
 
 
 class Delegate(NoodleObject):
@@ -515,7 +510,7 @@ class InvokeIDType(NoodleObject):
     table: Optional[TableID] = None
     plot: Optional[PlotID] = None
 
-    @root_validator(allow_reuse=True)
+    @model_validator(mode="after")
     def one_of_three(cls, values):
         already_found = False
         for field in values:
@@ -556,7 +551,7 @@ class TableInitData(NoodleObject):
     selections: Optional[List[Selection]] = None
 
     # too much overhead? - strict mode
-    @root_validator(allow_reuse=True)
+    @model_validator(mode="after")
     def types_match(cls, values):
         for row in values['data']:
             for col, i in zip(values['columns'], range(len(row))):
@@ -669,7 +664,7 @@ class Plot(Delegate):
     methods_list: Optional[List[MethodID]] = None
     signals_list: Optional[List[SignalID]] = None
 
-    @root_validator(allow_reuse=True)
+    @model_validator(mode="after")
     def one_of(cls, values):
         if bool(values['simple_plot']) != bool(values['url_plot']):
             return values
@@ -694,7 +689,7 @@ class Buffer(Delegate):
     inline_bytes: bytes = None
     uri_bytes: str = None
 
-    @root_validator(allow_reuse=True)
+    @model_validator(mode="after")
     def one_of(cls, values):
         if bool(values['inline_bytes']) != bool(values['uri_bytes']):
             return values
@@ -771,7 +766,7 @@ class Image(Delegate):
     buffer_source: BufferID = None
     uri_source: str = None
 
-    @root_validator(allow_reuse=True)
+    @model_validator(mode="after")
     def one_of(cls, values):
         if bool(values['buffer_source']) != bool(values['uri_source']):
             return values
@@ -837,7 +832,7 @@ class Light(Delegate):
     spot: SpotLight = None
     directional: DirectionalLight = None
 
-    @root_validator(allow_reuse=True)
+    @model_validator(mode="after")
     def one_of(cls, values):
         already_found = False
         for field in ['point', 'spot', 'directional']:
@@ -918,6 +913,22 @@ class Table(Delegate):
     def table_selection_updated(self, selection: Selection):
         """Invoke table selection updated signal"""
         pass
+
+
+# TODO: need to work this in to specify which methods are avaiable in which contexts
+class Document(Delegate):
+    """Represents the scope of the whole session
+
+    Attributes:
+        name (str): name will be "Document"
+        methods_list (list[MethodID]): list of methods available on the document
+        signals_list (list[SignalID]): list of signals available on the document
+    """
+
+    name: str = "Document"
+
+    methods_list: List[MethodID] = []  # Server usually sends as an update
+    signals_list: List[SignalID] = []
 
 
 """ ====================== Communication Objects ====================== """
