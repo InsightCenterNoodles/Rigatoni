@@ -128,10 +128,10 @@ def test_get_delegate_by_context(base_server):
 def test_get_message_contents(base_server):
 
     obj = base_server.get_delegate("test_method")
-    assert base_server._get_message_contents("create", obj) == {"id": rig.MethodID(0, 0), "name": "test_method", "arg_doc": []}
-    assert base_server._get_message_contents("delete", obj) == {"id": rig.MethodID(0, 0)}
+    assert base_server._get_message_contents("create", obj) == {"id": (0, 0), "name": "test_method", "arg_doc": []}
+    assert base_server._get_message_contents("delete", obj) == {"id": (0, 0)}
     obj.name = "new_name"
-    assert base_server._get_message_contents("update", obj, delta={"name"}) == {"id": rig.MethodID(0, 0), "name": "new_name"}
+    assert base_server._get_message_contents("update", obj, delta={"name"}) == {"id": (0, 0), "name": "new_name"}
     with pytest.raises(Exception):
         base_server._get_message_contents("delete", 0)
     assert base_server._get_message_contents("bad", obj) == {}
@@ -246,10 +246,10 @@ def test_invoke_signal(base_server):
     on_plot = base_server.get_delegate("test_plot")
 
     invoke_message = base_server.invoke_signal(signal.id, on_entity)
-    assert invoke_message == (33, {'id': rig.SignalID(4, 0), 'context': {'entity': rig.EntityID(0, 0)}, 'signal_data': []})
+    assert invoke_message == (33, {'id': (4, 0), 'context': {'entity': (0, 0)}, 'signal_data': []})
 
     invoke_message = base_server.invoke_signal(signal, on_plot)
-    assert invoke_message == (33, {'id': rig.SignalID(4, 0), 'context': {'plot': rig.PlotID(0, 0)}, 'signal_data': []})
+    assert invoke_message == (33, {'id': (4, 0), 'context': {'plot': (0, 0)}, 'signal_data': []})
 
     with pytest.raises(ValueError):
         base_server.invoke_signal(signal, signal)
@@ -260,19 +260,19 @@ def test_create_delegate_methods(base_server):
     method = base_server.create_method("new_method", [])
     assert isinstance(method, rig.Method)
 
-    signal = base_server.create_signal("new_signal")
+    signal = base_server.create_signal("new_signal", )
     assert isinstance(signal, rig.Signal)
 
     entity = base_server.create_entity("new_entity")
     assert isinstance(entity, rig.Entity)
 
-    bufferview = base_server.create_bufferview(rig.BufferID(0, 0), 0, 0)
+    bufferview = base_server.create_bufferview((0, 0), 0, 0)
     assert isinstance(bufferview, rig.BufferView)
 
     material = base_server.create_material("new_material")
     assert isinstance(material, rig.Material)
 
-    image = base_server.create_image(buffer_source=rig.BufferID(0, 0), name="new_image")
+    image = base_server.create_image(buffer_source=(0, 0), name="new_image")
     assert isinstance(image, rig.Image)
 
     texture = base_server.create_texture(rig.ImageID(0, 0), "new_texture")

@@ -165,8 +165,8 @@ def update_selection(server: Server, context: dict, selection: dict):
 
 class CustomTableDelegate(Table):
 
-    dataframe = pd.DataFrame()
-    selections = {}
+    dataframe: pd.DataFrame = pd.DataFrame()
+    selections: dict = {}
 
     def handle_insert(self, rows: list[list[int]]):
         next_index = self.dataframe.index[-1] + 1

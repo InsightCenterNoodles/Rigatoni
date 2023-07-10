@@ -388,7 +388,7 @@ class Server(object):
 
         elif action == "delete":
             try:
-                contents["id"] = noodle_object.id
+                contents["id"] = tuple(noodle_object.id)
             except AttributeError:
                 raise Exception(f"Cannot delete a {noodle_object}")
 
@@ -804,6 +804,8 @@ class Server(object):
         Returns:
             Signal: signal delegate that was created
         """
+        if arg_doc is None:
+            arg_doc = []
         return self.create_component(Signal, name=name, doc=doc, arg_doc=arg_doc)
 
     def create_entity(self, name: Optional[str],

@@ -138,7 +138,7 @@ class Delegate(NoodleObject):
     """
 
     server: object  # Better way to annotate this without introducing circular imports?
-    id: ID = None
+    id: ID
     name: Optional[str] = "No-Name"
     signals: Optional[dict] = {}
 
@@ -148,15 +148,10 @@ class Delegate(NoodleObject):
 
 """ ====================== Common Definitions ====================== """
 
-Vec3 = Tuple[float, float, float]
-Vec4 = Tuple[float, float, float, float]
-Mat3 = Tuple[float, float, float,
-             float, float, float,
-             float, float, float]
-Mat4 = Tuple[float, float, float, float,
-             float, float, float, float,
-             float, float, float, float,
-             float, float, float, float]
+Vec3 = List[float]  # Length 3
+Vec4 = List[float]  # Length 4
+Mat3 = List[float]  # Length 9
+Mat4 = List[float]  # Length 16
 
 RGB = Vec3
 RGBA = Vec4
@@ -591,7 +586,7 @@ class Signal(Delegate):
     id: SignalID
     name: str
     doc: Optional[str] = None
-    arg_doc: List[MethodArg] = None
+    arg_doc: List[MethodArg] = []
 
 
 class Entity(Delegate):
@@ -678,10 +673,10 @@ class Buffer(Delegate):
     """
     id: BufferID
     name: Optional[str] = None
-    size: int = None
+    size: int
 
-    inline_bytes: bytes = None
-    uri_bytes: str = None
+    inline_bytes: Optional[bytes] = None
+    uri_bytes: Optional[str] = None
 
     @model_validator(mode="after")
     def one_of(cls, model):
@@ -757,8 +752,8 @@ class Image(Delegate):
     id: ImageID
     name: Optional[str] = None
 
-    buffer_source: BufferID = None
-    uri_source: str = None
+    buffer_source: Optional[BufferID] = None
+    uri_source: Optional[str] = None
 
     @model_validator(mode="after")
     def one_of(cls, model):
@@ -822,9 +817,9 @@ class Light(Delegate):
     color: Optional[RGB] = [1.0, 1.0, 1.0]
     intensity: Optional[float] = 1.0
 
-    point: PointLight = None
-    spot: SpotLight = None
-    directional: DirectionalLight = None
+    point: Optional[PointLight] = None
+    spot: Optional[SpotLight] = None
+    directional: Optional[DirectionalLight] = None
 
     @model_validator(mode="after")
     def one_of(cls, model):
@@ -905,7 +900,7 @@ class Table(Delegate):
         pass
 
 
-# TODO: need to work this in to specify which methods are avaiable in which contexts
+# TODO: need to work this in to specify which methods are available in which contexts
 class Document(Delegate):
     """Represents the scope of the whole session
 

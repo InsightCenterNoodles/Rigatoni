@@ -54,7 +54,7 @@ starting_components = [
     StartingComponent(Signal, {"name": "noo::tbl_updated", "arg_doc": []}),
     StartingComponent(Signal, {"name": "noo::tbl_rows_removed", "arg_doc": []}),
     StartingComponent(Signal, {"name": "noo::tbl_selection_updated", "arg_doc": []}),
-    StartingComponent(Signal, {"name": "test_signal"}),
+    StartingComponent(Signal, {"name": "test_signal", "arg_doc": []}),
 
     StartingComponent(Entity, {"name": "test_entity"}),
     StartingComponent(Entity, {"name": "test_method_entity", "methods_list": [[0, 0]]}),
