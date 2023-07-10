@@ -511,18 +511,12 @@ class InvokeIDType(NoodleObject):
     plot: Optional[PlotID] = None
 
     @model_validator(mode="after")
-    def one_of_three(cls, values):
-        already_found = False
-        for field in values:
-            if values[field] and already_found:
-                raise ValueError("More than one field entered")
-            elif values[field]:
-                already_found = True
-
-        if not already_found:
-            raise ValueError("No field provided")
-        else:
-            return values
+    def one_of_three(cls, model):
+        """Ensure only one of the three attributes is set"""
+        selected = bool(model.entity) + bool(model.table) + bool(model.plot)
+        if selected != 1:
+            raise ValueError("Must select exactly one of entity, table, or plot")
+        return model
 
 
 class TableColumnInfo(NoodleObject):
@@ -552,15 +546,15 @@ class TableInitData(NoodleObject):
 
     # too much overhead? - strict mode
     @model_validator(mode="after")
-    def types_match(cls, values):
-        for row in values['data']:
-            for col, i in zip(values['columns'], range(len(row))):
+    def types_match(cls, model):
+        for row in model.data:
+            for col, i in zip(model.columns, range(len(row))):
                 text_mismatch = isinstance(row[i], str) and col.type != "TEXT"
                 real_mismatch = isinstance(row[i], float) and col.type != "REAL"
                 int_mismatch = isinstance(row[i], int) and col.type != "INTEGER"
                 if text_mismatch or real_mismatch or int_mismatch:
                     raise ValueError(f"Column Info doesn't match type in data: {col, row[i]}")
-        return values
+        return model
 
 
 """ ====================== NOODLE COMPONENTS / DELEGATES ====================== """
@@ -665,9 +659,9 @@ class Plot(Delegate):
     signals_list: Optional[List[SignalID]] = None
 
     @model_validator(mode="after")
-    def one_of(cls, values):
-        if bool(values['simple_plot']) != bool(values['url_plot']):
-            return values
+    def one_of(cls, model):
+        if bool(model.simple_plot) != bool(model.url_plot):
+            return model
         else:
             raise ValueError("One plot type must be specified")
 
@@ -690,9 +684,9 @@ class Buffer(Delegate):
     uri_bytes: str = None
 
     @model_validator(mode="after")
-    def one_of(cls, values):
-        if bool(values['inline_bytes']) != bool(values['uri_bytes']):
-            return values
+    def one_of(cls, model):
+        if bool(model.inline_bytes) != bool(model.uri_bytes):
+            return model
         else:
             raise ValueError("One plot type must be specified")
 
@@ -767,9 +761,9 @@ class Image(Delegate):
     uri_source: str = None
 
     @model_validator(mode="after")
-    def one_of(cls, values):
-        if bool(values['buffer_source']) != bool(values['uri_source']):
-            return values
+    def one_of(cls, model):
+        if bool(model.buffer_source) != bool(model.uri_source):
+            return model
         else:
             raise ValueError("One plot type must be specified")
 
@@ -833,18 +827,14 @@ class Light(Delegate):
     directional: DirectionalLight = None
 
     @model_validator(mode="after")
-    def one_of(cls, values):
-        already_found = False
-        for field in ['point', 'spot', 'directional']:
-            if values[field] and already_found:
-                raise ValueError("More than one field entered")
-            elif values[field]:
-                already_found = True
-
-        if not already_found:
-            raise ValueError("No field provided")
+    def one_of(cls, model):
+        num_selected = bool(model.point) + bool(model.spot) + bool(model.directional)
+        if num_selected > 1:
+            raise ValueError("Only one light type can be selected")
+        elif num_selected == 0:
+            raise ValueError("No light type selected")
         else:
-            return values
+            return model
 
 
 class Geometry(Delegate):
