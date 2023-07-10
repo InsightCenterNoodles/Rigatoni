@@ -2,7 +2,6 @@
 import logging
 
 import pytest
-import penne
 
 import rigatoni.noodle_objects as nooobs
 from tests.clients import base_client, delegate_client, mock_socket
@@ -40,9 +39,9 @@ def test_ids():
     assert m2.compact_str() == "|0/1|"
 
 
-def test_delegate(base_client):
-    x = nooobs.Delegate(client=base_client, id=nooobs.ID(slot=0, gen=0))
-    y = nooobs.Delegate(client=base_client, id=nooobs.ID(slot=1, gen=0), name="Test")
+def test_delegate(base_server):
+    x = nooobs.Delegate(server=base_server, id=nooobs.ID(slot=0, gen=0))
+    y = nooobs.Delegate(server=base_server, id=nooobs.ID(slot=1, gen=0), name="Test")
     assert str(x) == "No-Name - Delegate - |0/0|"
     assert str(y) == "Test - Delegate - |1/0|"
 
@@ -90,37 +89,38 @@ def test_entity(base_client):
                                     ">> test_method:\n\tNone\n\tReturns: None\n\tArgs:"
 
 
-# noinspection PyTypeChecker
-def test_plot(base_client):
-    nooobs.Plot(id=nooobs.PlotID(0, 0), simple_plot="True")
+def test_plot(base_server):
+    nooobs.Plot(server=base_server, id=nooobs.PlotID(0, 0), simple_plot="True")
     with pytest.raises(ValueError):
-        nooobs.Plot(id=nooobs.PlotID(0, 0))
+        nooobs.Plot(server=base_server, id=nooobs.PlotID(0, 0))
     with pytest.raises(ValueError):
-        nooobs.Plot(id=nooobs.PlotID(0, 0), simple_plot="True", url_plot="True")
+        nooobs.Plot(server=base_server, id=nooobs.PlotID(0, 0), simple_plot="True", url_plot="True")
 
 
-def test_buffer():
-    nooobs.Buffer(id=nooobs.BufferID(0, 0), inline_bytes=b"test")
+def test_buffer(base_server):
+    nooobs.Buffer(server=base_server, id=nooobs.BufferID(0, 0), inline_bytes=b"test", size=4)
     with pytest.raises(ValueError):
-        nooobs.Buffer(id=nooobs.BufferID(0, 0))
+        nooobs.Buffer(server=base_server, id=nooobs.BufferID(0, 0), size=4)
     with pytest.raises(ValueError):
-        nooobs.Buffer(id=nooobs.BufferID(0, 0), inline_bytes=b"test", uri_bytes="test")
+        nooobs.Buffer(server=base_server, id=nooobs.BufferID(0, 0), inline_bytes=b"test", uri_bytes="test", size=4)
 
 
-def test_image():
-    nooobs.Image(id=nooobs.ImageID(0, 0), buffer_source=nooobs.BufferID(0, 0))
+def test_image(base_server):
+    nooobs.Image(server=base_server, id=nooobs.ImageID(0, 0), buffer_source=nooobs.BufferID(0, 0))
     with pytest.raises(ValueError):
-        nooobs.Image(id=nooobs.ImageID(0, 0))
+        nooobs.Image(server=base_server, id=nooobs.ImageID(0, 0))
     with pytest.raises(ValueError):
-        nooobs.Image(id=nooobs.ImageID(0, 0), buffer_source=nooobs.BufferID(0, 0), uri_source="www.test.com")
+        nooobs.Image(server=base_server, id=nooobs.ImageID(0, 0),
+                     buffer_source=nooobs.BufferID(0, 0), uri_source="www.test.com")
 
 
-def test_light(caplog):
-    nooobs.Light(id=nooobs.LightID(0, 0), color=[0, 0, 0], point=nooobs.PointLight())
+def test_light(base_server):
+    nooobs.Light(server=base_server, id=nooobs.LightID(0, 0), color=[0, 0, 0], point=nooobs.PointLight())
     with pytest.raises(ValueError):
-        nooobs.Light(id=nooobs.LightID(0, 0), color=[0, 0, 0])
+        nooobs.Light(server=base_server, id=nooobs.LightID(0, 0), color=[0, 0, 0])
     with pytest.raises(ValueError):
-        nooobs.Light(id=nooobs.LightID(0, 0), color=[0, 0, 0, 1], point=nooobs.PointLight(), spot=nooobs.SpotLight())
+        nooobs.Light(server=base_server, id=nooobs.LightID(0, 0), color=[0, 0, 0, 1],
+                     point=nooobs.PointLight(), spot=nooobs.SpotLight())
 
 
 def test_basic_table_methods(plain_server):

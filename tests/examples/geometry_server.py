@@ -60,11 +60,30 @@ indices = [[0, 13, 12], [1, 13, 15], [0, 12, 17], [0, 17, 19],
 # colors = [[0.0, 1, 0.0, 1]] * 42
 
 
+def move(server: rigatoni.Server, context, *args):
+    # Change world transform, but do you change local?
+    sphere = server.get_delegate(context)
+    sphere.transform = [
+        1, 0, 0, 0,
+        0, 1, 0, 0,
+        0, 0, 1, 0,
+        args[0], args[1], args[2], 1
+    ]
+    server.update_component(sphere)
+
+
+def delete(server: rigatoni.Server, context, *args):
+    sphere = server.get_delegate(context)
+    server.delete_component(sphere)
+
+    return 0
+
+
 def create_spheres(server: rigatoni.Server, context, *args):
     """Test method to create two spheres"""
 
     name = "Test Sphere"
-    # uri_server = geo.ByteServer(port=40000)
+    # uri_server = rigatoni.ByteServer(port=40000)
     material = server.create_component(rigatoni.Material, name="Test Material")
 
     # Create Patch
@@ -82,10 +101,15 @@ def create_spheres(server: rigatoni.Server, context, *args):
 
     # Set instances and create an entity
     instances = geo.create_instances(
-        positions=[(1, 1, 1, 1), (2, 2, 2, 2)],
+        positions=[(0, 0, 0, 0), (2, 2, 2, 2)],
         colors=[(1.0, .5, .5, 1.0)],
     )
     entity = geo.build_entity(server, geometry=sphere, instances=instances)
+    entity.methods_list = [
+        server.get_delegate_id("move"),
+        server.get_delegate_id("delete")
+    ]
+    server.update_component(entity)
     geo.export_mesh(server, sphere, "tests/mesh_data/test_sphere.obj")
 
     # Add Lighting
@@ -218,7 +242,7 @@ def create_from_mesh(server: rigatoni.Server, context, *args):
     material = server.create_component(rigatoni.Material, name="Test Material")
 
     # use libraries from mesh option    
-    uri_server = geo.ByteServer(port=60000)
+    uri_server = rigatoni.ByteServer(port=60000)
     server.byte_server = uri_server
     mesh = geo.geometry_from_mesh(server, "tests/mesh_data/stanford-bunny.obj", material,
                                   name, uri_server, generate_normals=False)
@@ -226,39 +250,12 @@ def create_from_mesh(server: rigatoni.Server, context, *args):
     # mesh = geo.geometry_from_mesh(server, "mesh_data/magvort.x3d", material, name, uri_server, generate_normals=False)
     # mesh = geo.geometry_from_mesh(server, "mesh_databoot.obj", material, name, uri_server)
 
-    # Create instances of sphere to represent csv data in an entity
-    instances = geo.create_instances()
-    entity = geo.build_entity(server, geometry=mesh, instances=instances)
+    #instances = geo.create_instances()
+    entity = geo.build_entity(server, geometry=mesh)
 
     # Test export
     geo.export_mesh(server, mesh, "tests/mesh_data/test_mesh.obj", uri_server)
     return 0
-
-
-def delete_sphere(server: rigatoni.Server, context, *args):
-    sphere = server.get_delegate_id("Test Sphere")
-    server.delete_component(sphere)
-
-    return 0
-
-
-def move_sphere(server: rigatoni.Server, context, *args):
-    # Change world transform, but do you change local?
-    sphere = server.get_delegate("Test Sphere")
-    # sphere.transform = [
-    #     1, 0, 0, 0,
-    #     0, 1, 0, 0,
-    #     0, 0, 1, 0,
-    #     args[0], args[1], args[2], 1
-    # ]
-    sphere.transform = [
-        1, 0, 0, args[0],
-        0, 1, 0, args[1],
-        0, 0, 1, args[2],
-        0, 0, 0, 1
-    ]
-    server.update_component(sphere)
-    pass
 
 
 # define arg documentation for injected method
@@ -283,8 +280,8 @@ starting_state = [
                                create_new_instance),
     rigatoni.StartingComponent(rigatoni.Method, {"name": "create_sphere", "arg_doc": []}, create_spheres),
     rigatoni.StartingComponent(rigatoni.Method, {"name": "create_from_mesh", "arg_doc": []}, create_from_mesh),
-    rigatoni.StartingComponent(rigatoni.Method, {"name": "delete_sphere", "arg_doc": []}, delete_sphere),
-    rigatoni.StartingComponent(rigatoni.Method, {"name": "move_sphere", "arg_doc": [*move_args]}, move_sphere),
+    rigatoni.StartingComponent(rigatoni.Method, {"name": "delete", "arg_doc": []}, delete),
+    rigatoni.StartingComponent(rigatoni.Method, {"name": "move", "arg_doc": [*move_args]}, move),
 ]
 
 logging.basicConfig(

@@ -9,7 +9,7 @@ from math import pi
 from queue import Queue
 from typing import Callable, Optional, Any, List, Tuple, Dict, NamedTuple
 
-from pydantic import BaseModel, root_validator
+from pydantic import ConfigDict, BaseModel, model_validator
 
 """ =============================== ID's ============================= """
 
@@ -122,12 +122,7 @@ class TableID(ID):
 
 class NoodleObject(BaseModel):
     """Parent Class for all noodle objects"""
-
-    class Config:
-        """Configuration for Validation"""
-
-        arbitrary_types_allowed = True
-        use_enum_values = True
+    model_config = ConfigDict(arbitrary_types_allowed=True, use_enum_values=True)
 
 
 class Delegate(NoodleObject):
@@ -143,7 +138,7 @@ class Delegate(NoodleObject):
     """
 
     server: object  # Better way to annotate this without introducing circular imports?
-    id: ID = None
+    id: ID
     name: Optional[str] = "No-Name"
     signals: Optional[dict] = {}
 
@@ -153,15 +148,10 @@ class Delegate(NoodleObject):
 
 """ ====================== Common Definitions ====================== """
 
-Vec3 = Tuple[float, float, float]
-Vec4 = Tuple[float, float, float, float]
-Mat3 = Tuple[float, float, float,
-             float, float, float,
-             float, float, float]
-Mat4 = Tuple[float, float, float, float,
-             float, float, float, float,
-             float, float, float, float,
-             float, float, float, float]
+Vec3 = List[float]  # Length 3
+Vec4 = List[float]  # Length 4
+Mat3 = List[float]  # Length 9
+Mat4 = List[float]  # Length 16
 
 RGB = Vec3
 RGBA = Vec4
@@ -515,19 +505,13 @@ class InvokeIDType(NoodleObject):
     table: Optional[TableID] = None
     plot: Optional[PlotID] = None
 
-    @root_validator(allow_reuse=True)
-    def one_of_three(cls, values):
-        already_found = False
-        for field in values:
-            if values[field] and already_found:
-                raise ValueError("More than one field entered")
-            elif values[field]:
-                already_found = True
-
-        if not already_found:
-            raise ValueError("No field provided")
-        else:
-            return values
+    @model_validator(mode="after")
+    def one_of_three(cls, model):
+        """Ensure only one of the three attributes is set"""
+        selected = bool(model.entity) + bool(model.table) + bool(model.plot)
+        if selected != 1:
+            raise ValueError("Must select exactly one of entity, table, or plot")
+        return model
 
 
 class TableColumnInfo(NoodleObject):
@@ -556,16 +540,16 @@ class TableInitData(NoodleObject):
     selections: Optional[List[Selection]] = None
 
     # too much overhead? - strict mode
-    @root_validator(allow_reuse=True)
-    def types_match(cls, values):
-        for row in values['data']:
-            for col, i in zip(values['columns'], range(len(row))):
+    @model_validator(mode="after")
+    def types_match(cls, model):
+        for row in model.data:
+            for col, i in zip(model.columns, range(len(row))):
                 text_mismatch = isinstance(row[i], str) and col.type != "TEXT"
                 real_mismatch = isinstance(row[i], float) and col.type != "REAL"
                 int_mismatch = isinstance(row[i], int) and col.type != "INTEGER"
                 if text_mismatch or real_mismatch or int_mismatch:
                     raise ValueError(f"Column Info doesn't match type in data: {col, row[i]}")
-        return values
+        return model
 
 
 """ ====================== NOODLE COMPONENTS / DELEGATES ====================== """
@@ -602,7 +586,7 @@ class Signal(Delegate):
     id: SignalID
     name: str
     doc: Optional[str] = None
-    arg_doc: List[MethodArg] = None
+    arg_doc: List[MethodArg] = []
 
 
 class Entity(Delegate):
@@ -669,10 +653,10 @@ class Plot(Delegate):
     methods_list: Optional[List[MethodID]] = None
     signals_list: Optional[List[SignalID]] = None
 
-    @root_validator(allow_reuse=True)
-    def one_of(cls, values):
-        if bool(values['simple_plot']) != bool(values['url_plot']):
-            return values
+    @model_validator(mode="after")
+    def one_of(cls, model):
+        if bool(model.simple_plot) != bool(model.url_plot):
+            return model
         else:
             raise ValueError("One plot type must be specified")
 
@@ -689,15 +673,15 @@ class Buffer(Delegate):
     """
     id: BufferID
     name: Optional[str] = None
-    size: int = None
+    size: int
 
-    inline_bytes: bytes = None
-    uri_bytes: str = None
+    inline_bytes: Optional[bytes] = None
+    uri_bytes: Optional[str] = None
 
-    @root_validator(allow_reuse=True)
-    def one_of(cls, values):
-        if bool(values['inline_bytes']) != bool(values['uri_bytes']):
-            return values
+    @model_validator(mode="after")
+    def one_of(cls, model):
+        if bool(model.inline_bytes) != bool(model.uri_bytes):
+            return model
         else:
             raise ValueError("One plot type must be specified")
 
@@ -768,13 +752,13 @@ class Image(Delegate):
     id: ImageID
     name: Optional[str] = None
 
-    buffer_source: BufferID = None
-    uri_source: str = None
+    buffer_source: Optional[BufferID] = None
+    uri_source: Optional[str] = None
 
-    @root_validator(allow_reuse=True)
-    def one_of(cls, values):
-        if bool(values['buffer_source']) != bool(values['uri_source']):
-            return values
+    @model_validator(mode="after")
+    def one_of(cls, model):
+        if bool(model.buffer_source) != bool(model.uri_source):
+            return model
         else:
             raise ValueError("One plot type must be specified")
 
@@ -833,23 +817,19 @@ class Light(Delegate):
     color: Optional[RGB] = [1.0, 1.0, 1.0]
     intensity: Optional[float] = 1.0
 
-    point: PointLight = None
-    spot: SpotLight = None
-    directional: DirectionalLight = None
+    point: Optional[PointLight] = None
+    spot: Optional[SpotLight] = None
+    directional: Optional[DirectionalLight] = None
 
-    @root_validator(allow_reuse=True)
-    def one_of(cls, values):
-        already_found = False
-        for field in ['point', 'spot', 'directional']:
-            if values[field] and already_found:
-                raise ValueError("More than one field entered")
-            elif values[field]:
-                already_found = True
-
-        if not already_found:
-            raise ValueError("No field provided")
+    @model_validator(mode="after")
+    def one_of(cls, model):
+        num_selected = bool(model.point) + bool(model.spot) + bool(model.directional)
+        if num_selected > 1:
+            raise ValueError("Only one light type can be selected")
+        elif num_selected == 0:
+            raise ValueError("No light type selected")
         else:
-            return values
+            return model
 
 
 class Geometry(Delegate):
@@ -918,6 +898,22 @@ class Table(Delegate):
     def table_selection_updated(self, selection: Selection):
         """Invoke table selection updated signal"""
         pass
+
+
+# TODO: need to work this in to specify which methods are available in which contexts
+class Document(Delegate):
+    """Represents the scope of the whole session
+
+    Attributes:
+        name (str): name will be "Document"
+        methods_list (list[MethodID]): list of methods available on the document
+        signals_list (list[SignalID]): list of signals available on the document
+    """
+
+    name: str = "Document"
+
+    methods_list: List[MethodID] = []  # Server usually sends as an update
+    signals_list: List[SignalID] = []
 
 
 """ ====================== Communication Objects ====================== """

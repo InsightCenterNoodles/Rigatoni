@@ -261,16 +261,16 @@ def build_geometry_patch(server: Server, name: str, patch_input: GeometryPatchIn
 
     # Build buffer with given lists
     buffer: nooobs.Buffer
-    buffer, index_offset = _build_geometry_buffer(server, name, patch_input, index_format, attribute_info, byte_server)
+    buffer, index_offset = _build_geometry_buffer(server, f"{name} Buffer", patch_input, index_format, attribute_info, byte_server)
 
     # Make buffer view component
     buffer_view: nooobs.BufferView = server.create_component(
         nooobs.BufferView,
-        name=name,
+        name=f"{name} Buffer View",
         source_buffer=buffer.id,
         type="GEOMETRY",
-        offset=0,  # What is this? cant always assume 0
-        length=buffer.size
+        offset=0,
+        length=index_offset  # For this format of buffer
     )
 
     # Create attribute objects from buffer view and attribute info
@@ -335,7 +335,11 @@ def build_entity(server: Server, geometry: nooobs.Geometry, instances: list[list
     """
 
     # Set name to match geometry
-    name = geometry.name if geometry.name else None
+    if geometry.name:
+        name = geometry.name
+        geometry.name = f"{name} Geometry"
+    else:
+        name = "No Name Entity"
 
     # Create instance buffer and view if specified
     if instances:
