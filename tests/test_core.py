@@ -15,7 +15,7 @@ def test_server_init(base_server):
 
     assert isinstance(base_server, Server)
     assert base_server.port == 50000
-    assert len(base_server.state) == 22
+    assert len(base_server.state) == 23
     assert base_server.shutdown_event.is_set() is False
     assert base_server.ready.is_set() is True
 
