@@ -900,7 +900,6 @@ class Table(Delegate):
         pass
 
 
-# TODO: need to work this in to specify which methods are available in which contexts
 class Document(Delegate):
     """Represents the scope of the whole session
 
@@ -910,7 +909,7 @@ class Document(Delegate):
         signals_list (list[SignalID]): list of signals available on the document
     """
 
-    name: str = "Document"
+    name: Optional[str] = "Document"
 
     methods_list: List[MethodID] = []  # Server usually sends as an update
     signals_list: List[SignalID] = []
@@ -1009,12 +1008,14 @@ class StartingComponent(object):
         type (Type[Delegate]): Type of component
         component_attrs (dict): Attributes for component
         method (Callable): Optional method to call on component
+        document (bool): Whether method is attached to and can be called on document
     """
 
-    def __init__(self, kind, component_attrs: Dict[str, Any], method: Optional[Callable] = None):
+    def __init__(self, kind, component_attrs: Dict[str, Any], method: Optional[Callable] = None, document: bool = False):
         self.type = kind
         self.component_attrs = component_attrs
         self.method = method
+        self.document = document
 
 
 def get_context(delegate):

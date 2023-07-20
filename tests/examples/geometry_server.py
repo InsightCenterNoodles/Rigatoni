@@ -5,7 +5,9 @@ Offers sample methods a server could implement using a sphere
 
 import logging
 import pandas as pd
+import numpy as np
 import matplotlib
+from pyrr import Quaternion
 
 import rigatoni
 from rigatoni.core import Server
@@ -60,16 +62,51 @@ indices = [[0, 13, 12], [1, 13, 15], [0, 12, 17], [0, 17, 19],
 # colors = [[0.0, 1, 0.0, 1]] * 42
 
 
-def move(server: rigatoni.Server, context, *args):
+def move(server: rigatoni.Server, context, vec):
     # Change world transform, but do you change local?
     sphere = server.get_delegate(context)
-    sphere.transform = [
-        1, 0, 0, 0,
-        0, 1, 0, 0,
-        0, 0, 1, 0,
-        args[0], args[1], args[2], 1
-    ]
+    x, y, z = vec
+    if sphere.transform is None:
+        sphere.transform = [
+            1, 0, 0, 0,
+            0, 1, 0, 0,
+            0, 0, 1, 0,
+            x, y, z, 1
+        ]
+    else:
+        sphere.transform = sphere.transform[:12] + [x, y, z, 1]
     server.update_component(sphere)
+
+
+def rotate(server: rigatoni.Server, context, quat):
+
+    sphere = server.get_delegate(context)
+    # quat = np.quaternion(*quat)
+    # rotation = quaternion.as_rotation_matrix(quat)
+    # rotation = np.pad(rotation, ((0, 1), (0, 1)), mode="constant", constant_values=0)
+    # rotation[3, 3] = 1
+    quat = Quaternion(quat)
+    if sphere.transform is not None:
+        rotation_mat = quat.matrix33
+        new_transform = np.array(sphere.transform).reshape(4, 4)  # make new transform matrix so update sees new list
+        new_transform[:3, :3] = rotation_mat
+        sphere.transform = new_transform.flatten().tolist()
+    else:
+        # Flatten to 1d array (col major order) and convert to list
+        sphere.transform = quat.matrix44.flatten().tolist()
+    server.update_component(sphere)
+
+
+def scale(server: rigatoni.Server, context, *args):
+    entity = server.get_delegate(context)
+    x, y, z = args[0]
+    entity.transform = [
+        x, 0, 0, 0,
+        0, y, 0, 0,
+        0, 0, z, 0,
+        0, 0, 0, 1
+    ]
+    server.update_component(entity)
 
 
 def delete(server: rigatoni.Server, context, *args):
@@ -106,7 +143,9 @@ def create_spheres(server: rigatoni.Server, context, *args):
     )
     entity = geo.build_entity(server, geometry=sphere, instances=instances)
     entity.methods_list = [
-        server.get_delegate_id("move"),
+        server.get_delegate_id("noo::set_position"),
+        server.get_delegate_id("noo::set_rotation"),
+        server.get_delegate_id("noo::set_scale"),
         server.get_delegate_id("delete")
     ]
     server.update_component(entity)
@@ -184,16 +223,6 @@ def make_point_plot(server: rigatoni.Server, context, *args):
     sun = server.create_component(rigatoni.Light, name="Sun", intensity=1, directional=rigatoni.DirectionalLight())
     server.create_component(rigatoni.Entity, transform=mat, lights=[light.id])
 
-    spot_info = rigatoni.SpotLight()
-    mat = [
-        1, 0, 0, 0,
-        0, 1, 0, 0,
-        0, 0, 1, 0,
-        0, 3, 0, 1
-    ]
-    spot = server.create_component(rigatoni.Light, name="Test Spot Light", spot=spot_info)
-    server.create_component(rigatoni.Entity, transform=mat, lights=[spot.id])
-
     # Create patch / geometry for point geometry
     patches = []
     patch_info = geo.GeometryPatchInput(
@@ -230,6 +259,13 @@ def make_point_plot(server: rigatoni.Server, context, *args):
         scales=scls
     )
     entity = geo.build_entity(server, geometry=sphere, instances=instances)
+    entity.methods_list = [
+        server.get_delegate_id("noo::set_position"),
+        server.get_delegate_id("noo::set_rotation"),
+        server.get_delegate_id("noo::set_scale"),
+        server.get_delegate_id("delete")
+    ]
+    server.update_component(entity)
     # new_instance = geo.create_instances([[1,1,1]])
     # geo.add_instances(server, entity, new_instance)
     return 0
@@ -268,20 +304,28 @@ instance_args = [
 ]
 
 move_args = [
-    rigatoni.MethodArg(name="x", doc="How far to move in x", editor_hint="noo::real"),
-    rigatoni.MethodArg(name="y", doc="How far to move in y", editor_hint="noo::real"),
-    rigatoni.MethodArg(name="z", doc="How far to move in z", editor_hint="noo::real")
+    rigatoni.MethodArg(name="position", doc="Where to move to", editor_hint="noo::array")
+]
+
+rot_args = [
+    rigatoni.MethodArg(name="rotation", doc="How to rotate", editor_hint="noo::array")
+]
+
+scale_args = [
+    rigatoni.MethodArg(name="scale", doc="How to scale", editor_hint="noo::array")
 ]
 
 # Define starting state
 starting_state = [
-    rigatoni.StartingComponent(rigatoni.Method, {"name": "new_point_plot", "arg_doc": []}, make_point_plot),
+    rigatoni.StartingComponent(rigatoni.Method, {"name": "new_point_plot", "arg_doc": []}, make_point_plot, True),
     rigatoni.StartingComponent(rigatoni.Method, {"name": "create_new_instance", "arg_doc": [*instance_args]},
                                create_new_instance),
-    rigatoni.StartingComponent(rigatoni.Method, {"name": "create_sphere", "arg_doc": []}, create_spheres),
-    rigatoni.StartingComponent(rigatoni.Method, {"name": "create_from_mesh", "arg_doc": []}, create_from_mesh),
+    rigatoni.StartingComponent(rigatoni.Method, {"name": "create_sphere", "arg_doc": []}, create_spheres, True),
+    rigatoni.StartingComponent(rigatoni.Method, {"name": "create_from_mesh", "arg_doc": []}, create_from_mesh, True),
     rigatoni.StartingComponent(rigatoni.Method, {"name": "delete", "arg_doc": []}, delete),
-    rigatoni.StartingComponent(rigatoni.Method, {"name": "move", "arg_doc": [*move_args]}, move),
+    rigatoni.StartingComponent(rigatoni.Method, {"name": "noo::set_position", "arg_doc": [*move_args]}, move),
+    rigatoni.StartingComponent(rigatoni.Method, {"name": "noo::set_rotation", "arg_doc": [*rot_args]}, rotate),
+    rigatoni.StartingComponent(rigatoni.Method, {"name": "noo::set_scale", "arg_doc": [*scale_args]}, scale),
 ]
 
 logging.basicConfig(
