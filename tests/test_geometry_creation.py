@@ -30,13 +30,13 @@ colors_attr = rig.geometry.AttributeInput(semantic="COLOR", format="U8VEC4", nor
 def test_geometry_server(geometry_server):
     # Callbacks
     def create_sphere():
-        client.invoke_method("create_sphere", on_done=new_point_plot)
+        client.invoke_method("create_sphere", callback=new_point_plot)
 
     def new_point_plot(*args):
-        client.invoke_method("create_sphere", on_done=delete_sphere)
+        client.invoke_method("create_sphere", callback=delete_sphere)
 
     def delete_sphere(*args):
-        client.invoke_method("delete", context={"entity": [0, 0]}, on_done=shutdown)
+        client.invoke_method("delete", context={"entity": [0, 0]}, callback=shutdown)
 
     def shutdown(*args):
         client.is_active = False
@@ -65,7 +65,7 @@ def test_large_mesh(geometry_server):
 
     # Callbacks
     def create_from_mesh(*args):
-        client.invoke_method("create_from_mesh", on_done=shutdown)
+        client.invoke_method("create_from_mesh", callback=shutdown)
 
     def shutdown(*args):
         client.is_active = False

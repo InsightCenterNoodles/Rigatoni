@@ -97,7 +97,7 @@ class TableDelegate(Table):
     plotting: multiprocessing.Process = None
     sender: Any = None
 
-    def _on_table_init(self, init_info: dict, on_done=None):
+    def _on_table_init(self, init_info: dict, callback=None):
         """Creates table from server response info
 
         Args:
@@ -120,8 +120,8 @@ class TableDelegate(Table):
             self.selections[selection["name"]] = selection
 
         print(f"Initialized data table...\n{self.dataframe}")
-        if on_done:
-            on_done()
+        if callback:
+            callback()
 
     def _reset_table(self, init_info: dict = None):
         """Reset dataframe and selections to blank objects
@@ -210,7 +210,7 @@ class TableDelegate(Table):
         df = self.dataframe
         self.sender._send(get_plot_data(df))
 
-    def plot(self, on_done: Callable = None):
+    def plot(self, callback: Callable = None):
         """Creates plot in a new window
 
         Uses matplotlib to plot a representation of the table
@@ -220,8 +220,8 @@ class TableDelegate(Table):
 
         self.plotting = multiprocessing.Process(target=plot_process, args=(self.dataframe, receiver))
         self.plotting.start()
-        if on_done:
-            on_done()
+        if callback:
+            callback()
 
 
 @pytest.fixture
@@ -251,35 +251,35 @@ def run_basic_operations(table: TableID, plotting: bool = True):
 
     # Callbacks
     def create_table():
-        client.invoke_method("new_point_plot", points, on_done=subscribe)
+        client.invoke_method("new_point_plot", points, callback=subscribe)
 
     def subscribe(*args):
         if plotting:
-            client.state[table].subscribe(on_done=plot)
+            client.state[table].subscribe(callback=plot)
         else:
-            client.state[table].subscribe(on_done=insert_points)
+            client.state[table].subscribe(callback=insert_points)
 
     def plot(*args):
-        client.state[table].plot(on_done=insert_points)
+        client.state[table].plot(callback=insert_points)
 
     def insert_points(*args):
         client.state[table].request_insert(
             row_list=[[8, 8, 8, .3, .2, 1, .05, .05, .05], [9, 9, 9, .1, .2, .5, .02, .02, .02, "Annotation"]],
-            on_done=update_rows
+            callback=update_rows
         )
 
     def update_rows(*args):
         client.state[table].request_update([3], [[4, 6, 3, 0, 1, 0, .1, .1, .1, "Updated this row"]],
-                                           on_done=get_selection)
+                                           callback=get_selection)
 
     def get_selection(*args):
-        client.state[table].request_update_selection("Test Select", [1, 2, 3], on_done=remove_row)
+        client.state[table].request_update_selection("Test Select", [1, 2, 3], callback=remove_row)
 
     def remove_row(*args):
-        client.state[table].request_remove([2], on_done=clear)
+        client.state[table].request_remove([2], callback=clear)
 
     def clear(*args):
-        client.state[table].request_clear(on_done=shutdown)
+        client.state[table].request_clear(callback=shutdown)
 
     def shutdown(*args):
         client.is_active = False

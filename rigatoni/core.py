@@ -41,7 +41,7 @@ class Server(object):
         state (dict):
             document's current state, contains all components with component ID as the key
         client_state (dict):
-            lagging state to keep track of how up to date clients are
+            lagging state to keep track of how up-to-date clients are
         references (dict):
             maps component ID to all the component ID's that reference it
         delete_queue (set):
@@ -147,6 +147,8 @@ class Server(object):
         }
 
         # Set up starting state
+        self.state["document"] = Document(server=self, id=ID(slot=0, gen=0))
+        self.client_state["document"] = Document(server=self, id=ID(slot=0, gen=0))
         for starting_component in starting_state:
             comp_type = starting_component.type
             comp_method = starting_component.method
@@ -156,11 +158,17 @@ class Server(object):
             except Exception as e:
                 raise TypeError(f"Invalid arguments to create {comp_type}: {e}")
 
-            if comp_type == Method and comp_method:
+            if comp_type == Method:
+                if not comp_method:
+                    raise ValueError("Method not specified for starting method")
+
+                # Create injected method and set it as attribute
                 injected = InjectedMethod(self, comp_method)
                 setattr(self, comp.name, injected)
-            elif comp_type == Method and not comp_method:
-                raise ValueError("Method not specified for starting method")
+
+                # Add to document context if flag is set
+                if starting_component.document:
+                    self.state["document"].methods_list.append(comp.id)
 
         logging.debug(f"Server initialized with objects: {self.state}")
 
@@ -379,8 +387,9 @@ class Server(object):
 
         elif action == "update":
             if not noodle_object:  # Document case
-                contents["methods_list"] = self.get_ids_by_type(Method)
-                contents["signals_list"] = self.get_ids_by_type(Signal)
+                document = self.state["document"].model_dump()
+                contents["methods_list"] = document.get("methods_list", [])
+                contents["signals_list"] = document.get("signals_list", [])
             else:  # Normal update, include id, and any field in delta
                 delta = set() if not delta else delta
                 delta.add("id")
@@ -1054,11 +1063,12 @@ def top_sort_recurse(id, refs, visited, components, stack):
             if not visited[ref]:
                 top_sort_recurse(ref, refs, visited, components, stack)
 
-    stack.append(components[id])
+    comp = components[id]
+    if not isinstance(comp, Document):
+        stack.append(comp)
 
 
-def order_components(components: dict[ID, Delegate],
-                     refs: dict[ID, list[ID]]):
+def order_components(components: dict[ID, Delegate], refs: dict[ID, list[ID]]):
     """Helper for creating topological sort of components"""
 
     visited = {key: False for key in components}
