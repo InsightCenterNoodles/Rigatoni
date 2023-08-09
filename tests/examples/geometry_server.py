@@ -71,8 +71,8 @@ class EntityDelegate(rigatoni.Entity):
         transform = np.eye(4)
         transform[3, :3] = self.position
         transform[:3, :3] = Quaternion(self.rotation).matrix33.tolist()
-        transform[:3, :3] *= self.scale
-        return transform.flatten().tolist()
+        transform[:3, :3] = np.matmul(np.diag(self.scale), transform[:3, :3])
+        self.transform = transform.flatten().tolist()
 
 
 def move(server: rigatoni.Server, context, vec):
@@ -84,59 +84,15 @@ def move(server: rigatoni.Server, context, vec):
 
 def rotate(server: rigatoni.Server, context, quat):
     entity = server.get_delegate(context)
-    # entity.rotation = quat
-    # entity.update_transform()
-    # server.update_component(entity)
-
-    if sphere.transform is not None:
-
-        # Extract old components of the transform
-        old_transform = np.array(sphere.transform).reshape(4, 4)
-        old_rotation = old_transform[:3, :3]
-        old_translation = old_transform[3, :3]
-        old_scale = np.linalg.norm(old_rotation, axis=1)
-        scaling_matrix = np.diag(old_scale)
-
-        # Apply rotation to existing transform
-        new_rotation = quat.matrix33
-        old_rotation /= np.linalg.norm(old_rotation, axis=1)
-        new_transform = np.eye(4)
-        new_transform[:3, :3] = np.matmul(scaling_matrix, new_rotation)
-        new_transform[3, :3] = old_translation
-        sphere.transform = new_transform.flatten().tolist()
-
-    else:
-        # Flatten to 1d array (col major order) and convert to list
-        sphere.transform = quat.matrix44.flatten().tolist()
-    server.update_component(sphere)
+    entity.rotation = quat
+    entity.update_transform()
+    server.update_component(entity)
 
 
-def scale(server: rigatoni.Server, context, *args):
+def scale(server: rigatoni.Server, context, vec):
     entity = server.get_delegate(context)
-    x, y, z = args[0]
-    if entity.transform is None:
-        entity.transform = [x, 0, 0, 0, 0, y, 0, 0, 0, 0, z, 0, 0, 0, 0, 1]
-    else:
-        # Something here... as long as its just repeated scaling its ok, rotation in the mix throws things off
-        old_transform = np.array(entity.transform).reshape(4, 4)
-        new_transform = old_transform
-
-        # Extract old components of the transform, scale and rotation without scaling
-        old_scaling_matrix = np.diag(np.linalg.norm(old_transform[:3, :3], axis=1))
-        inverse_old_scales = np.linalg.inv(old_scaling_matrix)
-        old_rotation = np.matmul(old_transform[:3, :3], inverse_old_scales)
-
-        # Apply new scaling
-        new_scaling_matrix = np.diag(np.array([x, y, z]))
-        new_transform[:3, :3] = np.matmul(new_scaling_matrix, old_rotation)
-
-        # check = old_transform[:3, :3] / current_scales
-        # rotation = old_transform[:3, :3]
-        # rotation[0] /= current_scales[0]
-        # rotation[1] /= current_scales[1]
-        # rotation[2] /= current_scales[2]
-        # old_transform[:3, :3] = np.matmul(scaling_matrix, rotation)
-        entity.transform = new_transform.flatten().tolist()
+    entity.scale = vec
+    entity.update_transform()
     server.update_component(entity)
 
 

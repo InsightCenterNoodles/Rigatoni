@@ -699,8 +699,7 @@ class Server(object):
             logging.info(f"Couldn't delete {delegate}, referenced by {self.references[del_id]}, added to queue")
             self.delete_queue.add(del_id)
 
-    @staticmethod
-    def _find_delta(state, edited):
+    def _find_delta(self, state, edited):
         """Helper to find differences between two objects
         
         Also checks to find recursive cases and cases where references
@@ -708,9 +707,10 @@ class Server(object):
         """
 
         delta = set()
+        base_type = self.id_decoder[type(edited.id)]
         for field_name, value in edited:
             state_val = getattr(state, field_name)
-            if value != state_val:
+            if value != state_val and field_name in base_type.model_fields:
                 delta.add(field_name)
         return delta
 
