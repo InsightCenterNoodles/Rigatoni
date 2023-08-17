@@ -4,10 +4,12 @@ Offers sample methods a server could implement using a sphere
 """
 
 import logging
+from typing import List, Optional
+
 import pandas as pd
 import numpy as np
 import matplotlib
-from pyrr import Quaternion
+import quaternion
 
 import rigatoni
 from rigatoni.core import Server
@@ -59,53 +61,39 @@ indices = [[0, 13, 12], [1, 13, 15], [0, 12, 17], [0, 17, 19],
            [13, 0, 16], [12, 14, 2], [12, 13, 14], [13, 1, 14]]
 
 
-# colors = [[0.0, 1, 0.0, 1]] * 42
+class EntityDelegate(rigatoni.Entity):
+    """Custom Entity that stores scale, rotation, and position as attributes"""
+    scale: Optional[List[float]] = [1.0, 1.0, 1.0]
+    rotation: Optional[List[float]] = [1.0, 0.0, 0.0, 0.0]
+    position: Optional[List[float]] = [0.0, 0.0, 0.0]
+
+    def update_transform(self):
+        transform = np.eye(4)
+        transform[3, :3] = self.position
+        transform[:3, :3] = quaternion.as_rotation_matrix(np.quaternion(*self.rotation))
+        transform[:3, :3] = np.matmul(np.diag(self.scale), transform[:3, :3])
+        self.transform = transform.flatten().tolist()
 
 
 def move(server: rigatoni.Server, context, vec):
-    # Change world transform, but do you change local?
-    sphere = server.get_delegate(context)
-    x, y, z = vec
-    if sphere.transform is None:
-        sphere.transform = [
-            1, 0, 0, 0,
-            0, 1, 0, 0,
-            0, 0, 1, 0,
-            x, y, z, 1
-        ]
-    else:
-        sphere.transform = sphere.transform[:12] + [x, y, z, 1]
-    server.update_component(sphere)
+    entity = server.get_delegate(context)
+    entity.position = vec
+    entity.update_transform()
+    server.update_component(entity)
 
 
 def rotate(server: rigatoni.Server, context, quat):
-
-    sphere = server.get_delegate(context)
-    # quat = np.quaternion(*quat)
-    # rotation = quaternion.as_rotation_matrix(quat)
-    # rotation = np.pad(rotation, ((0, 1), (0, 1)), mode="constant", constant_values=0)
-    # rotation[3, 3] = 1
-    quat = Quaternion(quat)
-    if sphere.transform is not None:
-        rotation_mat = quat.matrix33
-        new_transform = np.array(sphere.transform).reshape(4, 4)  # make new transform matrix so update sees new list
-        new_transform[:3, :3] = rotation_mat
-        sphere.transform = new_transform.flatten().tolist()
-    else:
-        # Flatten to 1d array (col major order) and convert to list
-        sphere.transform = quat.matrix44.flatten().tolist()
-    server.update_component(sphere)
-
-
-def scale(server: rigatoni.Server, context, *args):
     entity = server.get_delegate(context)
-    x, y, z = args[0]
-    entity.transform = [
-        x, 0, 0, 0,
-        0, y, 0, 0,
-        0, 0, z, 0,
-        0, 0, 0, 1
-    ]
+    rearranged = [quat[3], quat[0], quat[1], quat[2]]
+    entity.rotation = rearranged
+    entity.update_transform()
+    server.update_component(entity)
+
+
+def scale(server: rigatoni.Server, context, vec):
+    entity = server.get_delegate(context)
+    entity.scale = vec
+    entity.update_transform()
     server.update_component(entity)
 
 
@@ -328,6 +316,10 @@ starting_state = [
     rigatoni.StartingComponent(rigatoni.Method, {"name": "noo::set_scale", "arg_doc": [*scale_args]}, scale),
 ]
 
+delegates = {
+    rigatoni.Entity: EntityDelegate
+}
+
 logging.basicConfig(
     format="%(message)s",
     level=logging.DEBUG
@@ -336,7 +328,7 @@ logging.basicConfig(
 
 def main():
 
-    server = Server(50000, starting_state)
+    server = Server(50000, starting_state, delegates)
     server.run()
 
 
