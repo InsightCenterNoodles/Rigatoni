@@ -9,7 +9,7 @@ from typing import List, Optional
 import pandas as pd
 import numpy as np
 import matplotlib
-from pyrr import Quaternion, Matrix44
+import quaternion
 
 import rigatoni
 from rigatoni.core import Server
@@ -64,13 +64,13 @@ indices = [[0, 13, 12], [1, 13, 15], [0, 12, 17], [0, 17, 19],
 class EntityDelegate(rigatoni.Entity):
     """Custom Entity that stores scale, rotation, and position as attributes"""
     scale: Optional[List[float]] = [1.0, 1.0, 1.0]
-    rotation: Optional[List[float]] = [0.0, 0.0, 0.0, 1.0]
+    rotation: Optional[List[float]] = [1.0, 0.0, 0.0, 0.0]
     position: Optional[List[float]] = [0.0, 0.0, 0.0]
 
     def update_transform(self):
         transform = np.eye(4)
         transform[3, :3] = self.position
-        transform[:3, :3] = Quaternion(self.rotation).matrix33.tolist()
+        transform[:3, :3] = quaternion.as_rotation_matrix(np.quaternion(*self.rotation))
         transform[:3, :3] = np.matmul(np.diag(self.scale), transform[:3, :3])
         self.transform = transform.flatten().tolist()
 
@@ -84,7 +84,8 @@ def move(server: rigatoni.Server, context, vec):
 
 def rotate(server: rigatoni.Server, context, quat):
     entity = server.get_delegate(context)
-    entity.rotation = quat
+    rearranged = [quat[3], quat[0], quat[1], quat[2]]
+    entity.rotation = rearranged
     entity.update_transform()
     server.update_component(entity)
 
