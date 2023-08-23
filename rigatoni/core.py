@@ -292,7 +292,7 @@ class Server(object):
             name (str): name of component to get
 
         Returns:
-            id: id of component with specified name
+            id (ID): id of component with specified name
 
         Raises:
             ValueError: if no component with specified name is found
@@ -312,7 +312,7 @@ class Server(object):
             identifier (ID | str| Dict[str, ID]]): identifier for component
 
         Returns:
-            delegate: delegate with specified identifier
+            delegate (Delegate): delegate with specified identifier
 
         Raises:
             TypeError: if identifier is not of type ID, str, or dict
@@ -340,7 +340,7 @@ class Server(object):
             context (dict): context of the form {str: ID}
 
         Returns:
-            delegate: delegate from specified context
+            delegate (Delegate): delegate from specified context
 
         Raises:
             ValueError: if context is invalid
@@ -753,7 +753,7 @@ class Server(object):
             signal_data (dict): data to be sent with the signal
 
         Returns:
-            message: message to be broadcast
+            message (list): message to be broadcast
 
         Raises:
             ValueError: if the user specifies an invalid on_component type

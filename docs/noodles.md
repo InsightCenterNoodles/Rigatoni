@@ -32,7 +32,7 @@ If you look at the [message specification](https://github.com/InsightCenterNoodl
 the messages follow a pattern. In general, most messages signal the creation, deletion, or modification of an object.
 These objects include lights, geometries, buffers, and more. These objects are all used to compose a scene that can be 
 rendered in 3d. Below is a diagram that shows the basic layout of the scene graph. For information on each type of 
-object, check out the latter half of this [page](api_reference/delegates.md).
+object, check out the latter half of this [page](api_reference/components.md).
 
 ![NOODLES Entity Structure](assets/concepts.svg)
 
