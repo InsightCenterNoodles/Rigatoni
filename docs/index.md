@@ -12,6 +12,10 @@ The server uses a websocket connection to send CBOR encoded messages. To customi
 provides convenient interface methods to assist the user in writing their own methods for the server. The user can
 also add custom delegates to add additional functionality to any of the standard components.
 
+<video autoplay loop src="assets/demo.mov"> video </video> 
+<figcaption>Rigatoni's Geometry Server used with Orzo for 3d visualizations</figcaption>
+
+
 ## Why use Rigatoni?
 
 Rigatoni is a great choice for anyone who wants to use the NOODLES protocol while working in Python. With a server

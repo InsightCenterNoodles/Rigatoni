@@ -24,3 +24,8 @@ To install optional dependencies along with Rigatoni:
 ```bash
 pip install rigatoni[geometry]
 ```
+
+!!! Note
+
+    For stability, Rigatoni's core dependencies are pinned to specific versions. While these are up to date as of August
+    2023, you may want to update them to the latest versions. To do so, simply update the package yourself.

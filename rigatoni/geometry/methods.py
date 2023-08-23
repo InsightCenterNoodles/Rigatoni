@@ -331,7 +331,7 @@ def build_entity(server: Server, geometry: nooobs.Geometry, instances: list[list
         instances (Mat4): optional instance matrix, can use create_instances to generate
 
     Returns:
-        Entity: newly created entity delegate
+        entity (Entity): newly created entity delegate
     """
 
     # Set name to match geometry
@@ -436,7 +436,7 @@ def update_entity(server: Server, entity: nooobs.Entity, geometry: nooobs.Geomet
         instances (list[Mat4]): Optional new instances if that is changed
 
     Returns:
-        Entity: updated entity
+        entity (Entity): updated entity
 
     Raises:
         ValueError: If no geometry is specified and entity has no geometry
@@ -614,7 +614,7 @@ def geometry_from_mesh(server: Server, file, material: nooobs.Material,
         ordered_indices (bool): whether indices are oriented consistently (clockwise or counterclockwise)
 
     Returns:
-        Geometry: newly created geometry delegate
+        geometry (Geometry): newly created geometry delegate
     """
 
     # Create meshio mesh object to extract data from file, if unsupported file type use meshlab
