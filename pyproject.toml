@@ -18,9 +18,9 @@ classifiers = [
     "Topic :: Scientific/Engineering :: Visualization"
 ]
 dependencies = [
-    "websockets",
-    "cbor2",
-    "pydantic"
+    "websockets==11.0.3",
+    "cbor2==5.4.6",
+    "pydantic==2.2.0",
 ]
 
 [project.optional-dependencies]
