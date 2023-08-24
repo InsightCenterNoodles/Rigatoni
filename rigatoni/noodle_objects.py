@@ -1047,7 +1047,7 @@ class StartingComponent(object):
         type (Type[Delegate]): Type of component
         component_attrs (dict): Attributes for component
         method (Callable): Optional method to call on component
-        document (bool): Whether method is attached to and can be called on document
+        document (bool): Whether method / signal is attached to and can be called on document
     """
 
     def __init__(self, kind, component_attrs: Dict[str, Any], method: Optional[Callable] = None, document: bool = False):
