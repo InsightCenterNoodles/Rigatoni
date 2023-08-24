@@ -1,0 +1,3395 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Documentation for Rigatoni.">
+      
+      
+      
+        <link rel="canonical" href="https://insightcenternoodles.github.io/Rigatoni/api_reference/support_objects/">
+      
+      
+        <link rel="prev" href="../server/">
+      
+      
+      
+      <link rel="icon" href="../../assets/favicon.png">
+      <meta name="generator" content="mkdocs-1.5.2, mkdocs-material-9.2.3">
+    
+    
+      
+        <title>Supporting Objects - Rigatoni</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.0e669242.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.85d0ee34.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/_mkdocstrings.css">
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce((e,_)=>(e<<5)-e+_.charCodeAt(0),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="deep-orange" data-md-color-accent="deep-orange">
+  
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&"object"==typeof palette.color)for(var key of Object.keys(palette.color))document.body.setAttribute("data-md-color-"+key,palette.color[key])</script>
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#supporting-objects" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="Rigatoni" class="md-header__button md-logo" aria-label="Rigatoni" data-md-component="logo">
+      
+  <img src="../../assets/logo.svg" alt="logo">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3V6m0 5h18v2H3v-2m0 5h18v2H3v-2Z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Rigatoni
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Supporting Objects
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="deep-orange" data-md-color-accent="deep-orange"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_2" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 2a7 7 0 0 1 7 7c0 2.38-1.19 4.47-3 5.74V17a1 1 0 0 1-1 1H9a1 1 0 0 1-1-1v-2.26C6.19 13.47 5 11.38 5 9a7 7 0 0 1 7-7M9 21v-1h6v1a1 1 0 0 1-1 1h-4a1 1 0 0 1-1-1m3-17a5 5 0 0 0-5 5c0 2.05 1.23 3.81 3 4.58V16h4v-2.42c1.77-.77 3-2.53 3-4.58a5 5 0 0 0-5-5Z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="deep-orange" data-md-color-accent="deep-orange"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_2">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 2a7 7 0 0 0-7 7c0 2.38 1.19 4.47 3 5.74V17a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1v-2.26c1.81-1.27 3-3.36 3-5.74a7 7 0 0 0-7-7M9 21a1 1 0 0 0 1 1h4a1 1 0 0 0 1-1v-1H9v1Z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+    
+      <label class="md-header__button md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5Z"/></svg>
+      </label>
+      <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5Z"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12Z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41Z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/InsightCenterNoodles/Rigatoni" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.4.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2023 Fonticons, Inc.--><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81z"/></svg>
+  </div>
+  <div class="md-source__repository">
+    InsightCenterNoodles/Rigatoni
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="Rigatoni" class="md-nav__button md-logo" aria-label="Rigatoni" data-md-component="logo">
+      
+  <img src="../../assets/logo.svg" alt="logo">
+
+    </a>
+    Rigatoni
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/InsightCenterNoodles/Rigatoni" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.4.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2023 Fonticons, Inc.--><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81z"/></svg>
+  </div>
+  <div class="md-source__repository">
+    InsightCenterNoodles/Rigatoni
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Overview
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../install/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Install
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../basic_usage/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Basic usage
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../quick_start/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Quick start
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+    
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+        
+        
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" checked>
+        
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Api reference
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            Api reference
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../server/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Server
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../delegates/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Delegates
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../geometry/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Geometry
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../contributing/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Contributing
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../noodles/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    What is NOODLES?
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#ids" class="md-nav__link">
+    ID's
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#rigatoni.ID" class="md-nav__link">
+    ID
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#rigatoni.MethodID" class="md-nav__link">
+    MethodID
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#rigatoni.SignalID" class="md-nav__link">
+    SignalID
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#rigatoni.EntityID" class="md-nav__link">
+    EntityID
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#rigatoni.PlotID" class="md-nav__link">
+    PlotID
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#rigatoni.BufferID" class="md-nav__link">
+    BufferID
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#rigatoni.BufferViewID" class="md-nav__link">
+    BufferViewID
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#rigatoni.MaterialID" class="md-nav__link">
+    MaterialID
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#rigatoni.ImageID" class="md-nav__link">
+    ImageID
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#rigatoni.TextureID" class="md-nav__link">
+    TextureID
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#rigatoni.SamplerID" class="md-nav__link">
+    SamplerID
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#rigatoni.LightID" class="md-nav__link">
+    LightID
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#rigatoni.GeometryID" class="md-nav__link">
+    GeometryID
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#rigatoni.TableID" class="md-nav__link">
+    TableID
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#enums-for-specific-string-options" class="md-nav__link">
+    Enums for Specific String Options
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#rigatoni.AttributeSemantic" class="md-nav__link">
+    AttributeSemantic
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#rigatoni.Format" class="md-nav__link">
+    Format
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#rigatoni.IndexFormat" class="md-nav__link">
+    IndexFormat
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#rigatoni.PrimitiveType" class="md-nav__link">
+    PrimitiveType
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#rigatoni.ColumnType" class="md-nav__link">
+    ColumnType
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#rigatoni.BufferType" class="md-nav__link">
+    BufferType
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#rigatoni.SamplerMode" class="md-nav__link">
+    SamplerMode
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#rigatoni.MagFilterTypes" class="md-nav__link">
+    MagFilterTypes
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#rigatoni.MinFilterTypes" class="md-nav__link">
+    MinFilterTypes
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#supporting-objects_1" class="md-nav__link">
+    Supporting Objects
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#rigatoni.SelectionRange" class="md-nav__link">
+    SelectionRange
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#rigatoni.Selection" class="md-nav__link">
+    Selection
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#rigatoni.MethodArg" class="md-nav__link">
+    MethodArg
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#rigatoni.BoundingBox" class="md-nav__link">
+    BoundingBox
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#rigatoni.TextRepresentation" class="md-nav__link">
+    TextRepresentation
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#rigatoni.WebRepresentation" class="md-nav__link">
+    WebRepresentation
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#rigatoni.InstanceSource" class="md-nav__link">
+    InstanceSource
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#rigatoni.RenderRepresentation" class="md-nav__link">
+    RenderRepresentation
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#rigatoni.TextureRef" class="md-nav__link">
+    TextureRef
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#rigatoni.PBRInfo" class="md-nav__link">
+    PBRInfo
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#rigatoni.PointLight" class="md-nav__link">
+    PointLight
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#rigatoni.SpotLight" class="md-nav__link">
+    SpotLight
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#rigatoni.DirectionalLight" class="md-nav__link">
+    DirectionalLight
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#rigatoni.Attribute" class="md-nav__link">
+    Attribute
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#rigatoni.Index" class="md-nav__link">
+    Index
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#rigatoni.GeometryPatch" class="md-nav__link">
+    GeometryPatch
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#rigatoni.InvokeIDType" class="md-nav__link">
+    InvokeIDType
+  </a>
+  
+    <nav class="md-nav" aria-label="InvokeIDType">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#rigatoni.InvokeIDType.one_of_three" class="md-nav__link">
+    one_of_three()
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#rigatoni.TableColumnInfo" class="md-nav__link">
+    TableColumnInfo
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#rigatoni.TableInitData" class="md-nav__link">
+    TableInitData
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+  
+  
+
+
+<h1 id="supporting-objects">Supporting Objects</h1>
+<p>These are objects that are used by other components in the library.</p>
+<h2 id="ids">ID's</h2>
+
+
+<div class="doc doc-object doc-class">
+
+
+
+<h2 id="rigatoni.ID" class="doc doc-heading">
+          <span class="doc doc-object-name doc-class-name">rigatoni.ID</span>
+
+
+</h2>
+
+
+  <div class="doc doc-contents first">
+          <p class="doc doc-class-bases">
+            Bases: <code><span title="typing.NamedTuple">NamedTuple</span></code></p>
+
+  
+      <p>Base class for all ID's</p>
+<p>Each ID is composed of a slot and a generation, resulting in a tuple like id ex. (0, 0). Both are positive
+integers that are filled in increasing order. Slots are taken first, but once the slot is freed, it can be used
+with a new generation. For example, a method is created -&gt; (0, 0), then another is created -&gt; (1, 0), then method
+(0, 0) is deleted. Now, the next method created will be (0, 1).</p>
+
+
+
+  <p><strong>Attributes:</strong></p>
+  <table>
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr>
+          <td><code>slot</code></td>
+          <td>
+                <code>int</code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>Slot of the ID</p>
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td><code>gen</code></td>
+          <td>
+                <code>int</code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>Generation of the ID</p>
+            </div>
+          </td>
+        </tr>
+    </tbody>
+  </table>
+
+
+  
+
+  <div class="doc doc-children">
+
+
+
+
+
+
+
+
+
+
+
+  </div>
+
+  </div>
+
+</div>
+
+<div class="doc doc-object doc-class">
+
+
+
+<h2 id="rigatoni.MethodID" class="doc doc-heading">
+          <span class="doc doc-object-name doc-class-name">rigatoni.MethodID</span>
+
+
+</h2>
+
+
+  <div class="doc doc-contents first">
+          <p class="doc doc-class-bases">
+            Bases: <code><a class="autorefs autorefs-internal" title="rigatoni.noodle_objects.ID" href="#rigatoni.ID">ID</a></code></p>
+
+  
+      <p>ID specifically for methods</p>
+
+
+  </div>
+
+</div>
+
+<div class="doc doc-object doc-class">
+
+
+
+<h2 id="rigatoni.SignalID" class="doc doc-heading">
+          <span class="doc doc-object-name doc-class-name">rigatoni.SignalID</span>
+
+
+</h2>
+
+
+  <div class="doc doc-contents first">
+          <p class="doc doc-class-bases">
+            Bases: <code><a class="autorefs autorefs-internal" title="rigatoni.noodle_objects.ID" href="#rigatoni.ID">ID</a></code></p>
+
+  
+      <p>ID specifically for signals</p>
+
+
+  </div>
+
+</div>
+
+<div class="doc doc-object doc-class">
+
+
+
+<h2 id="rigatoni.EntityID" class="doc doc-heading">
+          <span class="doc doc-object-name doc-class-name">rigatoni.EntityID</span>
+
+
+</h2>
+
+
+  <div class="doc doc-contents first">
+          <p class="doc doc-class-bases">
+            Bases: <code><a class="autorefs autorefs-internal" title="rigatoni.noodle_objects.ID" href="#rigatoni.ID">ID</a></code></p>
+
+  
+      <p>ID specifically for entities</p>
+
+
+  </div>
+
+</div>
+
+<div class="doc doc-object doc-class">
+
+
+
+<h2 id="rigatoni.PlotID" class="doc doc-heading">
+          <span class="doc doc-object-name doc-class-name">rigatoni.PlotID</span>
+
+
+</h2>
+
+
+  <div class="doc doc-contents first">
+          <p class="doc doc-class-bases">
+            Bases: <code><a class="autorefs autorefs-internal" title="rigatoni.noodle_objects.ID" href="#rigatoni.ID">ID</a></code></p>
+
+  
+      <p>ID specifically for plots</p>
+
+
+  </div>
+
+</div>
+
+<div class="doc doc-object doc-class">
+
+
+
+<h2 id="rigatoni.BufferID" class="doc doc-heading">
+          <span class="doc doc-object-name doc-class-name">rigatoni.BufferID</span>
+
+
+</h2>
+
+
+  <div class="doc doc-contents first">
+          <p class="doc doc-class-bases">
+            Bases: <code><a class="autorefs autorefs-internal" title="rigatoni.noodle_objects.ID" href="#rigatoni.ID">ID</a></code></p>
+
+  
+      <p>ID specifically for buffers</p>
+
+
+  </div>
+
+</div>
+
+<div class="doc doc-object doc-class">
+
+
+
+<h2 id="rigatoni.BufferViewID" class="doc doc-heading">
+          <span class="doc doc-object-name doc-class-name">rigatoni.BufferViewID</span>
+
+
+</h2>
+
+
+  <div class="doc doc-contents first">
+          <p class="doc doc-class-bases">
+            Bases: <code><a class="autorefs autorefs-internal" title="rigatoni.noodle_objects.ID" href="#rigatoni.ID">ID</a></code></p>
+
+  
+      <p>ID specifically for buffer views</p>
+
+
+  </div>
+
+</div>
+
+<div class="doc doc-object doc-class">
+
+
+
+<h2 id="rigatoni.MaterialID" class="doc doc-heading">
+          <span class="doc doc-object-name doc-class-name">rigatoni.MaterialID</span>
+
+
+</h2>
+
+
+  <div class="doc doc-contents first">
+          <p class="doc doc-class-bases">
+            Bases: <code><a class="autorefs autorefs-internal" title="rigatoni.noodle_objects.ID" href="#rigatoni.ID">ID</a></code></p>
+
+  
+      <p>ID specifically for materials</p>
+
+
+  </div>
+
+</div>
+
+<div class="doc doc-object doc-class">
+
+
+
+<h2 id="rigatoni.ImageID" class="doc doc-heading">
+          <span class="doc doc-object-name doc-class-name">rigatoni.ImageID</span>
+
+
+</h2>
+
+
+  <div class="doc doc-contents first">
+          <p class="doc doc-class-bases">
+            Bases: <code><a class="autorefs autorefs-internal" title="rigatoni.noodle_objects.ID" href="#rigatoni.ID">ID</a></code></p>
+
+  
+      <p>ID specifically for images</p>
+
+
+  </div>
+
+</div>
+
+<div class="doc doc-object doc-class">
+
+
+
+<h2 id="rigatoni.TextureID" class="doc doc-heading">
+          <span class="doc doc-object-name doc-class-name">rigatoni.TextureID</span>
+
+
+</h2>
+
+
+  <div class="doc doc-contents first">
+          <p class="doc doc-class-bases">
+            Bases: <code><a class="autorefs autorefs-internal" title="rigatoni.noodle_objects.ID" href="#rigatoni.ID">ID</a></code></p>
+
+  
+      <p>ID specifically for textures</p>
+
+
+  </div>
+
+</div>
+
+<div class="doc doc-object doc-class">
+
+
+
+<h2 id="rigatoni.SamplerID" class="doc doc-heading">
+          <span class="doc doc-object-name doc-class-name">rigatoni.SamplerID</span>
+
+
+</h2>
+
+
+  <div class="doc doc-contents first">
+          <p class="doc doc-class-bases">
+            Bases: <code><a class="autorefs autorefs-internal" title="rigatoni.noodle_objects.ID" href="#rigatoni.ID">ID</a></code></p>
+
+  
+      <p>ID specifically for samplers</p>
+
+
+  </div>
+
+</div>
+
+<div class="doc doc-object doc-class">
+
+
+
+<h2 id="rigatoni.LightID" class="doc doc-heading">
+          <span class="doc doc-object-name doc-class-name">rigatoni.LightID</span>
+
+
+</h2>
+
+
+  <div class="doc doc-contents first">
+          <p class="doc doc-class-bases">
+            Bases: <code><a class="autorefs autorefs-internal" title="rigatoni.noodle_objects.ID" href="#rigatoni.ID">ID</a></code></p>
+
+  
+      <p>ID specifically for lights</p>
+
+
+  </div>
+
+</div>
+
+<div class="doc doc-object doc-class">
+
+
+
+<h2 id="rigatoni.GeometryID" class="doc doc-heading">
+          <span class="doc doc-object-name doc-class-name">rigatoni.GeometryID</span>
+
+
+</h2>
+
+
+  <div class="doc doc-contents first">
+          <p class="doc doc-class-bases">
+            Bases: <code><a class="autorefs autorefs-internal" title="rigatoni.noodle_objects.ID" href="#rigatoni.ID">ID</a></code></p>
+
+  
+      <p>ID specifically for geometries</p>
+
+
+  </div>
+
+</div>
+
+<div class="doc doc-object doc-class">
+
+
+
+<h2 id="rigatoni.TableID" class="doc doc-heading">
+          <span class="doc doc-object-name doc-class-name">rigatoni.TableID</span>
+
+
+</h2>
+
+
+  <div class="doc doc-contents first">
+          <p class="doc doc-class-bases">
+            Bases: <code><a class="autorefs autorefs-internal" title="rigatoni.noodle_objects.ID" href="#rigatoni.ID">ID</a></code></p>
+
+  
+      <p>ID specifically for tables</p>
+
+
+  </div>
+
+</div><hr />
+<h2 id="enums-for-specific-string-options">Enums for Specific String Options</h2>
+
+
+<div class="doc doc-object doc-class">
+
+
+
+<h2 id="rigatoni.AttributeSemantic" class="doc doc-heading">
+          <span class="doc doc-object-name doc-class-name">rigatoni.AttributeSemantic</span>
+
+
+</h2>
+
+
+  <div class="doc doc-contents first">
+          <p class="doc doc-class-bases">
+            Bases: <code><span title="enum.Enum">Enum</span></code></p>
+
+  
+      <p>String indicating type of attribute, used in Attribute inside of geometry patch</p>
+<p>Takes value of either POSITION, NORMAL, TANGENT, TEXTURE, or COLOR</p>
+
+
+  
+
+  <div class="doc doc-children">
+
+
+
+
+
+
+
+
+
+
+
+  </div>
+
+  </div>
+
+</div>
+
+<div class="doc doc-object doc-class">
+
+
+
+<h2 id="rigatoni.Format" class="doc doc-heading">
+          <span class="doc doc-object-name doc-class-name">rigatoni.Format</span>
+
+
+</h2>
+
+
+  <div class="doc doc-contents first">
+          <p class="doc doc-class-bases">
+            Bases: <code><span title="enum.Enum">Enum</span></code></p>
+
+  
+      <p>String indicating format of byte data for an attribute</p>
+<p>Used in Attribute inside of geometry patch. Takes value of either U8, U16, U32, U8VEC4, U16VEC2,
+VEC2, VEC3, VEC4, MAT3, or MAT4</p>
+
+
+  
+
+  <div class="doc doc-children">
+
+
+
+
+
+
+
+
+
+
+
+  </div>
+
+  </div>
+
+</div>
+
+<div class="doc doc-object doc-class">
+
+
+
+<h2 id="rigatoni.IndexFormat" class="doc doc-heading">
+          <span class="doc doc-object-name doc-class-name">rigatoni.IndexFormat</span>
+
+
+</h2>
+
+
+  <div class="doc doc-contents first">
+          <p class="doc doc-class-bases">
+            Bases: <code>str</code>, <code><span title="enum.Enum">Enum</span></code></p>
+
+  
+      <p>String indicating format of byte data for an index</p>
+<p>Used in Index inside of geometry patch. Takes value of either U8, U16, or U32</p>
+
+
+  
+
+  <div class="doc doc-children">
+
+
+
+
+
+
+
+
+
+
+
+  </div>
+
+  </div>
+
+</div>
+
+<div class="doc doc-object doc-class">
+
+
+
+<h2 id="rigatoni.PrimitiveType" class="doc doc-heading">
+          <span class="doc doc-object-name doc-class-name">rigatoni.PrimitiveType</span>
+
+
+</h2>
+
+
+  <div class="doc doc-contents first">
+          <p class="doc doc-class-bases">
+            Bases: <code><span title="enum.Enum">Enum</span></code></p>
+
+  
+      <p>String indicating type of primitive used in a geometry patch</p>
+<p>Takes value of either POINTS, LINES, LINE_LOOP, LINE_STRIP, TRIANGLES, or TRIANGLE_STRIP</p>
+
+
+  
+
+  <div class="doc doc-children">
+
+
+
+
+
+
+
+
+
+
+
+  </div>
+
+  </div>
+
+</div>
+
+<div class="doc doc-object doc-class">
+
+
+
+<h2 id="rigatoni.ColumnType" class="doc doc-heading">
+          <span class="doc doc-object-name doc-class-name">rigatoni.ColumnType</span>
+
+
+</h2>
+
+
+  <div class="doc doc-contents first">
+          <p class="doc doc-class-bases">
+            Bases: <code>str</code>, <code><span title="enum.Enum">Enum</span></code></p>
+
+  
+      <p>String indicating type of data stored in a column in a table</p>
+<p>Used in TableColumnInfo inside TableInitData. Takes value of either TEXT, REAL, or INTEGER</p>
+
+
+  
+
+  <div class="doc doc-children">
+
+
+
+
+
+
+
+
+
+
+
+  </div>
+
+  </div>
+
+</div>
+
+<div class="doc doc-object doc-class">
+
+
+
+<h2 id="rigatoni.BufferType" class="doc doc-heading">
+          <span class="doc doc-object-name doc-class-name">rigatoni.BufferType</span>
+
+
+</h2>
+
+
+  <div class="doc doc-contents first">
+          <p class="doc doc-class-bases">
+            Bases: <code>str</code>, <code><span title="enum.Enum">Enum</span></code></p>
+
+  
+      <p>String indicating type of data stored in a buffer</p>
+<p>Used in BufferView. Takes value of either UNK, GEOMETRY, or IMAGE</p>
+
+
+  
+
+  <div class="doc doc-children">
+
+
+
+
+
+
+
+
+
+
+
+  </div>
+
+  </div>
+
+</div>
+
+<div class="doc doc-object doc-class">
+
+
+
+<h2 id="rigatoni.SamplerMode" class="doc doc-heading">
+          <span class="doc doc-object-name doc-class-name">rigatoni.SamplerMode</span>
+
+
+</h2>
+
+
+  <div class="doc doc-contents first">
+          <p class="doc doc-class-bases">
+            Bases: <code><span title="enum.Enum">Enum</span></code></p>
+
+  
+      <p>String options for sampler mode</p>
+<p>Used in Sampler. Takes value of either CLAMP_TO_EDGE, MIRRORED_REPEAT, or REPEAT</p>
+
+
+  
+
+  <div class="doc doc-children">
+
+
+
+
+
+
+
+
+
+
+
+  </div>
+
+  </div>
+
+</div>
+
+<div class="doc doc-object doc-class">
+
+
+
+<h2 id="rigatoni.MagFilterTypes" class="doc doc-heading">
+          <span class="doc doc-object-name doc-class-name">rigatoni.MagFilterTypes</span>
+
+
+</h2>
+
+
+  <div class="doc doc-contents first">
+          <p class="doc doc-class-bases">
+            Bases: <code><span title="enum.Enum">Enum</span></code></p>
+
+  
+      <p>Options for magnification filter type</p>
+<p>Used in Sampler. Takes value of either NEAREST or LINEAR</p>
+
+
+  
+
+  <div class="doc doc-children">
+
+
+
+
+
+
+
+
+
+
+
+  </div>
+
+  </div>
+
+</div>
+
+<div class="doc doc-object doc-class">
+
+
+
+<h2 id="rigatoni.MinFilterTypes" class="doc doc-heading">
+          <span class="doc doc-object-name doc-class-name">rigatoni.MinFilterTypes</span>
+
+
+</h2>
+
+
+  <div class="doc doc-contents first">
+          <p class="doc doc-class-bases">
+            Bases: <code><span title="enum.Enum">Enum</span></code></p>
+
+  
+      <p>Options for minification filter type</p>
+<p>Used in Sampler. Takes value of either NEAREST, LINEAR, or LINEAR_MIPMAP_LINEAR</p>
+
+
+  
+
+  <div class="doc doc-children">
+
+
+
+
+
+
+
+
+
+
+
+  </div>
+
+  </div>
+
+</div><hr />
+<h2 id="supporting-objects_1">Supporting Objects</h2>
+
+
+<div class="doc doc-object doc-class">
+
+
+
+<h2 id="rigatoni.SelectionRange" class="doc doc-heading">
+          <span class="doc doc-object-name doc-class-name">rigatoni.SelectionRange</span>
+
+
+</h2>
+
+
+  <div class="doc doc-contents first">
+          <p class="doc doc-class-bases">
+            Bases: <code><span title="rigatoni.noodle_objects.NoodleObject">NoodleObject</span></code></p>
+
+  
+      <p>Range of rows to select in a table</p>
+
+
+
+  <p><strong>Attributes:</strong></p>
+  <table>
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr>
+          <td><code>key_from_inclusive</code></td>
+          <td>
+                <code>int</code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>First row to select</p>
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td><code>key_to_exclusive</code></td>
+          <td>
+                <code>int</code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>Where to end selection, exclusive</p>
+            </div>
+          </td>
+        </tr>
+    </tbody>
+  </table>
+
+
+  
+
+  <div class="doc doc-children">
+
+
+
+
+
+
+
+
+
+
+
+  </div>
+
+  </div>
+
+</div>
+
+<div class="doc doc-object doc-class">
+
+
+
+<h2 id="rigatoni.Selection" class="doc doc-heading">
+          <span class="doc doc-object-name doc-class-name">rigatoni.Selection</span>
+
+
+</h2>
+
+
+  <div class="doc doc-contents first">
+          <p class="doc doc-class-bases">
+            Bases: <code><span title="rigatoni.noodle_objects.NoodleObject">NoodleObject</span></code></p>
+
+  
+      <p>Selection of rows in a table</p>
+
+
+
+  <p><strong>Attributes:</strong></p>
+  <table>
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr>
+          <td><code>name</code></td>
+          <td>
+                <code>str</code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>Name of selection</p>
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td><code>rows</code></td>
+          <td>
+                <code><span title="typing.List">List</span>[int]</code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>List of rows to select</p>
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td><code>row_ranges</code></td>
+          <td>
+                <code><span title="typing.List">List</span>[<a class="autorefs autorefs-internal" title="rigatoni.noodle_objects.SelectionRange" href="#rigatoni.SelectionRange">SelectionRange</a>]</code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>List of ranges of rows to select</p>
+            </div>
+          </td>
+        </tr>
+    </tbody>
+  </table>
+
+
+  
+
+  <div class="doc doc-children">
+
+
+
+
+
+
+
+
+
+
+
+  </div>
+
+  </div>
+
+</div>
+
+<div class="doc doc-object doc-class">
+
+
+
+<h2 id="rigatoni.MethodArg" class="doc doc-heading">
+          <span class="doc doc-object-name doc-class-name">rigatoni.MethodArg</span>
+
+
+</h2>
+
+
+  <div class="doc doc-contents first">
+          <p class="doc doc-class-bases">
+            Bases: <code><span title="rigatoni.noodle_objects.NoodleObject">NoodleObject</span></code></p>
+
+  
+      <p>Argument for a method</p>
+
+
+
+  <p><strong>Attributes:</strong></p>
+  <table>
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr>
+          <td><code>name</code></td>
+          <td>
+                <code>str</code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>Name of argument</p>
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td><code>doc</code></td>
+          <td>
+                <code>str</code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>Documentation for argument</p>
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td><code>editor_hint</code></td>
+          <td>
+                <code>str</code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>Hint for editor, refer to message spec for hint options</p>
+            </div>
+          </td>
+        </tr>
+    </tbody>
+  </table>
+
+
+  
+
+  <div class="doc doc-children">
+
+
+
+
+
+
+
+
+
+
+
+  </div>
+
+  </div>
+
+</div>
+
+<div class="doc doc-object doc-class">
+
+
+
+<h2 id="rigatoni.BoundingBox" class="doc doc-heading">
+          <span class="doc doc-object-name doc-class-name">rigatoni.BoundingBox</span>
+
+
+</h2>
+
+
+  <div class="doc doc-contents first">
+          <p class="doc doc-class-bases">
+            Bases: <code><span title="rigatoni.noodle_objects.NoodleObject">NoodleObject</span></code></p>
+
+  
+      <p>Axis-aligned bounding box</p>
+
+
+
+  <p><strong>Attributes:</strong></p>
+  <table>
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr>
+          <td><code>min</code></td>
+          <td>
+                <code><span title="rigatoni.noodle_objects.Vec3">Vec3</span></code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>Minimum point of bounding box</p>
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td><code>max</code></td>
+          <td>
+                <code><span title="rigatoni.noodle_objects.Vec3">Vec3</span></code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>Maximum point of bounding box</p>
+            </div>
+          </td>
+        </tr>
+    </tbody>
+  </table>
+
+
+  
+
+  <div class="doc doc-children">
+
+
+
+
+
+
+
+
+
+
+
+  </div>
+
+  </div>
+
+</div>
+
+<div class="doc doc-object doc-class">
+
+
+
+<h2 id="rigatoni.TextRepresentation" class="doc doc-heading">
+          <span class="doc doc-object-name doc-class-name">rigatoni.TextRepresentation</span>
+
+
+</h2>
+
+
+  <div class="doc doc-contents first">
+          <p class="doc doc-class-bases">
+            Bases: <code><span title="rigatoni.noodle_objects.NoodleObject">NoodleObject</span></code></p>
+
+  
+      <p>Text representation for an entity</p>
+
+
+
+  <p><strong>Attributes:</strong></p>
+  <table>
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr>
+          <td><code>txt</code></td>
+          <td>
+                <code>str</code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>Text to display</p>
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td><code>font</code></td>
+          <td>
+                <code>str</code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>Font to use</p>
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td><code>height</code></td>
+          <td>
+                <code><span title="typing.Optional">Optional</span>[float]</code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>Height of text</p>
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td><code>width</code></td>
+          <td>
+                <code><span title="typing.Optional">Optional</span>[float]</code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>Width of text</p>
+            </div>
+          </td>
+        </tr>
+    </tbody>
+  </table>
+
+
+  
+
+  <div class="doc doc-children">
+
+
+
+
+
+
+
+
+
+
+
+  </div>
+
+  </div>
+
+</div>
+
+<div class="doc doc-object doc-class">
+
+
+
+<h2 id="rigatoni.WebRepresentation" class="doc doc-heading">
+          <span class="doc doc-object-name doc-class-name">rigatoni.WebRepresentation</span>
+
+
+</h2>
+
+
+  <div class="doc doc-contents first">
+          <p class="doc doc-class-bases">
+            Bases: <code><span title="rigatoni.noodle_objects.NoodleObject">NoodleObject</span></code></p>
+
+  
+      <p>Web page with a given URL rendered as a plane</p>
+
+
+
+  <p><strong>Attributes:</strong></p>
+  <table>
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr>
+          <td><code>source</code></td>
+          <td>
+                <code>str</code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>URL for entity</p>
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td><code>height</code></td>
+          <td>
+                <code><span title="typing.Optional">Optional</span>[float]</code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>Height of plane</p>
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td><code>width</code></td>
+          <td>
+                <code><span title="typing.Optional">Optional</span>[float]</code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>Width of plane</p>
+            </div>
+          </td>
+        </tr>
+    </tbody>
+  </table>
+
+
+  
+
+  <div class="doc doc-children">
+
+
+
+
+
+
+
+
+
+
+
+  </div>
+
+  </div>
+
+</div>
+
+<div class="doc doc-object doc-class">
+
+
+
+<h2 id="rigatoni.InstanceSource" class="doc doc-heading">
+          <span class="doc doc-object-name doc-class-name">rigatoni.InstanceSource</span>
+
+
+</h2>
+
+
+  <div class="doc doc-contents first">
+          <p class="doc doc-class-bases">
+            Bases: <code><span title="rigatoni.noodle_objects.NoodleObject">NoodleObject</span></code></p>
+
+  
+      <p>Source of instances for a geometry patch</p>
+
+
+
+  <p><strong>Attributes:</strong></p>
+  <table>
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr>
+          <td><code>view</code></td>
+          <td>
+                <code><a class="autorefs autorefs-internal" title="rigatoni.noodle_objects.BufferViewID" href="#rigatoni.BufferViewID">BufferViewID</a></code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>View of mat4</p>
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td><code>stride</code></td>
+          <td>
+                <code>int</code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>Stride for buffer, defaults to tightly packed</p>
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td><code>bb</code></td>
+          <td>
+                <code><a class="autorefs autorefs-internal" title="rigatoni.noodle_objects.BoundingBox" href="#rigatoni.BoundingBox">BoundingBox</a></code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>Bounding box of instances</p>
+            </div>
+          </td>
+        </tr>
+    </tbody>
+  </table>
+
+
+  
+
+  <div class="doc doc-children">
+
+
+
+
+
+
+
+
+
+
+
+  </div>
+
+  </div>
+
+</div>
+
+<div class="doc doc-object doc-class">
+
+
+
+<h2 id="rigatoni.RenderRepresentation" class="doc doc-heading">
+          <span class="doc doc-object-name doc-class-name">rigatoni.RenderRepresentation</span>
+
+
+</h2>
+
+
+  <div class="doc doc-contents first">
+          <p class="doc doc-class-bases">
+            Bases: <code><span title="rigatoni.noodle_objects.NoodleObject">NoodleObject</span></code></p>
+
+  
+      <p>Render representation for an entity</p>
+
+
+
+  <p><strong>Attributes:</strong></p>
+  <table>
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr>
+          <td><code>mesh</code></td>
+          <td>
+                <code><a class="autorefs autorefs-internal" title="rigatoni.noodle_objects.GeometryID" href="#rigatoni.GeometryID">GeometryID</a></code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>Mesh to render</p>
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td><code>instances</code></td>
+          <td>
+                <code><span title="typing.Optional">Optional</span>[<a class="autorefs autorefs-internal" title="rigatoni.noodle_objects.InstanceSource" href="#rigatoni.InstanceSource">InstanceSource</a>]</code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>Source of instances for mesh</p>
+            </div>
+          </td>
+        </tr>
+    </tbody>
+  </table>
+
+
+  
+
+  <div class="doc doc-children">
+
+
+
+
+
+
+
+
+
+
+
+  </div>
+
+  </div>
+
+</div>
+
+<div class="doc doc-object doc-class">
+
+
+
+<h2 id="rigatoni.TextureRef" class="doc doc-heading">
+          <span class="doc doc-object-name doc-class-name">rigatoni.TextureRef</span>
+
+
+</h2>
+
+
+  <div class="doc doc-contents first">
+          <p class="doc doc-class-bases">
+            Bases: <code><span title="rigatoni.noodle_objects.NoodleObject">NoodleObject</span></code></p>
+
+  
+      <p>Reference to a texture</p>
+
+
+
+  <p><strong>Attributes:</strong></p>
+  <table>
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr>
+          <td><code>texture</code></td>
+          <td>
+                <code><a class="autorefs autorefs-internal" title="rigatoni.noodle_objects.TextureID" href="#rigatoni.TextureID">TextureID</a></code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>Texture to reference</p>
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td><code>transform</code></td>
+          <td>
+                <code><span title="typing.Optional">Optional</span>[<span title="rigatoni.noodle_objects.Mat3">Mat3</span>]</code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>Transform to apply to texture</p>
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td><code>texture_coord_slot</code></td>
+          <td>
+                <code><span title="typing.Optional">Optional</span>[int]</code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>Texture coordinate slot to use</p>
+            </div>
+          </td>
+        </tr>
+    </tbody>
+  </table>
+
+
+  
+
+  <div class="doc doc-children">
+
+
+
+
+
+
+
+
+
+
+
+  </div>
+
+  </div>
+
+</div>
+
+<div class="doc doc-object doc-class">
+
+
+
+<h2 id="rigatoni.PBRInfo" class="doc doc-heading">
+          <span class="doc doc-object-name doc-class-name">rigatoni.PBRInfo</span>
+
+
+</h2>
+
+
+  <div class="doc doc-contents first">
+          <p class="doc doc-class-bases">
+            Bases: <code><span title="rigatoni.noodle_objects.NoodleObject">NoodleObject</span></code></p>
+
+  
+      <p>Physically based rendering information for a material</p>
+
+
+
+  <p><strong>Attributes:</strong></p>
+  <table>
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr>
+          <td><code>base_color</code></td>
+          <td>
+                <code><span title="typing.Optional">Optional</span>[<span title="rigatoni.noodle_objects.RGBA">RGBA</span>]</code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>Base color of material</p>
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td><code>base_color_texture</code></td>
+          <td>
+                <code><span title="typing.Optional">Optional</span>[<a class="autorefs autorefs-internal" title="rigatoni.noodle_objects.TextureRef" href="#rigatoni.TextureRef">TextureRef</a>]</code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>Texture to use for base color</p>
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td><code>metallic</code></td>
+          <td>
+                <code><span title="typing.Optional">Optional</span>[float]</code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>Metallic value of material</p>
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td><code>roughness</code></td>
+          <td>
+                <code><span title="typing.Optional">Optional</span>[float]</code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>Roughness value of material</p>
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td><code>metal_rough_texture</code></td>
+          <td>
+                <code><span title="typing.Optional">Optional</span>[<a class="autorefs autorefs-internal" title="rigatoni.noodle_objects.TextureRef" href="#rigatoni.TextureRef">TextureRef</a>]</code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>Texture to use for metallic and roughness</p>
+            </div>
+          </td>
+        </tr>
+    </tbody>
+  </table>
+
+
+  
+
+  <div class="doc doc-children">
+
+
+
+
+
+
+
+
+
+
+
+  </div>
+
+  </div>
+
+</div>
+
+<div class="doc doc-object doc-class">
+
+
+
+<h2 id="rigatoni.PointLight" class="doc doc-heading">
+          <span class="doc doc-object-name doc-class-name">rigatoni.PointLight</span>
+
+
+</h2>
+
+
+  <div class="doc doc-contents first">
+          <p class="doc doc-class-bases">
+            Bases: <code><span title="rigatoni.noodle_objects.NoodleObject">NoodleObject</span></code></p>
+
+  
+      <p>Point light information for a light delegate</p>
+
+
+
+  <p><strong>Attributes:</strong></p>
+  <table>
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr>
+          <td><code>range</code></td>
+          <td>
+                <code>float</code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>Range of light, -1 defaults to infinite</p>
+            </div>
+          </td>
+        </tr>
+    </tbody>
+  </table>
+
+
+  
+
+  <div class="doc doc-children">
+
+
+
+
+
+
+
+
+
+
+
+  </div>
+
+  </div>
+
+</div>
+
+<div class="doc doc-object doc-class">
+
+
+
+<h2 id="rigatoni.SpotLight" class="doc doc-heading">
+          <span class="doc doc-object-name doc-class-name">rigatoni.SpotLight</span>
+
+
+</h2>
+
+
+  <div class="doc doc-contents first">
+          <p class="doc doc-class-bases">
+            Bases: <code><span title="rigatoni.noodle_objects.NoodleObject">NoodleObject</span></code></p>
+
+  
+      <p>Spotlight information for a light delegate</p>
+
+
+
+  <p><strong>Attributes:</strong></p>
+  <table>
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr>
+          <td><code>range</code></td>
+          <td>
+                <code>float</code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>Range of light, -1 defaults to infinite</p>
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td><code>inner_cone_angle_rad</code></td>
+          <td>
+                <code>float</code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>Inner cone angle of light</p>
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td><code>outer_cone_angle_rad</code></td>
+          <td>
+                <code>float</code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>Outer cone angle of light</p>
+            </div>
+          </td>
+        </tr>
+    </tbody>
+  </table>
+
+
+  
+
+  <div class="doc doc-children">
+
+
+
+
+
+
+
+
+
+
+
+  </div>
+
+  </div>
+
+</div>
+
+<div class="doc doc-object doc-class">
+
+
+
+<h2 id="rigatoni.DirectionalLight" class="doc doc-heading">
+          <span class="doc doc-object-name doc-class-name">rigatoni.DirectionalLight</span>
+
+
+</h2>
+
+
+  <div class="doc doc-contents first">
+          <p class="doc doc-class-bases">
+            Bases: <code><span title="rigatoni.noodle_objects.NoodleObject">NoodleObject</span></code></p>
+
+  
+      <p>Directional light information for a light delegate</p>
+
+
+
+  <p><strong>Attributes:</strong></p>
+  <table>
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr>
+          <td><code>range</code></td>
+          <td>
+                <code>float</code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>Range of light, -1 defaults to infinite</p>
+            </div>
+          </td>
+        </tr>
+    </tbody>
+  </table>
+
+
+  
+
+  <div class="doc doc-children">
+
+
+
+
+
+
+
+
+
+
+
+  </div>
+
+  </div>
+
+</div>
+
+<div class="doc doc-object doc-class">
+
+
+
+<h2 id="rigatoni.Attribute" class="doc doc-heading">
+          <span class="doc doc-object-name doc-class-name">rigatoni.Attribute</span>
+
+
+</h2>
+
+
+  <div class="doc doc-contents first">
+          <p class="doc doc-class-bases">
+            Bases: <code><span title="rigatoni.noodle_objects.NoodleObject">NoodleObject</span></code></p>
+
+  
+      <p>Attribute for a geometry patch</p>
+<p>Each attribute is a view into a buffer that corresponds to a specific element of the mesh
+(e.g. position, normal, etc.). Attributes allow information for the vertices to be extracted from buffers</p>
+
+
+
+  <p><strong>Attributes:</strong></p>
+  <table>
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr>
+          <td><code>view</code></td>
+          <td>
+                <code><a class="autorefs autorefs-internal" title="rigatoni.noodle_objects.BufferViewID" href="#rigatoni.BufferViewID">BufferViewID</a></code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>View of the buffer storing the data</p>
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td><code>semantic</code></td>
+          <td>
+                <code><a class="autorefs autorefs-internal" title="rigatoni.noodle_objects.AttributeSemantic" href="#rigatoni.AttributeSemantic">AttributeSemantic</a></code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>String describing the type of attribute</p>
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td><code>channel</code></td>
+          <td>
+                <code><span title="typing.Optional">Optional</span>[int]</code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>Channel of attribute, if applicable</p>
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td><code>offset</code></td>
+          <td>
+                <code><span title="typing.Optional">Optional</span>[int]</code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>Offset into buffer</p>
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td><code>stride</code></td>
+          <td>
+                <code><span title="typing.Optional">Optional</span>[int]</code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>Distance, in bytes, between data for two vertices in the buffer</p>
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td><code>format</code></td>
+          <td>
+                <code><a class="autorefs autorefs-internal" title="rigatoni.noodle_objects.Format" href="#rigatoni.Format">Format</a></code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>How many bytes per element, how to decode the bytes</p>
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td><code>minimum_value</code></td>
+          <td>
+                <code><span title="typing.Optional">Optional</span>[<span title="typing.List">List</span>[float]]</code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>Minimum value for attribute data</p>
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td><code>maximum_value</code></td>
+          <td>
+                <code><span title="typing.Optional">Optional</span>[<span title="typing.List">List</span>[float]]</code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>Maximum value for attribute data</p>
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td><code>normalized</code></td>
+          <td>
+                <code><span title="typing.Optional">Optional</span>[bool]</code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>Whether to normalize the attribute data</p>
+            </div>
+          </td>
+        </tr>
+    </tbody>
+  </table>
+
+
+  
+
+  <div class="doc doc-children">
+
+
+
+
+
+
+
+
+
+
+
+  </div>
+
+  </div>
+
+</div>
+
+<div class="doc doc-object doc-class">
+
+
+
+<h2 id="rigatoni.Index" class="doc doc-heading">
+          <span class="doc doc-object-name doc-class-name">rigatoni.Index</span>
+
+
+</h2>
+
+
+  <div class="doc doc-contents first">
+          <p class="doc doc-class-bases">
+            Bases: <code><span title="rigatoni.noodle_objects.NoodleObject">NoodleObject</span></code></p>
+
+  
+      <p>Index for a geometry patch</p>
+<p>The index is a view into a buffer that corresponds to the indices of the mesh. The index allows the mesh to
+connect vertices and render triangles, lines, or points.</p>
+
+
+
+  <p><strong>Attributes:</strong></p>
+  <table>
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr>
+          <td><code>view</code></td>
+          <td>
+                <code><a class="autorefs autorefs-internal" title="rigatoni.noodle_objects.BufferViewID" href="#rigatoni.BufferViewID">BufferViewID</a></code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>View of the buffer storing the data</p>
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td><code>count</code></td>
+          <td>
+                <code>int</code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>Number of indices</p>
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td><code>offset</code></td>
+          <td>
+                <code><span title="typing.Optional">Optional</span>[int]</code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>Offset into buffer</p>
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td><code>stride</code></td>
+          <td>
+                <code><span title="typing.Optional">Optional</span>[int]</code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>Distance, in bytes, between data for two elements in the buffer</p>
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td><code>format</code></td>
+          <td>
+                <code><a class="autorefs autorefs-internal" title="rigatoni.noodle_objects.IndexFormat" href="#rigatoni.IndexFormat">IndexFormat</a></code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>How many bytes per element, how to decode the bytes</p>
+            </div>
+          </td>
+        </tr>
+    </tbody>
+  </table>
+
+
+  
+
+  <div class="doc doc-children">
+
+
+
+
+
+
+
+
+
+
+
+  </div>
+
+  </div>
+
+</div>
+
+<div class="doc doc-object doc-class">
+
+
+
+<h2 id="rigatoni.GeometryPatch" class="doc doc-heading">
+          <span class="doc doc-object-name doc-class-name">rigatoni.GeometryPatch</span>
+
+
+</h2>
+
+
+  <div class="doc doc-contents first">
+          <p class="doc doc-class-bases">
+            Bases: <code><span title="rigatoni.noodle_objects.NoodleObject">NoodleObject</span></code></p>
+
+  
+      <p>Geometry patch for a mesh</p>
+<p>Principle object used in geometry delegates. A geometry patch combines vertex data from attributes and index data
+from indices.</p>
+
+
+
+  <p><strong>Attributes:</strong></p>
+  <table>
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr>
+          <td><code>attributes</code></td>
+          <td>
+                <code><span title="typing.List">List</span>[<a class="autorefs autorefs-internal" title="rigatoni.noodle_objects.Attribute" href="#rigatoni.Attribute">Attribute</a>]</code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>List of attributes storing vertex data for the mesh</p>
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td><code>vertex_count</code></td>
+          <td>
+                <code>int</code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>Number of vertices in the mesh</p>
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td><code>indices</code></td>
+          <td>
+                <code><span title="typing.Optional">Optional</span>[<a class="autorefs autorefs-internal" title="rigatoni.noodle_objects.Index" href="#rigatoni.Index">Index</a>]</code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>Indices for the mesh</p>
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td><code>type</code></td>
+          <td>
+                <code><a class="autorefs autorefs-internal" title="rigatoni.noodle_objects.PrimitiveType" href="#rigatoni.PrimitiveType">PrimitiveType</a></code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>Type of primitive to render</p>
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td><code>material</code></td>
+          <td>
+                <code><a class="autorefs autorefs-internal" title="rigatoni.noodle_objects.MaterialID" href="#rigatoni.MaterialID">MaterialID</a></code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>Material to use for rendering</p>
+            </div>
+          </td>
+        </tr>
+    </tbody>
+  </table>
+
+
+  
+
+  <div class="doc doc-children">
+
+
+
+
+
+
+
+
+
+
+
+  </div>
+
+  </div>
+
+</div>
+
+<div class="doc doc-object doc-class">
+
+
+
+<h2 id="rigatoni.InvokeIDType" class="doc doc-heading">
+          <span class="doc doc-object-name doc-class-name">rigatoni.InvokeIDType</span>
+
+
+</h2>
+
+
+  <div class="doc doc-contents first">
+          <p class="doc doc-class-bases">
+            Bases: <code><span title="rigatoni.noodle_objects.NoodleObject">NoodleObject</span></code></p>
+
+  
+      <p>Context for invoking a signal</p>
+
+
+
+  <p><strong>Attributes:</strong></p>
+  <table>
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr>
+          <td><code>entity</code></td>
+          <td>
+                <code><span title="typing.Optional">Optional</span>[<a class="autorefs autorefs-internal" title="rigatoni.noodle_objects.EntityID" href="#rigatoni.EntityID">EntityID</a>]</code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>Entity to invoke signal on</p>
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td><code>table</code></td>
+          <td>
+                <code><span title="typing.Optional">Optional</span>[<a class="autorefs autorefs-internal" title="rigatoni.noodle_objects.TableID" href="#rigatoni.TableID">TableID</a>]</code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>Table to invoke signal on</p>
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td><code>plot</code></td>
+          <td>
+                <code><span title="typing.Optional">Optional</span>[<a class="autorefs autorefs-internal" title="rigatoni.noodle_objects.PlotID" href="#rigatoni.PlotID">PlotID</a>]</code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>Plot to invoke signal on</p>
+            </div>
+          </td>
+        </tr>
+    </tbody>
+  </table>
+
+
+  
+
+  <div class="doc doc-children">
+
+
+
+
+
+
+
+
+
+
+<div class="doc doc-object doc-function">
+
+
+
+<h3 id="rigatoni.InvokeIDType.one_of_three" class="doc doc-heading">
+          <span class="doc doc-object-name doc-function-name">one_of_three</span>
+
+
+</h3>
+<div class="highlight"><pre><span></span><code><span class="n">one_of_three</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>
+</code></pre></div>
+
+  <div class="doc doc-contents ">
+  
+      <p>Ensure only one of the three attributes is set</p>
+
+          <details class="quote">
+            <summary>Source code in <code>rigatoni/noodle_objects.py</code></summary>
+            <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">512</span>
+<span class="normal">513</span>
+<span class="normal">514</span>
+<span class="normal">515</span>
+<span class="normal">516</span>
+<span class="normal">517</span>
+<span class="normal">518</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@model_validator</span><span class="p">(</span><span class="n">mode</span><span class="o">=</span><span class="s2">&quot;after&quot;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">one_of_three</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">model</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Ensure only one of the three attributes is set&quot;&quot;&quot;</span>
+    <span class="n">selected</span> <span class="o">=</span> <span class="nb">bool</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">entity</span><span class="p">)</span> <span class="o">+</span> <span class="nb">bool</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">table</span><span class="p">)</span> <span class="o">+</span> <span class="nb">bool</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">plot</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">selected</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Must select exactly one of entity, table, or plot&quot;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">model</span>
+</code></pre></div></td></tr></table></div>
+          </details>
+  </div>
+
+</div>
+
+
+
+  </div>
+
+  </div>
+
+</div>
+
+<div class="doc doc-object doc-class">
+
+
+
+<h2 id="rigatoni.TableColumnInfo" class="doc doc-heading">
+          <span class="doc doc-object-name doc-class-name">rigatoni.TableColumnInfo</span>
+
+
+</h2>
+
+
+  <div class="doc doc-contents first">
+          <p class="doc doc-class-bases">
+            Bases: <code><span title="rigatoni.noodle_objects.NoodleObject">NoodleObject</span></code></p>
+
+  
+      <p>Information about a column in a table</p>
+
+
+
+  <p><strong>Attributes:</strong></p>
+  <table>
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr>
+          <td><code>name</code></td>
+          <td>
+                <code>str</code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>Name of column</p>
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td><code>type</code></td>
+          <td>
+                <code><a class="autorefs autorefs-internal" title="rigatoni.noodle_objects.ColumnType" href="#rigatoni.ColumnType">ColumnType</a></code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>Type data in the column</p>
+            </div>
+          </td>
+        </tr>
+    </tbody>
+  </table>
+
+
+  
+
+  <div class="doc doc-children">
+
+
+
+
+
+
+
+
+
+
+
+  </div>
+
+  </div>
+
+</div>
+
+<div class="doc doc-object doc-class">
+
+
+
+<h2 id="rigatoni.TableInitData" class="doc doc-heading">
+          <span class="doc doc-object-name doc-class-name">rigatoni.TableInitData</span>
+
+
+</h2>
+
+
+  <div class="doc doc-contents first">
+          <p class="doc doc-class-bases">
+            Bases: <code><span title="rigatoni.noodle_objects.NoodleObject">NoodleObject</span></code></p>
+
+  
+      <p>Init data to create a table</p>
+
+
+
+  <p><strong>Attributes:</strong></p>
+  <table>
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr>
+          <td><code>columns</code></td>
+          <td>
+                <code><span title="typing.List">List</span>[<a class="autorefs autorefs-internal" title="rigatoni.noodle_objects.TableColumnInfo" href="#rigatoni.TableColumnInfo">TableColumnInfo</a>]</code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>List of column information</p>
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td><code>keys</code></td>
+          <td>
+                <code><span title="typing.List">List</span>[int]</code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>List of column indices that are keys</p>
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td><code>data</code></td>
+          <td>
+                <code><span title="typing.List">List</span>[<span title="typing.List">List</span>[<span title="typing.Any">Any</span>]]</code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>List of rows of data</p>
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td><code>selections</code></td>
+          <td>
+                <code><span title="typing.Optional">Optional</span>[<span title="typing.List">List</span>[<a class="autorefs autorefs-internal" title="rigatoni.noodle_objects.Selection" href="#rigatoni.Selection">Selection</a>]]</code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>List of selections to apply to table</p>
+            </div>
+          </td>
+        </tr>
+    </tbody>
+  </table>
+
+
+  
+
+  <div class="doc doc-children">
+
+
+
+
+
+
+
+
+
+
+
+  </div>
+
+  </div>
+
+</div>
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+  <script>var tabs=__md_get("__tabs");if(Array.isArray(tabs))e:for(var set of document.querySelectorAll(".tabbed-set")){var tab,labels=set.querySelector(".tabbed-labels");for(tab of tabs)for(var label of labels.getElementsByTagName("label"))if(label.innerText.trim()===tab){var input=document.getElementById(label.htmlFor);input.checked=!0;continue e}}</script>
+
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    <script id="__config" type="application/json">{"base": "../..", "features": ["content.tabs.link"], "search": "../../assets/javascripts/workers/search.dfff1995.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.78eede0e.min.js"></script>
+      
+    
+  </body>
+</html>
