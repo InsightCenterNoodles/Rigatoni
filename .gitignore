@@ -1,8 +1,9 @@
 # Added
 *.x3d
-.idea
 venv/
 *.json
+.DS_Store
+.idea
 
 # Standard from Github
 # Byte-compiled / optimized / DLL files
