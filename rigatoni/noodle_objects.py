@@ -128,7 +128,11 @@ class NoodleObject(BaseModel):
 class Delegate(NoodleObject):
     """Parent class for all delegates
 
-    Defines general methods that should be available for all delegates.
+    Defines general methods that should be available for all delegates. In this context, a delegate refers to an
+    object in a NOODLES scene that can be subclassed and extended by the user. For example, a user can create an
+    implementation for a table that specifically suits their needs. The server's job is essentially to manage the
+    state of all delegates, and to call the appropriate methods on them when necessary. Most methods defined by
+    the user will also be to manipulate the state of the delegates.
 
     Attributes:
         server (Server): server delegate is attached to
