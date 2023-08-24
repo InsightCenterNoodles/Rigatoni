@@ -39,6 +39,12 @@ delegate doesn't store any data by default, but users can customize it using any
 simple example where the table delegate uses an added dataframe. A more complete version of this example can be found in
 [here](https://github.com/InsightCenterNoodles/Rigatoni/blob/v0.2.1/tests/examples/basic_server.py).
 
+!!! Note
+
+    In this library, delegates are Pydantic models. This means that they come with some built in functionality, and it might be helpful
+    to read the [Pydantic docs](https://docs.pydantic.dev/latest/usage/models/) to learn more about how to use them.
+    
+
 ```python
 import pandas as pd
 from rigatoni import Table
