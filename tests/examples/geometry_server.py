@@ -70,7 +70,7 @@ class EntityDelegate(rigatoni.Entity):
     def update_transform(self):
         transform = np.eye(4)
         transform[3, :3] = self.position
-        transform[:3, :3] = quaternion.as_rotation_matrix(np.quaternion(*self.rotation))
+        transform[:3, :3] = quaternion.as_rotation_matrix(np.quaternion(*self.rotation)).T
         transform[:3, :3] = np.matmul(np.diag(self.scale), transform[:3, :3])
         self.transform = transform.flatten().tolist()
 
