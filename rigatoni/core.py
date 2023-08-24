@@ -170,6 +170,9 @@ class Server(object):
                 if starting_component.document:
                     self.state["document"].methods_list.append(comp.id)
 
+            elif comp_type == Signal and starting_component.document:
+                self.state["document"].signals_list.append(comp.id)
+
         logging.debug(f"Server initialized with objects: {self.state}")
 
     def __enter__(self):
